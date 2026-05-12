@@ -22,6 +22,14 @@ export const Route = createRootRouteWithContext<{
         content: 'width=device-width, initial-scale=1',
       },
       {
+        name: 'referrer',
+        content: 'strict-origin-when-cross-origin',
+      },
+      {
+        httpEquiv: 'X-Content-Type-Options',
+        content: 'nosniff',
+      },
+      {
         title: 'albo — MVP starter',
       },
     ],

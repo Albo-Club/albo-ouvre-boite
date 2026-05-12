@@ -18,6 +18,7 @@ import type * as http from "../http.js";
 import type * as invitations from "../invitations.js";
 import type * as items from "../items.js";
 import type * as lib_auth from "../lib/auth.js";
+import type * as lib_webhooks from "../lib/webhooks.js";
 import type * as organizations from "../organizations.js";
 import type * as rateLimiters from "../rateLimiters.js";
 import type * as users from "../users.js";
@@ -39,6 +40,7 @@ declare const fullApi: ApiFromModules<{
   invitations: typeof invitations;
   items: typeof items;
   "lib/auth": typeof lib_auth;
+  "lib/webhooks": typeof lib_webhooks;
   organizations: typeof organizations;
   rateLimiters: typeof rateLimiters;
   users: typeof users;
