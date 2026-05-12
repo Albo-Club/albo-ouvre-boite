@@ -8,6 +8,7 @@ import * as React from 'react'
 import type { QueryClient } from '@tanstack/react-query'
 import appCss from '~/styles/app.css?url'
 import { Toaster } from '~/components/ui/sonner'
+import { ThemeProvider } from '~/components/app-shell/ThemeProvider'
 
 export const Route = createRootRouteWithContext<{
   queryClient: QueryClient
@@ -62,13 +63,15 @@ function RootComponent() {
 
 function RootDocument({ children }: { children: React.ReactNode }) {
   return (
-    <html>
+    <html suppressHydrationWarning>
       <head>
         <HeadContent />
       </head>
       <body>
-        {children}
-        <Toaster richColors closeButton />
+        <ThemeProvider>
+          {children}
+          <Toaster richColors closeButton />
+        </ThemeProvider>
         <Scripts />
       </body>
     </html>

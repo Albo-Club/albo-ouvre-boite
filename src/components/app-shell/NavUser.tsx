@@ -1,0 +1,114 @@
+import { Link, useNavigate } from '@tanstack/react-router'
+import {
+  ChevronsUpDown,
+  LogOut,
+  Shield,
+  UserCircle,
+  Building2,
+} from 'lucide-react'
+
+import { authClient } from '~/lib/auth-client'
+import { Avatar, AvatarFallback, AvatarImage } from '~/components/ui/avatar'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '~/components/ui/dropdown-menu'
+import {
+  SidebarMenu,
+  SidebarMenuButton,
+  SidebarMenuItem,
+  useSidebar,
+} from '~/components/ui/sidebar'
+
+export function NavUser({
+  name,
+  email,
+  avatarUrl,
+  superAdmin,
+}: {
+  name: string | null
+  email: string
+  avatarUrl: string | null | undefined
+  superAdmin: boolean
+}) {
+  const navigate = useNavigate()
+  const { isMobile } = useSidebar()
+  const displayName = name ?? email
+  const initials = (name ?? email).slice(0, 2).toUpperCase() || '?'
+
+  async function handleSignOut() {
+    await authClient.signOut()
+    navigate({ to: '/login' })
+  }
+
+  return (
+    <SidebarMenu>
+      <SidebarMenuItem>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <SidebarMenuButton
+              size="lg"
+              className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
+            >
+              <Avatar className="size-8 rounded-lg">
+                {avatarUrl ? (
+                  <AvatarImage src={avatarUrl} alt={displayName} />
+                ) : null}
+                <AvatarFallback className="rounded-lg">
+                  {initials}
+                </AvatarFallback>
+              </Avatar>
+              <div className="grid flex-1 text-left text-sm leading-tight">
+                <span className="truncate font-semibold">{displayName}</span>
+                <span className="text-muted-foreground truncate text-xs">
+                  {email}
+                </span>
+              </div>
+              <ChevronsUpDown className="ml-auto size-4" />
+            </SidebarMenuButton>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent
+            className="w-(--radix-dropdown-menu-trigger-width) min-w-56"
+            align="end"
+            side={isMobile ? 'bottom' : 'right'}
+            sideOffset={4}
+          >
+            <DropdownMenuLabel className="text-muted-foreground text-xs font-normal">
+              {email}
+            </DropdownMenuLabel>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem asChild>
+              <Link to="/app/me">
+                <UserCircle className="mr-2 size-4" />
+                Your profile
+              </Link>
+            </DropdownMenuItem>
+            <DropdownMenuItem asChild>
+              <Link to="/app">
+                <Building2 className="mr-2 size-4" />
+                Switch organization
+              </Link>
+            </DropdownMenuItem>
+            {superAdmin && (
+              <DropdownMenuItem asChild>
+                <Link to="/app/admin">
+                  <Shield className="mr-2 size-4" />
+                  Super-admin
+                </Link>
+              </DropdownMenuItem>
+            )}
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onSelect={handleSignOut}>
+              <LogOut className="mr-2 size-4" />
+              Sign out
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </SidebarMenuItem>
+    </SidebarMenu>
+  )
+}
