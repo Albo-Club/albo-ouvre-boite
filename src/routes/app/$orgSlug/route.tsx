@@ -101,6 +101,11 @@ function OrgLayout() {
               <DropdownMenuItem asChild>
                 <Link to="/app">Switch organization</Link>
               </DropdownMenuItem>
+              {me.user.superAdmin && (
+                <DropdownMenuItem asChild>
+                  <Link to="/app/admin">Super-admin</Link>
+                </DropdownMenuItem>
+              )}
               <DropdownMenuSeparator />
               <DropdownMenuItem onSelect={handleSignOut}>
                 Sign out

@@ -16,6 +16,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AppIndexRouteImport } from './routes/app/index'
 import { Route as AppOnboardingRouteImport } from './routes/app/onboarding'
 import { Route as AppMeRouteImport } from './routes/app/me'
+import { Route as AppAdminRouteImport } from './routes/app/admin'
 import { Route as AcceptInviteTokenRouteImport } from './routes/accept-invite.$token'
 import { Route as AppOrgSlugRouteRouteImport } from './routes/app/$orgSlug/route'
 import { Route as AppOrgSlugIndexRouteImport } from './routes/app/$orgSlug/index'
@@ -59,6 +60,11 @@ const AppOnboardingRoute = AppOnboardingRouteImport.update({
 const AppMeRoute = AppMeRouteImport.update({
   id: '/me',
   path: '/me',
+  getParentRoute: () => AppRouteRoute,
+} as any)
+const AppAdminRoute = AppAdminRouteImport.update({
+  id: '/admin',
+  path: '/admin',
   getParentRoute: () => AppRouteRoute,
 } as any)
 const AcceptInviteTokenRoute = AcceptInviteTokenRouteImport.update({
@@ -117,6 +123,7 @@ export interface FileRoutesByFullPath {
   '/register': typeof RegisterRoute
   '/app/$orgSlug': typeof AppOrgSlugRouteRouteWithChildren
   '/accept-invite/$token': typeof AcceptInviteTokenRoute
+  '/app/admin': typeof AppAdminRoute
   '/app/me': typeof AppMeRoute
   '/app/onboarding': typeof AppOnboardingRoute
   '/app/': typeof AppIndexRoute
@@ -133,6 +140,7 @@ export interface FileRoutesByTo {
   '/login': typeof LoginRoute
   '/register': typeof RegisterRoute
   '/accept-invite/$token': typeof AcceptInviteTokenRoute
+  '/app/admin': typeof AppAdminRoute
   '/app/me': typeof AppMeRoute
   '/app/onboarding': typeof AppOnboardingRoute
   '/app': typeof AppIndexRoute
@@ -151,6 +159,7 @@ export interface FileRoutesById {
   '/register': typeof RegisterRoute
   '/app/$orgSlug': typeof AppOrgSlugRouteRouteWithChildren
   '/accept-invite/$token': typeof AcceptInviteTokenRoute
+  '/app/admin': typeof AppAdminRoute
   '/app/me': typeof AppMeRoute
   '/app/onboarding': typeof AppOnboardingRoute
   '/app/': typeof AppIndexRoute
@@ -171,6 +180,7 @@ export interface FileRouteTypes {
     | '/register'
     | '/app/$orgSlug'
     | '/accept-invite/$token'
+    | '/app/admin'
     | '/app/me'
     | '/app/onboarding'
     | '/app/'
@@ -187,6 +197,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/register'
     | '/accept-invite/$token'
+    | '/app/admin'
     | '/app/me'
     | '/app/onboarding'
     | '/app'
@@ -204,6 +215,7 @@ export interface FileRouteTypes {
     | '/register'
     | '/app/$orgSlug'
     | '/accept-invite/$token'
+    | '/app/admin'
     | '/app/me'
     | '/app/onboarding'
     | '/app/'
@@ -274,6 +286,13 @@ declare module '@tanstack/react-router' {
       path: '/me'
       fullPath: '/app/me'
       preLoaderRoute: typeof AppMeRouteImport
+      parentRoute: typeof AppRouteRoute
+    }
+    '/app/admin': {
+      id: '/app/admin'
+      path: '/admin'
+      fullPath: '/app/admin'
+      preLoaderRoute: typeof AppAdminRouteImport
       parentRoute: typeof AppRouteRoute
     }
     '/accept-invite/$token': {
@@ -378,6 +397,7 @@ const AppOrgSlugRouteRouteWithChildren = AppOrgSlugRouteRoute._addFileChildren(
 
 interface AppRouteRouteChildren {
   AppOrgSlugRouteRoute: typeof AppOrgSlugRouteRouteWithChildren
+  AppAdminRoute: typeof AppAdminRoute
   AppMeRoute: typeof AppMeRoute
   AppOnboardingRoute: typeof AppOnboardingRoute
   AppIndexRoute: typeof AppIndexRoute
@@ -385,6 +405,7 @@ interface AppRouteRouteChildren {
 
 const AppRouteRouteChildren: AppRouteRouteChildren = {
   AppOrgSlugRouteRoute: AppOrgSlugRouteRouteWithChildren,
+  AppAdminRoute: AppAdminRoute,
   AppMeRoute: AppMeRoute,
   AppOnboardingRoute: AppOnboardingRoute,
   AppIndexRoute: AppIndexRoute,
