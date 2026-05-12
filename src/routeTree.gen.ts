@@ -20,6 +20,7 @@ import { Route as AppAdminRouteImport } from './routes/app/admin'
 import { Route as AcceptInviteTokenRouteImport } from './routes/accept-invite.$token'
 import { Route as AppOrgSlugRouteRouteImport } from './routes/app/$orgSlug/route'
 import { Route as AppOrgSlugIndexRouteImport } from './routes/app/$orgSlug/index'
+import { Route as AppOrgSlugItemsRouteImport } from './routes/app/$orgSlug/items'
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
 import { Route as AppOrgSlugSettingsRouteRouteImport } from './routes/app/$orgSlug/settings/route'
 import { Route as AppOrgSlugSettingsIndexRouteImport } from './routes/app/$orgSlug/settings/index'
@@ -82,6 +83,11 @@ const AppOrgSlugIndexRoute = AppOrgSlugIndexRouteImport.update({
   path: '/',
   getParentRoute: () => AppOrgSlugRouteRoute,
 } as any)
+const AppOrgSlugItemsRoute = AppOrgSlugItemsRouteImport.update({
+  id: '/items',
+  path: '/items',
+  getParentRoute: () => AppOrgSlugRouteRoute,
+} as any)
 const ApiAuthSplatRoute = ApiAuthSplatRouteImport.update({
   id: '/api/auth/$',
   path: '/api/auth/$',
@@ -129,6 +135,7 @@ export interface FileRoutesByFullPath {
   '/app/': typeof AppIndexRoute
   '/app/$orgSlug/settings': typeof AppOrgSlugSettingsRouteRouteWithChildren
   '/api/auth/$': typeof ApiAuthSplatRoute
+  '/app/$orgSlug/items': typeof AppOrgSlugItemsRoute
   '/app/$orgSlug/': typeof AppOrgSlugIndexRoute
   '/app/$orgSlug/settings/general': typeof AppOrgSlugSettingsGeneralRoute
   '/app/$orgSlug/settings/invitations': typeof AppOrgSlugSettingsInvitationsRoute
@@ -145,6 +152,7 @@ export interface FileRoutesByTo {
   '/app/onboarding': typeof AppOnboardingRoute
   '/app': typeof AppIndexRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
+  '/app/$orgSlug/items': typeof AppOrgSlugItemsRoute
   '/app/$orgSlug': typeof AppOrgSlugIndexRoute
   '/app/$orgSlug/settings/general': typeof AppOrgSlugSettingsGeneralRoute
   '/app/$orgSlug/settings/invitations': typeof AppOrgSlugSettingsInvitationsRoute
@@ -165,6 +173,7 @@ export interface FileRoutesById {
   '/app/': typeof AppIndexRoute
   '/app/$orgSlug/settings': typeof AppOrgSlugSettingsRouteRouteWithChildren
   '/api/auth/$': typeof ApiAuthSplatRoute
+  '/app/$orgSlug/items': typeof AppOrgSlugItemsRoute
   '/app/$orgSlug/': typeof AppOrgSlugIndexRoute
   '/app/$orgSlug/settings/general': typeof AppOrgSlugSettingsGeneralRoute
   '/app/$orgSlug/settings/invitations': typeof AppOrgSlugSettingsInvitationsRoute
@@ -186,6 +195,7 @@ export interface FileRouteTypes {
     | '/app/'
     | '/app/$orgSlug/settings'
     | '/api/auth/$'
+    | '/app/$orgSlug/items'
     | '/app/$orgSlug/'
     | '/app/$orgSlug/settings/general'
     | '/app/$orgSlug/settings/invitations'
@@ -202,6 +212,7 @@ export interface FileRouteTypes {
     | '/app/onboarding'
     | '/app'
     | '/api/auth/$'
+    | '/app/$orgSlug/items'
     | '/app/$orgSlug'
     | '/app/$orgSlug/settings/general'
     | '/app/$orgSlug/settings/invitations'
@@ -221,6 +232,7 @@ export interface FileRouteTypes {
     | '/app/'
     | '/app/$orgSlug/settings'
     | '/api/auth/$'
+    | '/app/$orgSlug/items'
     | '/app/$orgSlug/'
     | '/app/$orgSlug/settings/general'
     | '/app/$orgSlug/settings/invitations'
@@ -316,6 +328,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppOrgSlugIndexRouteImport
       parentRoute: typeof AppOrgSlugRouteRoute
     }
+    '/app/$orgSlug/items': {
+      id: '/app/$orgSlug/items'
+      path: '/items'
+      fullPath: '/app/$orgSlug/items'
+      preLoaderRoute: typeof AppOrgSlugItemsRouteImport
+      parentRoute: typeof AppOrgSlugRouteRoute
+    }
     '/api/auth/$': {
       id: '/api/auth/$'
       path: '/api/auth/$'
@@ -383,11 +402,13 @@ const AppOrgSlugSettingsRouteRouteWithChildren =
 
 interface AppOrgSlugRouteRouteChildren {
   AppOrgSlugSettingsRouteRoute: typeof AppOrgSlugSettingsRouteRouteWithChildren
+  AppOrgSlugItemsRoute: typeof AppOrgSlugItemsRoute
   AppOrgSlugIndexRoute: typeof AppOrgSlugIndexRoute
 }
 
 const AppOrgSlugRouteRouteChildren: AppOrgSlugRouteRouteChildren = {
   AppOrgSlugSettingsRouteRoute: AppOrgSlugSettingsRouteRouteWithChildren,
+  AppOrgSlugItemsRoute: AppOrgSlugItemsRoute,
   AppOrgSlugIndexRoute: AppOrgSlugIndexRoute,
 }
 

@@ -36,24 +36,30 @@ function OrgDashboard() {
             Role: <code>{myRole ?? '—'}</code>
           </p>
         </div>
-        <Button asChild variant="outline">
-          <Link to="/app/$orgSlug/settings" params={{ orgSlug }}>
-            Settings
-          </Link>
-        </Button>
+        <div className="flex gap-2">
+          <Button asChild variant="outline">
+            <Link to="/app/$orgSlug/items" params={{ orgSlug }}>
+              Items
+            </Link>
+          </Button>
+          <Button asChild variant="outline">
+            <Link to="/app/$orgSlug/settings" params={{ orgSlug }}>
+              Settings
+            </Link>
+          </Button>
+        </div>
       </header>
 
       <Card>
         <CardHeader>
           <CardTitle>Welcome</CardTitle>
           <CardDescription>
-            This is your organization dashboard. Items, AI chat and more land
-            later in phase 3.
+            This is your organization dashboard. AI chat lands next.
           </CardDescription>
         </CardHeader>
         <CardContent className="text-muted-foreground text-sm">
-          Use the <strong>Settings</strong> button above to manage members and
-          invitations.
+          Open <strong>Items</strong> to play with the example resource, or{' '}
+          <strong>Settings</strong> to manage members and invitations.
         </CardContent>
       </Card>
     </main>

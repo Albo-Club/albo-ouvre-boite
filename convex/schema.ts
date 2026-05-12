@@ -55,4 +55,12 @@ export default defineSchema({
     .index('by_token', ['token'])
     .index('by_org', ['orgId'])
     .index('by_email_and_org', ['email', 'orgId']),
+
+  items: defineTable({
+    orgId: v.id('organizations'),
+    title: v.string(),
+    description: v.optional(v.string()),
+    createdBy: v.id('users'),
+    createdAt: v.number(),
+  }).index('by_org', ['orgId']),
 })
