@@ -4,9 +4,13 @@ import { routerWithQueryClient } from '@tanstack/react-router-with-query'
 import { ConvexQueryClient } from '@convex-dev/react-query'
 import { ConvexBetterAuthProvider } from '@convex-dev/better-auth/react'
 import { authClient } from '~/lib/auth-client'
+import { initSentry } from '~/lib/sentry'
 import { routeTree } from './routeTree.gen'
 
 export function getRouter() {
+  if (typeof window !== 'undefined') {
+    initSentry()
+  }
   const CONVEX_URL = (import.meta as any).env.VITE_CONVEX_URL!
   if (!CONVEX_URL) {
     console.error('missing envar CONVEX_URL')
