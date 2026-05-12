@@ -2,6 +2,7 @@ import type { LucideIcon } from 'lucide-react'
 import {
   LayoutDashboard,
   Package,
+  MapPin,
   Calendar,
   ListTodo,
   CreditCard,
@@ -38,6 +39,12 @@ export function getNavGroups(): NavGroup[] {
           title: 'Items',
           to: '/app/$orgSlug/items',
           icon: Package,
+        },
+        {
+          title: 'Locations',
+          to: '/app/$orgSlug/map',
+          icon: MapPin,
+          badge: 'Demo',
         },
         {
           title: 'Calendar',
