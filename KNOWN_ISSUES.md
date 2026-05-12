@@ -55,9 +55,29 @@ find . \( -path ./node_modules -o -path ./.output \) -prune -o \
 
 ## Anthropic model id
 
-`convex/agent.ts` defaults to `claude-sonnet-4-5`. Override via the
+`convex/agent.ts` defaults to `claude-haiku-4-5`. Override via the
 `ANTHROPIC_MODEL` Convex env var to pick a different model. Anthropic
-sometimes ships dated aliases (`claude-sonnet-4-5-20251022`) for stability.
+sometimes ships dated aliases (`claude-haiku-4-5-20251001`) for stability.
+
+## SITE_URL drift in prod = broken email links
+
+`SITE_URL` is the Convex env var that builds every email URL (magic link,
+invitation accept, change-email verification, delete-account confirm) and
+feeds Better Auth's `baseURL`. If you forget to set it on the prod Convex
+deployment, emails ship with `http://localhost:3000/...` links — silent
+data loss until a user complains.
+
+`convex/auth.ts` throws at boot if `APP_ENV=production` AND `SITE_URL`
+matches `localhost` / `127.0.0.1`. So:
+
+- Set `APP_ENV=development` on dev deployments (no guard, localhost is fine).
+- Set `APP_ENV=production` AND a real `SITE_URL` on prod. A `convex deploy`
+  with the wrong combo will fail loudly.
+
+```bash
+pnpm exec convex env set --prod APP_ENV production
+pnpm exec convex env set --prod SITE_URL "https://your-domain"
+```
 
 ## Vite / Convex dev fails after partial install state
 

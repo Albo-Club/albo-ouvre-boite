@@ -26,6 +26,7 @@ pnpm install
 pnpm exec convex dev     # one-time: provisions the deployment
 pnpm exec convex env set BETTER_AUTH_SECRET "$(openssl rand -hex 32)"
 pnpm exec convex env set SITE_URL "http://localhost:3000"
+pnpm exec convex env set APP_ENV development
 pnpm exec convex env set RESEND_API_KEY re_...
 pnpm exec convex env set RESEND_FROM "hello@yourdomain.com"
 pnpm exec convex env set RESEND_TEST_MODE false
@@ -169,17 +170,36 @@ Then set the Vercel build command to
 backend and injects `VITE_CONVEX_URL` automatically (the manual VITE_*
 env vars become unnecessary).
 
-**Convex prod env** — set the server-side secrets directly on the Convex
-prod deployment (not on Vercel):
+**Convex prod env** — one command, instead of pasting 8 `convex env set`:
+
+```bash
+pnpm run setup:prod
+```
+
+The script prompts for your prod domain, reads your dev env, mirrors the
+secrets (Resend, Anthropic, optional Sentry) to prod, generates a **fresh**
+`BETTER_AUTH_SECRET` (never reused from dev — same secret across envs would
+let a dev session token unlock prod), sets `APP_ENV=production`,
+`SITE_URL`, `BETTER_AUTH_URL`, `RESEND_TEST_MODE=false`, and runs
+`convex deploy`.
+
+`APP_ENV=production` activates a boot-time guard in `convex/auth.ts` that
+refuses to start if `SITE_URL` still points at `localhost` — this is what
+prevents shipping magic-link / invitation emails with broken `localhost`
+links.
+
+If you prefer the manual route:
 
 ```bash
 pnpm exec convex env set --prod BETTER_AUTH_SECRET "$(openssl rand -hex 32)"
-pnpm exec convex env set --prod BETTER_AUTH_URL https://<your-vercel-domain>
-pnpm exec convex env set --prod SITE_URL https://<your-vercel-domain>
+pnpm exec convex env set --prod BETTER_AUTH_URL https://<your-domain>
+pnpm exec convex env set --prod SITE_URL https://<your-domain>
 pnpm exec convex env set --prod ANTHROPIC_API_KEY sk-ant-...
 pnpm exec convex env set --prod RESEND_API_KEY re_...
 pnpm exec convex env set --prod RESEND_FROM "hello@yourdomain.com"
 pnpm exec convex env set --prod RESEND_TEST_MODE false
+pnpm exec convex env set --prod APP_ENV production
+pnpm exec convex deploy
 ```
 
 **Verify a deploy**
