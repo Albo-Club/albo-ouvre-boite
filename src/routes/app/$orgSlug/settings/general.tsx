@@ -9,6 +9,7 @@ import { useConvexMutation, useConvexQuery } from '@convex-dev/react-query'
 import { api } from '../../../../../convex/_generated/api'
 import { Button } from '~/components/ui/button'
 import { Input } from '~/components/ui/input'
+import { ImageUpload } from '~/components/ImageUpload'
 import {
   Field,
   FieldDescription,
@@ -26,7 +27,6 @@ import {
 
 const schema = z.object({
   name: z.string().min(1, 'Name is required').max(80, 'Too long'),
-  logoUrl: z.union([z.literal(''), z.url('Invalid URL')]),
 })
 
 export const Route = createFileRoute('/app/$orgSlug/settings/general')({
@@ -38,6 +38,8 @@ function GeneralSettings() {
   const me = useConvexQuery(api.users.me)
   const org = useConvexQuery(api.organizations.bySlug, { slug: orgSlug })
   const update = useConvexMutation(api.organizations.updateGeneral)
+  const setOrgLogo = useConvexMutation(api.files.setOrgLogo)
+  const removeOrgLogo = useConvexMutation(api.files.removeOrgLogo)
   const [saving, setSaving] = useState(false)
 
   const role =
@@ -47,17 +49,13 @@ function GeneralSettings() {
   const canManage = role === 'admin' || role === 'owner'
 
   const form = useForm({
-    defaultValues: { name: '', logoUrl: '' },
+    defaultValues: { name: '' },
     validators: { onChange: schema, onSubmit: schema },
     onSubmit: async ({ value }) => {
       if (!org) return
       setSaving(true)
       try {
-        await update({
-          orgId: org._id,
-          name: value.name,
-          logoUrl: value.logoUrl || undefined,
-        })
+        await update({ orgId: org._id, name: value.name })
         toast.success('Organization updated')
       } catch (err) {
         const code = err instanceof ConvexError ? (err.data as string) : ''
@@ -76,7 +74,7 @@ function GeneralSettings() {
 
   useEffect(() => {
     if (org) {
-      form.reset({ name: org.name, logoUrl: org.logoUrl ?? '' })
+      form.reset({ name: org.name })
     }
   }, [org, form])
 
@@ -130,32 +128,22 @@ function GeneralSettings() {
               </FieldDescription>
             </Field>
 
-            <form.Field name="logoUrl">
-              {(field) => {
-                const invalid =
-                  field.state.meta.isTouched && !field.state.meta.isValid
-                return (
-                  <Field data-invalid={invalid || undefined}>
-                    <FieldLabel htmlFor={field.name}>Logo URL</FieldLabel>
-                    <Input
-                      id={field.name}
-                      name={field.name}
-                      type="url"
-                      placeholder="https://…"
-                      value={field.state.value}
-                      onBlur={field.handleBlur}
-                      onChange={(e) => field.handleChange(e.target.value)}
-                      disabled={!canManage}
-                      aria-invalid={invalid || undefined}
-                    />
-                    <FieldDescription>
-                      Optional. Paste a public image URL.
-                    </FieldDescription>
-                    {invalid && <FieldError errors={field.state.meta.errors} />}
-                  </Field>
-                )
-              }}
-            </form.Field>
+            <Field>
+              <FieldLabel>Logo</FieldLabel>
+              <ImageUpload
+                currentUrl={org.logoUrl ?? null}
+                onPicked={async (storageId) => {
+                  await setOrgLogo({ orgId: org._id, storageId })
+                }}
+                onRemove={async () => {
+                  await removeOrgLogo({ orgId: org._id })
+                }}
+                disabled={!canManage}
+              />
+              <FieldDescription>
+                PNG, JPEG, WEBP or GIF, up to 20 MB.
+              </FieldDescription>
+            </Field>
 
             {canManage && (
               <Button type="submit" disabled={saving}>

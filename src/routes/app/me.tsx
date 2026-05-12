@@ -10,6 +10,7 @@ import { api } from '../../../convex/_generated/api'
 import { authClient } from '~/lib/auth-client'
 import { Button } from '~/components/ui/button'
 import { Input } from '~/components/ui/input'
+import { ImageUpload } from '~/components/ImageUpload'
 import {
   Field,
   FieldDescription,
@@ -27,7 +28,6 @@ import {
 
 const profileSchema = z.object({
   name: z.string().min(1, 'Name is required').max(80, 'Too long'),
-  avatarUrl: z.union([z.literal(''), z.url('Invalid URL')]),
 })
 
 const passwordSchema = z
@@ -53,20 +53,17 @@ function ProfilePage() {
   const [changingPassword, setChangingPassword] = useState(false)
   const [signingOut, setSigningOut] = useState(false)
 
+  const setMyAvatar = useConvexMutation(api.files.setMyAvatar)
+  const removeMyAvatar = useConvexMutation(api.files.removeMyAvatar)
+
   const profileForm = useForm({
-    defaultValues: { name: '', avatarUrl: '' },
+    defaultValues: { name: '' },
     validators: { onChange: profileSchema, onSubmit: profileSchema },
     onSubmit: async ({ value }) => {
       setSavingProfile(true)
       try {
-        await updateProfile({
-          name: value.name,
-          avatarUrl: value.avatarUrl || undefined,
-        })
-        await authClient.updateUser({
-          name: value.name,
-          image: value.avatarUrl || undefined,
-        })
+        await updateProfile({ name: value.name })
+        await authClient.updateUser({ name: value.name })
         toast.success('Profile updated')
       } catch (err) {
         const code = err instanceof ConvexError ? (err.data as string) : ''
@@ -99,10 +96,7 @@ function ProfilePage() {
 
   useEffect(() => {
     if (me?.kind === 'ready') {
-      profileForm.reset({
-        name: me.user.name ?? '',
-        avatarUrl: me.user.avatarUrl ?? '',
-      })
+      profileForm.reset({ name: me.user.name ?? '' })
     }
   }, [me, profileForm])
 
@@ -162,11 +156,25 @@ function ProfilePage() {
           <CardContent>
             <FieldGroup>
               <Field>
+                <FieldLabel>Avatar</FieldLabel>
+                <ImageUpload
+                  currentUrl={me.user.avatarUrl}
+                  shape="circle"
+                  onPicked={async (storageId) => {
+                    await setMyAvatar({ storageId })
+                  }}
+                  onRemove={async () => {
+                    await removeMyAvatar({})
+                  }}
+                />
+                <FieldDescription>
+                  PNG, JPEG, WEBP or GIF, up to 20 MB.
+                </FieldDescription>
+              </Field>
+
+              <Field>
                 <FieldLabel htmlFor="email">Email</FieldLabel>
                 <Input id="email" value={me.user.email} disabled />
-                <FieldDescription>
-                  Email changes aren&apos;t supported yet — contact support.
-                </FieldDescription>
               </Field>
 
               <profileForm.Field name="name">
@@ -184,34 +192,6 @@ function ProfilePage() {
                         onChange={(e) => field.handleChange(e.target.value)}
                         aria-invalid={invalid || undefined}
                       />
-                      {invalid && (
-                        <FieldError errors={field.state.meta.errors} />
-                      )}
-                    </Field>
-                  )
-                }}
-              </profileForm.Field>
-
-              <profileForm.Field name="avatarUrl">
-                {(field) => {
-                  const invalid =
-                    field.state.meta.isTouched && !field.state.meta.isValid
-                  return (
-                    <Field data-invalid={invalid || undefined}>
-                      <FieldLabel htmlFor={field.name}>Avatar URL</FieldLabel>
-                      <Input
-                        id={field.name}
-                        name={field.name}
-                        type="url"
-                        placeholder="https://…"
-                        value={field.state.value}
-                        onBlur={field.handleBlur}
-                        onChange={(e) => field.handleChange(e.target.value)}
-                        aria-invalid={invalid || undefined}
-                      />
-                      <FieldDescription>
-                        Optional. Paste a public image URL.
-                      </FieldDescription>
                       {invalid && (
                         <FieldError errors={field.state.meta.errors} />
                       )}

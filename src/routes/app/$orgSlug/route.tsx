@@ -80,8 +80,16 @@ function OrgLayout() {
             className="flex items-center gap-2"
           >
             <Logo className="h-6 w-auto" />
+            <span className="text-muted-foreground text-sm">/</span>
+            {org?.logoUrl && (
+              <img
+                src={org.logoUrl}
+                alt=""
+                className="h-6 w-6 rounded object-cover"
+              />
+            )}
             <span className="text-muted-foreground text-sm">
-              / {member.name}
+              {member.name}
             </span>
           </Link>
           <div className="flex items-center gap-2">
@@ -95,9 +103,17 @@ function OrgLayout() {
             <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" size="sm" className="gap-2">
-                <span className="bg-muted text-muted-foreground flex h-7 w-7 items-center justify-center rounded-full text-xs font-medium">
-                  {initials}
-                </span>
+                {me.user.avatarUrl ? (
+                  <img
+                    src={me.user.avatarUrl}
+                    alt=""
+                    className="h-7 w-7 rounded-full object-cover"
+                  />
+                ) : (
+                  <span className="bg-muted text-muted-foreground flex h-7 w-7 items-center justify-center rounded-full text-xs font-medium">
+                    {initials}
+                  </span>
+                )}
                 <span className="hidden sm:inline">{displayName}</span>
               </Button>
             </DropdownMenuTrigger>

@@ -1,7 +1,9 @@
 import { ConvexError, v } from 'convex/values'
+
 import { mutation, query } from './_generated/server'
 import { authComponent } from './auth'
 import { provisionAppUser, requireAppUser, safeAppUser } from './lib/auth'
+import { resolveAvatarUrl, resolveLogoUrl } from './lib/storage'
 
 export const me = query({
   args: {},
@@ -35,7 +37,7 @@ export const me = query({
             _id: org._id,
             slug: org.slug,
             name: org.name,
-            logoUrl: org.logoUrl ?? null,
+            logoUrl: await resolveLogoUrl(ctx, org),
             role: m.role,
           }
         }),
@@ -48,7 +50,7 @@ export const me = query({
         _id: user._id,
         email: user.email,
         name: user.name ?? null,
-        avatarUrl: user.avatarUrl ?? null,
+        avatarUrl: await resolveAvatarUrl(ctx, user),
         superAdmin: user.superAdmin,
         lastOrgSlug: user.lastOrgSlug ?? null,
       },
@@ -66,25 +68,12 @@ export const provisionMe = mutation({
 })
 
 export const updateProfile = mutation({
-  args: {
-    name: v.optional(v.string()),
-    avatarUrl: v.optional(v.string()),
-  },
-  handler: async (ctx, { name, avatarUrl }) => {
+  args: { name: v.string() },
+  handler: async (ctx, { name }) => {
     const user = await requireAppUser(ctx)
-    const patch: Partial<{ name: string; avatarUrl: string | undefined }> = {}
-    if (name !== undefined) {
-      const trimmed = name.trim()
-      if (!trimmed) throw new ConvexError('invalid_name')
-      patch.name = trimmed
-    }
-    if (avatarUrl !== undefined) {
-      const trimmed = avatarUrl.trim()
-      patch.avatarUrl = trimmed ? trimmed : undefined
-    }
-    if (Object.keys(patch).length > 0) {
-      await ctx.db.patch(user._id, patch)
-    }
+    const trimmed = name.trim()
+    if (!trimmed) throw new ConvexError('invalid_name')
+    await ctx.db.patch(user._id, { name: trimmed })
     return null
   },
 })

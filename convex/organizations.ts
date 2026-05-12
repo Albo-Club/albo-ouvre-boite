@@ -9,6 +9,7 @@ import {
   requireOrgRole,
   safeAppUser,
 } from './lib/auth'
+import { resolveAvatarUrl, resolveLogoUrl } from './lib/storage'
 
 export const listMembers = query({
   args: { orgId: v.id('organizations') },
@@ -26,6 +27,7 @@ export const listMembers = query({
           userId: m.userId,
           email: u?.email ?? '',
           name: u?.name ?? null,
+          avatarUrl: u ? await resolveAvatarUrl(ctx, u) : null,
           role: m.role,
           joinedAt: m.joinedAt,
         }
@@ -85,7 +87,10 @@ export const bySlug = query({
       )
       .unique()
     if (!member) return null
-    return org
+    return {
+      ...org,
+      logoUrl: await resolveLogoUrl(ctx, org),
+    }
   },
 })
 
@@ -110,17 +115,12 @@ export const updateGeneral = mutation({
   args: {
     orgId: v.id('organizations'),
     name: v.string(),
-    logoUrl: v.optional(v.string()),
   },
-  handler: async (ctx, { orgId, name, logoUrl }) => {
+  handler: async (ctx, { orgId, name }) => {
     await requireOrgRole(ctx, orgId, 'admin')
     const trimmedName = name.trim()
     if (!trimmedName) throw new ConvexError('invalid_name')
-    const trimmedLogo = logoUrl?.trim()
-    await ctx.db.patch(orgId, {
-      name: trimmedName,
-      logoUrl: trimmedLogo ? trimmedLogo : undefined,
-    })
+    await ctx.db.patch(orgId, { name: trimmedName })
     return null
   },
 })

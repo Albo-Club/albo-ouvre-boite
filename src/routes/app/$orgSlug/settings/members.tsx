@@ -131,20 +131,33 @@ function MembersSettings() {
                   key={m._id}
                   className="flex items-center justify-between gap-3 py-3"
                 >
-                  <div className="min-w-0">
-                    <p className="truncate font-medium">
-                      {m.name ?? m.email}
-                      {isSelf && (
-                        <span className="text-muted-foreground ml-2 text-xs">
-                          (you)
-                        </span>
-                      )}
-                    </p>
-                    {m.name && (
-                      <p className="text-muted-foreground truncate text-xs">
-                        {m.email}
-                      </p>
+                  <div className="flex min-w-0 items-center gap-3">
+                    {m.avatarUrl ? (
+                      <img
+                        src={m.avatarUrl}
+                        alt=""
+                        className="h-8 w-8 rounded-full object-cover"
+                      />
+                    ) : (
+                      <span className="bg-muted text-muted-foreground flex h-8 w-8 items-center justify-center rounded-full text-xs">
+                        {(m.name ?? m.email).slice(0, 2).toUpperCase()}
+                      </span>
                     )}
+                    <div className="min-w-0">
+                      <p className="truncate font-medium">
+                        {m.name ?? m.email}
+                        {isSelf && (
+                          <span className="text-muted-foreground ml-2 text-xs">
+                            (you)
+                          </span>
+                        )}
+                      </p>
+                      {m.name && (
+                        <p className="text-muted-foreground truncate text-xs">
+                          {m.email}
+                        </p>
+                      )}
+                    </div>
                   </div>
                   <div className="flex items-center gap-2">
                     <span className="text-muted-foreground text-xs">
