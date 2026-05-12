@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import {
   createFileRoute,
   Link,
@@ -19,6 +19,7 @@ import {
   DropdownMenuTrigger,
 } from '~/components/ui/dropdown-menu'
 import { Logo } from '~/components/Logo'
+import { AiChat } from '~/components/AiChat'
 
 export const Route = createFileRoute('/app/$orgSlug')({
   component: OrgLayout,
@@ -28,7 +29,9 @@ function OrgLayout() {
   const { orgSlug } = Route.useParams()
   const navigate = useNavigate()
   const me = useConvexQuery(api.users.me)
+  const org = useConvexQuery(api.organizations.bySlug, { slug: orgSlug })
   const setLastOrg = useConvexMutation(api.organizations.setLastOrg)
+  const [chatOpen, setChatOpen] = useState(false)
 
   useEffect(() => {
     if (me?.kind !== 'ready') return
@@ -81,7 +84,15 @@ function OrgLayout() {
               / {member.name}
             </span>
           </Link>
-          <DropdownMenu>
+          <div className="flex items-center gap-2">
+            <Button
+              size="sm"
+              variant="ghost"
+              onClick={() => setChatOpen(true)}
+            >
+              AI
+            </Button>
+            <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" size="sm" className="gap-2">
                 <span className="bg-muted text-muted-foreground flex h-7 w-7 items-center justify-center rounded-full text-xs font-medium">
@@ -112,9 +123,17 @@ function OrgLayout() {
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
+          </div>
         </div>
       </header>
       <Outlet />
+      {org && (
+        <AiChat
+          orgId={org._id}
+          open={chatOpen}
+          onClose={() => setChatOpen(false)}
+        />
+      )}
     </div>
   )
 }
