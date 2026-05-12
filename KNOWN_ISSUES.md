@@ -59,6 +59,39 @@ find . \( -path ./node_modules -o -path ./.output \) -prune -o \
 `ANTHROPIC_MODEL` Convex env var to pick a different model. Anthropic
 sometimes ships dated aliases (`claude-sonnet-4-5-20251022`) for stability.
 
+## Vite dev fails with `_gensync(...) is not a function`
+
+Under Node 22 + `@babel/core@7.29.0`, the CJS-ESM interop loading of
+`gensync@1.0.0-beta.2` (transitive via `@vitejs/plugin-react`) intermittently
+yields a module shape that babel's `gensync-utils/async.js` cannot call. Pure
+dev-time failure — production builds and Convex dev are unaffected.
+
+**Workaround**: `pnpm dedupe` or `pnpm install --force`. If that fails, downgrade
+to Node 20.x for local dev. Tracking upstream babel / gensync.
+
+## Trade-offs vs PROJECT_BRIEF.md
+
+Choices that diverge from the brief, with rationale. See
+`/Users/benjaminbouquet/.claude/plans/glistening-puzzling-kay.md` for the full
+audit.
+
+- **Better Auth `organization()` plugin not loaded** — its tables are not Convex
+  first-class (no `withIndex` joins). We mirror orgs/members/invitations in our
+  own schema. Loss: `leaveOrganization`, session-level active-org, explicit
+  reject/cancel invitation states.
+- **AI front uses `useUIMessages` from `@convex-dev/agent/react`** instead of
+  `@assistant-ui/react`. No Convex adapter exists for assistant-ui; the brief's
+  pick would require ~200 lines of glue. Loss: markdown rendering, attachments,
+  tool-call UI, edit/regenerate. Migrate later if polish is needed.
+- **Anthropic model default `claude-sonnet-4-5`** (brief asked `4-6`). Override
+  via `ANTHROPIC_MODEL` env var.
+- **Rate-limit thresholds** chosen for usable defaults (e.g. invitations 20/h
+  burst 5) rather than the brief's tight 3/min example.
+- **Super-admin lacks impersonate** — out of scope for MVP, needs a careful
+  session-signing flow.
+- **Sentry only on the front-end** — Convex Dashboard logs cover errors;
+  Sentry-on-Convex would need a fetch-to-envelope helper.
+
 ## Convex dev typecheck
 
 `pnpm exec convex dev` runs its own typecheck (`--typecheck=enable`). If
