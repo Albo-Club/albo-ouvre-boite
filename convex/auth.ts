@@ -12,6 +12,7 @@ import {
   changeEmailVerificationEmail,
   deleteAccountVerificationEmail,
   magicLinkEmail,
+  verificationEmail,
 } from './emailTemplates'
 import { consumeLimit } from './rateLimiters'
 
@@ -36,7 +37,35 @@ export const createAuth = (ctx: GenericCtx<DataModel>) =>
     database: authComponent.adapter(ctx),
     emailAndPassword: {
       enabled: true,
-      requireEmailVerification: false,
+      requireEmailVerification: true,
+    },
+    emailVerification: {
+      sendOnSignUp: true,
+      autoSignInAfterVerification: true,
+      sendVerificationEmail: async (data: {
+        user: { email: string }
+        url: string
+      }) => {
+        const mutCtx = requireRunMutationCtx(ctx)
+        await consumeLimit(
+          mutCtx,
+          'magicLink',
+          data.user.email.toLowerCase().trim(),
+        )
+        const { subject, html, text } = verificationEmail({ url: data.url })
+        await resend.sendEmail(mutCtx, {
+          from: RESEND_FROM,
+          to: data.user.email,
+          subject,
+          html,
+          text,
+        })
+      },
+    },
+    account: {
+      accountLinking: {
+        enabled: true,
+      },
     },
     user: {
       changeEmail: {

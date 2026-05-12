@@ -183,6 +183,32 @@ export function deleteAccountVerificationEmail({
   return { subject, html, text }
 }
 
+export function verificationEmail({ url }: { url: string }) {
+  const subject = `Verify your email on ${APP_NAME}`
+  const heading = `Verify your email`
+  const intro = `Confirm this is your email address by clicking the button below. You'll be signed in automatically.`
+  const fallback = `If the button doesn't work, copy this URL into your browser:<br><span style="color:${MUTED}; word-break:break-all;">${url}</span>`
+  const footer = `If you didn't create an account, you can safely ignore this email.`
+  const preheader = `Verify your email on ${APP_NAME}.`
+
+  const html = layout({
+    preheader,
+    heading,
+    paragraphs: [intro, fallback],
+    cta: { label: 'Verify email', url },
+    footer,
+  })
+
+  const text = plainText([
+    `Verify your email on ${APP_NAME}.`,
+    `Open this link to verify and sign in:`,
+    url,
+    `If you didn't create an account, you can safely ignore this email.`,
+  ])
+
+  return { subject, html, text }
+}
+
 export function magicLinkEmail({ url }: { url: string }) {
   const subject = `Your ${APP_NAME} sign-in link`
   const heading = `Sign in to ${APP_NAME}`

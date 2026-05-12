@@ -33,14 +33,34 @@ export async function requireAppUser(ctx: Ctx): Promise<Doc<'users'>> {
  * Mutation-only: return the current app user, creating the row on first call
  * if Better Auth has the user but our Convex `users` table doesn't yet.
  * First user across the deployment becomes `superAdmin: true`.
+ *
+ * Dedup strategy (anti-doublon):
+ *   1. Lookup by `betterAuthId` — happy path for returning users.
+ *   2. Fallback lookup by `email` — covers the case where Better Auth linked
+ *      accounts on its side (different `betterAuthId`, same email) but our
+ *      `users` table hasn't seen the new BA id yet. We re-point the existing
+ *      row's `betterAuthId` to the current BA user instead of inserting a
+ *      duplicate. This also heals legacy duplicates as users come back in.
+ *   3. Insert only if neither match succeeds.
  */
 export async function provisionAppUser(ctx: MutCtx): Promise<Doc<'users'>> {
   const baUser = await authComponent.getAuthUser(ctx)
-  const existing = await ctx.db
+  const byBetterAuthId = await ctx.db
     .query('users')
     .withIndex('by_betterAuthId', (q) => q.eq('betterAuthId', baUser._id))
     .unique()
-  if (existing) return existing
+  if (byBetterAuthId) return byBetterAuthId
+
+  const byEmail = await ctx.db
+    .query('users')
+    .withIndex('by_email', (q) => q.eq('email', baUser.email))
+    .first()
+  if (byEmail) {
+    await ctx.db.patch(byEmail._id, { betterAuthId: baUser._id })
+    const refreshed = await ctx.db.get(byEmail._id)
+    if (!refreshed) throw new ConvexError('provision_failed')
+    return refreshed
+  }
 
   const probe = await ctx.db.query('users').take(1)
   const isFirst = probe.length === 0

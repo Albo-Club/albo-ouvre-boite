@@ -330,6 +330,7 @@ function SignUpToAccept({
   preview: Extract<Preview, { kind: 'ok' }>
 }) {
   const [loading, setLoading] = useState(false)
+  const [verificationSent, setVerificationSent] = useState(false)
 
   const form = useForm({
     defaultValues: { name: '', password: '' },
@@ -346,9 +347,27 @@ function SignUpToAccept({
         toast.error(error.message ?? 'Sign up failed')
         return
       }
-      // useConvexAuth flips → auto-accept effect fires in parent
+      setVerificationSent(true)
+      // After verification click → useConvexAuth flips → auto-accept fires
     },
   })
+
+  if (verificationSent) {
+    return (
+      <main className="flex min-h-svh items-center justify-center p-4">
+        <Card className="w-full max-w-sm">
+          <CardHeader>
+            <CardTitle>Check your inbox</CardTitle>
+            <CardDescription>
+              We sent a verification link to <strong>{preview.email}</strong>.
+              Click it to confirm your email — your invitation to{' '}
+              <strong>{preview.orgName}</strong> will be accepted automatically.
+            </CardDescription>
+          </CardHeader>
+        </Card>
+      </main>
+    )
+  }
 
   return (
     <main className="flex min-h-svh items-center justify-center p-4">
@@ -356,7 +375,8 @@ function SignUpToAccept({
         <CardHeader>
           <CardTitle>Join {preview.orgName}</CardTitle>
           <CardDescription>
-            Set a name and password for <strong>{preview.email}</strong>.
+            Set a name and password for <strong>{preview.email}</strong>. We’ll
+            email a link to verify before you join.
           </CardDescription>
         </CardHeader>
         <form
