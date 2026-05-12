@@ -1,6 +1,14 @@
 import { ConvexError, v } from 'convex/values'
+import type { GenericMutationCtx, GenericQueryCtx } from 'convex/server'
+import type { DataModel, Id } from './_generated/dataModel'
 import { mutation, query } from './_generated/server'
-import { requireAppUser, requireOrgMember, safeAppUser } from './lib/auth'
+import { roleValidator } from './schema'
+import {
+  requireAppUser,
+  requireOrgMember,
+  requireOrgRole,
+  safeAppUser,
+} from './lib/auth'
 
 export const listMembers = query({
   args: { orgId: v.id('organizations') },
@@ -94,6 +102,83 @@ export const setLastOrg = mutation({
     if (user.lastOrgSlug !== slug) {
       await ctx.db.patch(user._id, { lastOrgSlug: slug })
     }
+    return null
+  },
+})
+
+export const updateGeneral = mutation({
+  args: {
+    orgId: v.id('organizations'),
+    name: v.string(),
+    logoUrl: v.optional(v.string()),
+  },
+  handler: async (ctx, { orgId, name, logoUrl }) => {
+    await requireOrgRole(ctx, orgId, 'admin')
+    const trimmedName = name.trim()
+    if (!trimmedName) throw new ConvexError('invalid_name')
+    const trimmedLogo = logoUrl?.trim()
+    await ctx.db.patch(orgId, {
+      name: trimmedName,
+      logoUrl: trimmedLogo ? trimmedLogo : undefined,
+    })
+    return null
+  },
+})
+
+async function countOwners(
+  ctx: GenericQueryCtx<DataModel> | GenericMutationCtx<DataModel>,
+  orgId: Id<'organizations'>,
+): Promise<number> {
+  const members = await ctx.db
+    .query('organizationMembers')
+    .withIndex('by_org', (q) => q.eq('orgId', orgId))
+    .collect()
+  return members.filter((m) => m.role === 'owner').length
+}
+
+export const updateMemberRole = mutation({
+  args: {
+    orgId: v.id('organizations'),
+    memberId: v.id('organizationMembers'),
+    role: roleValidator,
+  },
+  handler: async (ctx, { orgId, memberId, role }) => {
+    const { member: acting } = await requireOrgRole(ctx, orgId, 'admin')
+    const target = await ctx.db.get(memberId)
+    if (!target || target.orgId !== orgId) throw new ConvexError('not_found')
+
+    if (target.role === 'owner' || role === 'owner') {
+      if (acting.role !== 'owner') throw new ConvexError('owner_only')
+    }
+    if (target.role === 'owner' && role !== 'owner') {
+      const owners = await countOwners(ctx, orgId)
+      if (owners <= 1) throw new ConvexError('last_owner')
+    }
+    if (target.role === role) return null
+    await ctx.db.patch(memberId, { role })
+    return null
+  },
+})
+
+export const removeMember = mutation({
+  args: {
+    orgId: v.id('organizations'),
+    memberId: v.id('organizationMembers'),
+  },
+  handler: async (ctx, { orgId, memberId }) => {
+    const { user, member: acting } = await requireOrgRole(ctx, orgId, 'admin')
+    const target = await ctx.db.get(memberId)
+    if (!target || target.orgId !== orgId) throw new ConvexError('not_found')
+    if (target.role === 'owner') {
+      if (acting.role !== 'owner') throw new ConvexError('owner_only')
+      const owners = await countOwners(ctx, orgId)
+      if (owners <= 1) throw new ConvexError('last_owner')
+    }
+    if (target.userId === user._id && acting.role === 'owner') {
+      const owners = await countOwners(ctx, orgId)
+      if (owners <= 1) throw new ConvexError('last_owner')
+    }
+    await ctx.db.delete(memberId)
     return null
   },
 })
