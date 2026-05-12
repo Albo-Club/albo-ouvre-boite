@@ -5,10 +5,14 @@ import { convex } from '@convex-dev/better-auth/plugins'
 import { requireRunMutationCtx } from '@convex-dev/better-auth/utils'
 import type { GenericCtx } from '@convex-dev/better-auth'
 import authConfig from './auth.config'
-import { components } from './_generated/api'
+import { components, internal } from './_generated/api'
 import type { DataModel } from './_generated/dataModel'
 import { RESEND_FROM, resend } from './email'
-import { magicLinkEmail } from './emailTemplates'
+import {
+  changeEmailVerificationEmail,
+  deleteAccountVerificationEmail,
+  magicLinkEmail,
+} from './emailTemplates'
 import { consumeLimit } from './rateLimiters'
 
 const siteUrl = process.env.SITE_URL!
@@ -22,6 +26,55 @@ export const createAuth = (ctx: GenericCtx<DataModel>) =>
     emailAndPassword: {
       enabled: true,
       requireEmailVerification: false,
+    },
+    user: {
+      changeEmail: {
+        enabled: true,
+        sendChangeEmailVerification: async (data: {
+          user: { email: string }
+          newEmail: string
+          url: string
+        }) => {
+          const mutCtx = requireRunMutationCtx(ctx)
+          const { subject, html, text } = changeEmailVerificationEmail({
+            url: data.url,
+            newEmail: data.newEmail,
+          })
+          await resend.sendEmail(mutCtx, {
+            from: RESEND_FROM,
+            to: data.user.email,
+            subject,
+            html,
+            text,
+          })
+        },
+      },
+      deleteUser: {
+        enabled: true,
+        sendDeleteAccountVerification: async (data: {
+          user: { email: string; name?: string | null }
+          url: string
+        }) => {
+          const mutCtx = requireRunMutationCtx(ctx)
+          const { subject, html, text } = deleteAccountVerificationEmail({
+            url: data.url,
+            name: data.user.name ?? null,
+          })
+          await resend.sendEmail(mutCtx, {
+            from: RESEND_FROM,
+            to: data.user.email,
+            subject,
+            html,
+            text,
+          })
+        },
+        beforeDelete: async (user: { id: string }) => {
+          const mutCtx = requireRunMutationCtx(ctx)
+          await mutCtx.runMutation(internal.users.cascadeDelete, {
+            betterAuthId: user.id,
+          })
+        },
+      },
     },
     plugins: [
       magicLink({

@@ -25,9 +25,21 @@ import {
   CardHeader,
   CardTitle,
 } from '~/components/ui/card'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '~/components/ui/dialog'
 
 const profileSchema = z.object({
   name: z.string().min(1, 'Name is required').max(80, 'Too long'),
+})
+
+const emailSchema = z.object({
+  newEmail: z.email('Invalid email'),
 })
 
 const passwordSchema = z
@@ -55,6 +67,10 @@ function ProfilePage() {
 
   const setMyAvatar = useConvexMutation(api.files.setMyAvatar)
   const removeMyAvatar = useConvexMutation(api.files.removeMyAvatar)
+  const [sendingMagic, setSendingMagic] = useState(false)
+  const [savingEmail, setSavingEmail] = useState(false)
+  const [confirmDelete, setConfirmDelete] = useState(false)
+  const [deleting, setDeleting] = useState(false)
 
   const profileForm = useForm({
     defaultValues: { name: '' },
@@ -71,6 +87,32 @@ function ProfilePage() {
       } finally {
         setSavingProfile(false)
       }
+    },
+  })
+
+  const emailForm = useForm({
+    defaultValues: { newEmail: '' },
+    validators: { onChange: emailSchema, onSubmit: emailSchema },
+    onSubmit: async ({ value, formApi }) => {
+      if (me?.kind !== 'ready') return
+      if (value.newEmail.toLowerCase() === me.user.email.toLowerCase()) {
+        toast.error('That is already your email')
+        return
+      }
+      setSavingEmail(true)
+      const { error } = await authClient.changeEmail({
+        newEmail: value.newEmail,
+        callbackURL: '/app',
+      })
+      setSavingEmail(false)
+      if (error) {
+        toast.error(error.message ?? 'Could not request email change')
+        return
+      }
+      toast.success(
+        `Confirmation sent to ${me.user.email}. Click the link to apply the change.`,
+      )
+      formApi.reset()
     },
   })
 
@@ -112,6 +154,36 @@ function ProfilePage() {
     setSigningOut(true)
     await authClient.signOut()
     navigate({ to: '/login' })
+  }
+
+  async function handleMagicLink() {
+    if (me?.kind !== 'ready') return
+    setSendingMagic(true)
+    const { error } = await authClient.signIn.magicLink({
+      email: me.user.email,
+      callbackURL: '/app',
+    })
+    setSendingMagic(false)
+    if (error) {
+      const msg = error.message ?? 'Could not send magic link'
+      toast.error(/rate|slow/i.test(msg) ? 'Too many requests — wait a bit' : msg)
+      return
+    }
+    toast.success(`Magic link sent to ${me.user.email}`)
+  }
+
+  async function handleDelete() {
+    setDeleting(true)
+    const { error } = await authClient.deleteUser({ callbackURL: '/login' })
+    setDeleting(false)
+    if (error) {
+      toast.error(error.message ?? 'Could not request deletion')
+      return
+    }
+    toast.success(
+      `Confirmation sent to ${me?.kind === 'ready' ? me.user.email : 'your email'}. Click the link to permanently delete.`,
+    )
+    setConfirmDelete(false)
   }
 
   const backTo = me.user.lastOrgSlug ?? null
@@ -210,6 +282,77 @@ function ProfilePage() {
 
       <Card>
         <CardHeader>
+          <CardTitle>Email</CardTitle>
+          <CardDescription>
+            We&apos;ll send a confirmation link to your current address.
+          </CardDescription>
+        </CardHeader>
+        <form
+          className="flex flex-col gap-6"
+          onSubmit={(e) => {
+            e.preventDefault()
+            e.stopPropagation()
+            void emailForm.handleSubmit()
+          }}
+        >
+          <CardContent>
+            <FieldGroup>
+              <emailForm.Field name="newEmail">
+                {(field) => {
+                  const invalid =
+                    field.state.meta.isTouched && !field.state.meta.isValid
+                  return (
+                    <Field data-invalid={invalid || undefined}>
+                      <FieldLabel htmlFor={field.name}>New email</FieldLabel>
+                      <Input
+                        id={field.name}
+                        name={field.name}
+                        type="email"
+                        autoComplete="email"
+                        value={field.state.value}
+                        onBlur={field.handleBlur}
+                        onChange={(e) => field.handleChange(e.target.value)}
+                        aria-invalid={invalid || undefined}
+                      />
+                      <FieldDescription>
+                        Your current email stays active until you click the
+                        confirmation link.
+                      </FieldDescription>
+                      {invalid && (
+                        <FieldError errors={field.state.meta.errors} />
+                      )}
+                    </Field>
+                  )
+                }}
+              </emailForm.Field>
+              <Button type="submit" disabled={savingEmail}>
+                {savingEmail ? 'Sending…' : 'Send confirmation email'}
+              </Button>
+            </FieldGroup>
+          </CardContent>
+        </form>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Magic link</CardTitle>
+          <CardDescription>
+            Get a one-tap sign-in link in your inbox.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Button
+            variant="outline"
+            onClick={handleMagicLink}
+            disabled={sendingMagic}
+          >
+            {sendingMagic ? 'Sending…' : 'Email me a magic link'}
+          </Button>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
           <CardTitle>Password</CardTitle>
           <CardDescription>
             Other sessions will be signed out after a change.
@@ -298,6 +441,54 @@ function ProfilePage() {
           </Button>
         </CardContent>
       </Card>
+
+      <Card className="border-destructive/30">
+        <CardHeader>
+          <CardTitle className="text-destructive">Delete account</CardTitle>
+          <CardDescription>
+            Permanently remove your profile and all organization memberships.
+            This cannot be undone.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Button
+            variant="destructive"
+            onClick={() => setConfirmDelete(true)}
+            disabled={deleting}
+          >
+            Delete account…
+          </Button>
+        </CardContent>
+      </Card>
+
+      <Dialog
+        open={confirmDelete}
+        onOpenChange={(open) => !open && setConfirmDelete(false)}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Delete your account?</DialogTitle>
+            <DialogDescription>
+              We&apos;ll send a confirmation link to{' '}
+              <strong>{me.user.email}</strong>. Click it to permanently delete
+              your account. If you change your mind, ignore the email and
+              nothing happens.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setConfirmDelete(false)}>
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={handleDelete}
+              disabled={deleting}
+            >
+              {deleting ? 'Sending…' : 'Send confirmation'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </main>
   )
 }

@@ -115,6 +115,74 @@ export function invitationEmail({
   return { subject, html, text }
 }
 
+export function changeEmailVerificationEmail({
+  url,
+  newEmail,
+}: {
+  url: string
+  newEmail: string
+}) {
+  const subject = `Confirm your new email on ${APP_NAME}`
+  const heading = `Confirm your new email`
+  const intro = `You asked to change your email to <strong>${newEmail}</strong>. Click below to confirm.`
+  const followup = `If you didn't request this change, ignore this email and your current address stays unchanged.`
+  const footer = `Your account email is updated only after you confirm.`
+  const preheader = `Confirm change to ${newEmail}.`
+
+  const html = layout({
+    preheader,
+    heading,
+    paragraphs: [intro, followup],
+    cta: { label: 'Confirm new email', url },
+    footer,
+  })
+
+  const text = plainText([
+    `Confirm your new email on ${APP_NAME}.`,
+    `You asked to change your email to ${newEmail}.`,
+    `Open this link to confirm:`,
+    url,
+    `If you didn't request this change, ignore this email.`,
+  ])
+
+  return { subject, html, text }
+}
+
+export function deleteAccountVerificationEmail({
+  url,
+  name,
+}: {
+  url: string
+  name?: string | null
+}) {
+  const subject = `Confirm account deletion on ${APP_NAME}`
+  const heading = `Confirm account deletion`
+  const intro = name
+    ? `${name}, you asked to delete your ${APP_NAME} account.`
+    : `You asked to delete your ${APP_NAME} account.`
+  const followup = `This will permanently remove your profile, your organization memberships, and your access. <strong>This cannot be undone.</strong>`
+  const footer = `If you didn't request this, ignore this email and nothing happens.`
+  const preheader = `Confirm account deletion.`
+
+  const html = layout({
+    preheader,
+    heading,
+    paragraphs: [intro, followup],
+    cta: { label: 'Delete my account', url },
+    footer,
+  })
+
+  const text = plainText([
+    intro,
+    `This will permanently remove your profile and access. This cannot be undone.`,
+    `Confirm by opening this link:`,
+    url,
+    `If you didn't request this, ignore this email.`,
+  ])
+
+  return { subject, html, text }
+}
+
 export function magicLinkEmail({ url }: { url: string }) {
   const subject = `Your ${APP_NAME} sign-in link`
   const heading = `Sign in to ${APP_NAME}`

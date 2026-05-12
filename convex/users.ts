@@ -1,6 +1,6 @@
 import { ConvexError, v } from 'convex/values'
 
-import { mutation, query } from './_generated/server'
+import { internalMutation, mutation, query } from './_generated/server'
 import { authComponent } from './auth'
 import { provisionAppUser, requireAppUser, safeAppUser } from './lib/auth'
 import { resolveAvatarUrl, resolveLogoUrl } from './lib/storage'
@@ -74,6 +74,42 @@ export const updateProfile = mutation({
     const trimmed = name.trim()
     if (!trimmed) throw new ConvexError('invalid_name')
     await ctx.db.patch(user._id, { name: trimmed })
+    return null
+  },
+})
+
+/**
+ * Internal — called from Better Auth's `beforeDelete` hook to cascade-delete
+ * all Convex-side data for a user being removed. Idempotent.
+ */
+export const cascadeDelete = internalMutation({
+  args: { betterAuthId: v.string() },
+  handler: async (ctx, { betterAuthId }) => {
+    const appUser = await ctx.db
+      .query('users')
+      .withIndex('by_betterAuthId', (q) =>
+        q.eq('betterAuthId', betterAuthId),
+      )
+      .unique()
+    if (!appUser) return null
+
+    const memberships = await ctx.db
+      .query('organizationMembers')
+      .withIndex('by_user', (q) => q.eq('userId', appUser._id))
+      .collect()
+    for (const m of memberships) {
+      await ctx.db.delete(m._id)
+    }
+
+    if (appUser.avatarStorageId) {
+      try {
+        await ctx.storage.delete(appUser.avatarStorageId)
+      } catch {
+        // ignore — storage may already be gone
+      }
+    }
+
+    await ctx.db.delete(appUser._id)
     return null
   },
 })
