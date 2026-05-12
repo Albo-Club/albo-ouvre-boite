@@ -63,6 +63,30 @@ For multi-step tasks, state a brief plan:
 
 Strong success criteria let you loop independently. Weak criteria ("make it work") require constant clarification.
 
+## 5. Keep the Docs and Skills Fresh
+
+**Surface non-obvious knowledge. Drift kills future you.**
+
+When you finish a non-trivial task:
+
+- If the fix or pattern would save the next person (or future-you) an hour
+  of debugging, document it. README for "how to use", KNOWN_ISSUES for
+  rough edges and traps, CLAUDE.md only for behavioral guidelines.
+- Don't add docs for the obvious — diffs already explain what changed.
+  Document the **why** and the **gotcha**, not the **what**.
+- When you notice a doc has gone stale (claims something the code no
+  longer does, references a path/flag that no longer exists, contradicts
+  an upstream lib's current API), fix it in the same commit as the code
+  change that made it stale. Don't leave stale claims to rot.
+- Skills (`.agents/skills/`) are pulled from upstream — never edit them
+  in place (`pnpm run sync:skills` will overwrite). If an upstream skill
+  is wrong or missing, raise it upstream or capture the deviation in
+  CLAUDE.md / KNOWN_ISSUES so this repo overrides it.
+- When `pnpm run sync:skills:check` reports drift, treat it as a real
+  signal: read the new SKILL.md, check whether project patterns still
+  match, update CLAUDE.md / KNOWN_ISSUES if the upstream guidance has
+  changed. Don't mute the check.
+
 ---
 
 **These guidelines are working if:** fewer unnecessary changes in diffs, fewer rewrites due to overcomplication, and clarifying questions come before implementation rather than after mistakes.
