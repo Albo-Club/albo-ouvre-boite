@@ -71,22 +71,78 @@ Strong success criteria let you loop independently. Weak criteria ("make it work
 
 # Project-specific guide
 
+## Plan de test bout-en-bout
+
+Avant de dériver le template en projet de prod, dérouler `TESTING.md`
+(niveaux 1 → 6, ~70 min). Le niveau 1 est automatisé (`pnpm typecheck`,
+`pnpm lint`, `pnpm build`, `pnpm test:smoke`, `pnpm sync:skills:check`),
+le reste est manuel — checklist de signoff pour valider auth, multi-tenant,
+invitations, items CRUD, uploads, account lifecycle, super-admin, AI chat,
+sécurité.
+
 ## Stack
 
 - **Frontend** : React 19 + TypeScript strict, TanStack Start v1 (Node server target), TanStack Router (file-based, `src/routes/`), TanStack Query, TanStack Form + Zod, Vite.
 - **Styling** : Tailwind CSS v4 (CSS-first, no `tailwind.config.js`), shadcn/ui (neutral theme, `src/components/ui/`), Inter, radius `0.5rem`, tokens in `src/styles/brand.css` (oklch).
 - **Backend** : Convex (`^1.x`) — queries, mutations, actions, HTTP routes, file storage, components.
-- **Auth** : Better Auth via `@convex-dev/better-auth` with plugin `organization()` (orgs, members, roles, invitations) + `magicLink()`.
+- **Auth** : Better Auth via `@convex-dev/better-auth` with `magicLink()` + `convex()`. Multi-tenant (orgs/members/invitations/roles) is implemented **natively in the Convex schema** (`organizations`, `organizationMembers`, `invitations` tables). The BA `organization()` plugin is deliberately **not loaded** — its tables aren't first-class Convex (no `withIndex` joins). See `KNOWN_ISSUES.md` for trade-offs.
 - **Emails** : `@convex-dev/resend` for transactional.
-- **AI** : `@convex-dev/agent` backend + `@assistant-ui/react` front + streaming HTTP route `/api/chat`. Provider abstracted via `getModel()` in `convex/agent.ts`.
+- **AI** : `@convex-dev/agent` backend (default model `claude-haiku-4-5`, override via `ANTHROPIC_MODEL`) + `@assistant-ui/react` front + streaming HTTP route `/api/chat`. Provider abstracted via `getModel()` in `convex/agent.ts`. The chat agent ships with **DB-acting tools** (`convex/agentTools.ts`) scoped to the thread's org: list/create/update/delete `items`.
 - **File storage** : Convex native (`ctx.storage.generateUploadUrl()`), 20 MB cap.
 - **Observability** : Sentry (front + Convex actions). CORS strict, security headers, HMAC verify on webhooks.
 
-## Convex skills
+## Skills (READ BEFORE CODING)
 
-The Convex official skills are installed in `.agents/skills/` (symlinked into `.claude/skills/`). When working on Convex code, consult them before writing.
+**Obligation** : avant d'écrire ou de modifier du code touchant un des
+domaines ci-dessous, lis la skill correspondante dans `.agents/skills/`
+(symlinkée dans `.claude/skills/`). Elle remplace tes connaissances
+d'entraînement, qui sont périmées sur ces libs.
 
-When in doubt about a Convex pattern, always read `convex/_generated/ai/guidelines.md` first — it overrides training data.
+Manifest : `skills-lock.json` (source, chemin upstream, hash SHA-256).
+Sync hebdo via GitHub Action (`.github/workflows/sync-skills.yml`,
+lundi 06:00 UTC) + manuel via `pnpm run sync:skills`.
+Vérifier la dérive : `pnpm run sync:skills:check`.
+
+| Skill                                     | Domaine                                | Source upstream                            | Officiel ? |
+| ----------------------------------------- | -------------------------------------- | ------------------------------------------ | ---------- |
+| `convex`                                  | Routeur entre skills Convex            | `get-convex/agent-skills`                  | ✅ officiel |
+| `convex-quickstart`                       | Bootstrap Convex                       | `get-convex/agent-skills`                  | ✅ officiel |
+| `convex-setup-auth`                       | Auth Convex + identité + RBAC          | `get-convex/agent-skills`                  | ✅ officiel |
+| `convex-create-component`                 | Construire un composant Convex         | `get-convex/agent-skills`                  | ✅ officiel |
+| `convex-migration-helper`                 | Migrations de schéma / data            | `get-convex/agent-skills`                  | ✅ officiel |
+| `convex-performance-audit`                | Audit perf reads/subscriptions/OCC     | `get-convex/agent-skills`                  | ✅ officiel |
+| `better-auth-best-practices`              | Config Better Auth générale            | `better-auth/skills`                       | ✅ officiel |
+| `better-auth-security-best-practices`     | Hardening (rate-limit, CSRF, sessions) | `better-auth/skills`                       | ✅ officiel |
+| `email-and-password-best-practices`       | Email/password BA                      | `better-auth/skills`                       | ✅ officiel |
+| `two-factor-authentication-best-practices`| 2FA / TOTP / backup codes              | `better-auth/skills`                       | ✅ officiel |
+| `organization-best-practices`             | Plugin `organization()` BA             | `better-auth/skills`                       | ✅ officiel ⚠️ |
+| `create-auth-skill`                       | Scaffolding auth BA                    | `better-auth/skills`                       | ✅ officiel |
+| `tanstack-start-best-practices`           | SSR, server functions, middleware      | `deckardger/tanstack-agent-skills`         | ⚠️ communauté |
+
+**⚠️ `organization-best-practices`** : skill officielle BA, mais le plugin
+`organization()` est **désactivé** dans ce projet (voir `KNOWN_ISSUES.md`).
+Lis-la pour comprendre les concepts ; n'applique pas le code BA tel quel —
+nos orgs/membres vivent dans le schéma Convex maison.
+
+**⚠️ TanStack Start (`deckardger/tanstack-agent-skills`)** : TanStack ne
+publie pas (encore) de skill officielle. La meilleure source communautaire est
+le repo de Deckardger. Stratégie de maintenance :
+1. Vérifier le repo upstream tous les 1–2 mois (le sync hebdo détecte la dérive).
+2. Si la qualité se dégrade ou si TanStack publie un repo officiel, changer le
+   `source` + `skillPath` dans `skills-lock.json` et relancer `pnpm run sync:skills`.
+3. À défaut, fallback sur le MCP `context7` (`mcp__…__query-docs`) pour
+   `/tanstack/start` à la demande.
+
+**shadcn/ui** : pas de skill agent à ce jour. Les conventions vivent dans
+`components.json` (alias `@/components`, neutral theme, radius 0.5rem, tokens
+oklch dans `src/styles/brand.css`). Pour générer/maj un composant, utilise le
+CLI `pnpm dlx shadcn@latest add <component>` ou le MCP shadcn si configuré.
+Ne JAMAIS modifier `src/components/ui/*` à la main pour le restyler — passer
+par les tokens CSS.
+
+**Guidelines Convex spécifiques projet** : `convex/_generated/ai/guidelines.md`
+(régénéré par `convex dev`). Lecture obligatoire avant patterns Convex non
+triviaux — il override tout, y compris les skills upstream.
 
 ## Routing conventions
 

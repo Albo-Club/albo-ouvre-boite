@@ -94,8 +94,9 @@ audit.
   `@assistant-ui/react`. No Convex adapter exists for assistant-ui; the brief's
   pick would require ~200 lines of glue. Loss: markdown rendering, attachments,
   tool-call UI, edit/regenerate. Migrate later if polish is needed.
-- **Anthropic model default `claude-sonnet-4-5`** (brief asked `4-6`). Override
-  via `ANTHROPIC_MODEL` env var.
+- **Anthropic model default `claude-haiku-4-5`** — choisi pour le ratio
+  coût/latence sur un assistant in-app. Override via `ANTHROPIC_MODEL` env var
+  (ex. `claude-sonnet-4-6` pour des tâches plus lourdes).
 - **Rate-limit thresholds** chosen for usable defaults (e.g. invitations 20/h
   burst 5) rather than the brief's tight 3/min example.
 - **Super-admin lacks impersonate** — out of scope for MVP, needs a careful

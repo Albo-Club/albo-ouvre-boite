@@ -15,7 +15,7 @@ sidebar wired in, transactional emails, rate-limiting, and CI/CD on day one.
 | Styling      | Tailwind v4 (CSS-first) · shadcn/ui · Inter · tokens in oklch |
 | Auth         | Better Auth (email/password + magic link) + `organization()` |
 | Email        | Resend (HTML + plain text templates)                         |
-| AI           | Convex Agent + Anthropic Claude (Sonnet 4.5 default)         |
+| AI           | Convex Agent + Anthropic Claude (Haiku 4.5 default, with tools) |
 | Limiter      | `@convex-dev/rate-limiter`                                   |
 | Observ.      | Sentry (front-end), Convex built-in logs                     |
 
@@ -57,7 +57,8 @@ convex/                Convex backend
   users.ts             me, provisionMe, updateProfile
   admin.ts             super-admin queries + purgeExcept (dev cleanup)
   items.ts             example multi-tenant CRUD
-  agent.ts             AI agent instance (Anthropic)
+  agent.ts             AI agent instance (Anthropic, default Haiku 4.5)
+  agentTools.ts        DB-acting tools the chat agent can call (items CRUD)
   chat.ts              threads, sendMessage, listMessages, HTTP /api/chat
   rateLimiters.ts      named limits + consumeLimit helper
   lib/auth.ts          requireAppUser, requireOrgMember, requireOrgRole, …
@@ -119,6 +120,11 @@ The `AiChat` slide-over uses the Convex Agent's React hooks
 (`useUIMessages`) so streaming deltas arrive via WebSocket — no manual SSE
 plumbing. Threads are keyed by `${orgId}:${userId}`.
 
+The chat agent ships with **DB-acting tools** (`convex/agentTools.ts`) so it
+can list / create / update / delete `items` for the user's current org —
+membership is re-checked inside every tool via the thread's scope key.
+Tool calls cap out at 5 rounds per turn (`stepCountIs(5)`).
+
 There's also an HTTP streaming endpoint at `<convex-site-url>/api/chat` for
 clients that prefer plain HTTP streaming (curl, custom clients).
 
@@ -145,5 +151,6 @@ pnpm exec convex run admin:purgeExcept '{"keepEmail":"you@yourco.com"}'
 
 ## See also
 
+- [TESTING.md](TESTING.md) — end-to-end test plan (auth, multi-tenant, AI…).
 - [KNOWN_ISSUES.md](KNOWN_ISSUES.md) — pinned versions and why.
 - [CLAUDE.md](CLAUDE.md) — guidelines for AI-assisted work in this repo.
