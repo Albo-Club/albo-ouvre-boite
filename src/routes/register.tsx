@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { createFileRoute, Link, useNavigate } from '@tanstack/react-router'
+import { createFileRoute, Link } from '@tanstack/react-router'
 import { useForm } from '@tanstack/react-form'
 import { z } from 'zod'
 import { toast } from 'sonner'
@@ -40,8 +40,8 @@ export const Route = createFileRoute('/register')({
 
 function RegisterPage() {
   const { redirect } = Route.useSearch()
-  const navigate = useNavigate()
   const [loading, setLoading] = useState(false)
+  const [sentTo, setSentTo] = useState<string | null>(null)
 
   const form = useForm({
     defaultValues: { name: '', email: '', password: '' },
@@ -54,13 +54,43 @@ function RegisterPage() {
         toast.error(error.message ?? 'Sign up failed')
         return
       }
-      toast.success('Account created')
-      if (redirect) window.location.replace(redirect)
-      else navigate({ to: '/app' })
+      setSentTo(value.email)
     },
   })
 
   const isInviteFlow = redirect?.startsWith('/accept-invite/') ?? false
+
+  if (sentTo) {
+    return (
+      <main className="flex min-h-svh items-center justify-center p-4">
+        <Card className="w-full max-w-sm">
+          <CardHeader>
+            <CardTitle>Check your inbox</CardTitle>
+            <CardDescription>
+              We sent a verification link to <strong>{sentTo}</strong>. Click it
+              to confirm your email and sign in.
+              {isInviteFlow
+                ? ' Your invitation will be ready right after.'
+                : ''}
+            </CardDescription>
+          </CardHeader>
+          <CardFooter className="flex-col gap-3">
+            <p className="text-muted-foreground text-sm">
+              Didn't get it? Check spam, or{' '}
+              <button
+                type="button"
+                className="underline"
+                onClick={() => setSentTo(null)}
+              >
+                try a different email
+              </button>
+              .
+            </p>
+          </CardFooter>
+        </Card>
+      </main>
+    )
+  }
 
   return (
     <main className="flex min-h-svh items-center justify-center p-4">
@@ -70,7 +100,7 @@ function RegisterPage() {
           <CardDescription>
             {isInviteFlow
               ? 'Create an account to accept your invitation.'
-              : 'Start with email and password.'}
+              : 'Start with email and password. We’ll email you a link to verify.'}
           </CardDescription>
         </CardHeader>
         <form

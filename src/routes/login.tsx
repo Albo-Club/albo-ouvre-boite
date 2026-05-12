@@ -44,6 +44,8 @@ function LoginPage() {
   const navigate = useNavigate()
   const [loading, setLoading] = useState(false)
   const [magicLoading, setMagicLoading] = useState(false)
+  const [unverifiedEmail, setUnverifiedEmail] = useState<string | null>(null)
+  const [resendLoading, setResendLoading] = useState(false)
 
   const form = useForm({
     defaultValues: { email: '', password: '' },
@@ -53,13 +55,37 @@ function LoginPage() {
       const { error } = await authClient.signIn.email(value)
       setLoading(false)
       if (error) {
+        if (
+          error.code === 'EMAIL_NOT_VERIFIED' ||
+          error.status === 403 ||
+          /verif/i.test(error.message ?? '')
+        ) {
+          setUnverifiedEmail(value.email)
+          return
+        }
         toast.error(error.message ?? 'Sign in failed')
         return
       }
+      setUnverifiedEmail(null)
       if (redirect) window.location.replace(redirect)
       else navigate({ to: '/app' })
     },
   })
+
+  const onResendVerification = async () => {
+    if (!unverifiedEmail) return
+    setResendLoading(true)
+    const { error } = await authClient.sendVerificationEmail({
+      email: unverifiedEmail,
+      callbackURL: redirect ?? '/app',
+    })
+    setResendLoading(false)
+    if (error) {
+      toast.error(error.message ?? 'Could not resend verification email')
+      return
+    }
+    toast.success('Verification email sent — check your inbox.')
+  }
 
   const onMagicLink = async () => {
     const email = form.getFieldValue('email')
@@ -106,6 +132,24 @@ function LoginPage() {
           }}
         >
           <CardContent>
+            {unverifiedEmail && (
+              <div className="border-border bg-muted/50 text-foreground mb-4 rounded-md border p-3 text-sm">
+                <p className="mb-2">
+                  Email <strong>{unverifiedEmail}</strong> isn't verified yet.
+                </p>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={onResendVerification}
+                  disabled={resendLoading}
+                >
+                  {resendLoading
+                    ? 'Sending…'
+                    : 'Resend verification email'}
+                </Button>
+              </div>
+            )}
             <FieldGroup>
               <form.Field name="email">
                 {(field) => {

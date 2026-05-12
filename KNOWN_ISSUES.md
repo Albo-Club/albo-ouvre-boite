@@ -3,6 +3,30 @@
 Pinned versions, workarounds, and rough edges. Update this file as upstream
 fixes land so renovate (which respects `pnpm.overrides`) can be unblocked.
 
+## Account linking & verified email (anti-doublon)
+
+`convex/auth.ts` requires `emailVerification` on email/password sign-up
+**and** enables `account.accountLinking.enabled`. The two are coupled by
+design — don't relax one without the other.
+
+**Why coupled**: with account linking enabled, BA links two accounts when
+they share an email. If email/password were untrusted (no verification),
+an attacker could register `victim@example.com` with their own password,
+then wait for the victim to magic-link and silently inherit access. The
+`requireEmailVerification: true` requirement closes that hole: a
+password account can only ever be linked once the email is verified
+through a click on the link sent to that mailbox.
+
+Defense in depth: `provisionAppUser` (`convex/lib/auth.ts`) falls back to
+a lookup by `email` if the `betterAuthId` lookup misses, and re-points
+the existing `users` row to the new `betterAuthId` instead of inserting
+a duplicate. This heals legacy doublons as users come back in.
+
+**Legacy users** : comptes prod créés avant ce fix ont `emailVerified:
+false` côté BA. Au prochain `signIn.email`, ils seront bloqués — l'écran
+`/login` affiche un bouton "Resend verification email" pour débloquer.
+Pas de migration automatique.
+
 ## pnpm.overrides
 
 ### `@tanstack/react-router: 1.168.26` + `@tanstack/router-core: 1.169.2`
