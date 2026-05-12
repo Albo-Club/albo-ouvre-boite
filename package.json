@@ -43,6 +43,7 @@
     "convex": "^1.36.1",
     "convex-helpers": "^0.1.116",
     "lucide-react": "^0.469.0",
+    "nitro": "3.0.260429-beta",
     "radix-ui": "^1.4.3",
     "react": "^19.2.5",
     "react-dom": "^19.2.5",
