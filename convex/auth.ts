@@ -17,6 +17,17 @@ import { consumeLimit } from './rateLimiters'
 
 const siteUrl = process.env.SITE_URL!
 
+if (
+  process.env.APP_ENV === 'production' &&
+  /(?:^|\/\/)(?:localhost|127\.0\.0\.1)(?::|\/|$)/.test(siteUrl)
+) {
+  throw new Error(
+    `[albo] SITE_URL is "${siteUrl}" while APP_ENV=production. ` +
+      'Emails would ship with broken links. Run: ' +
+      'pnpm exec convex env set SITE_URL "https://your-domain" --prod',
+  )
+}
+
 export const authComponent = createClient<DataModel>(components.betterAuth)
 
 export const createAuth = (ctx: GenericCtx<DataModel>) =>
