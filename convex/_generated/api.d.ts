@@ -9,7 +9,9 @@
  */
 
 import type * as admin from "../admin.js";
+import type * as agent from "../agent.js";
 import type * as auth from "../auth.js";
+import type * as chat from "../chat.js";
 import type * as email from "../email.js";
 import type * as emailTemplates from "../emailTemplates.js";
 import type * as http from "../http.js";
@@ -27,7 +29,9 @@ import type {
 
 declare const fullApi: ApiFromModules<{
   admin: typeof admin;
+  agent: typeof agent;
   auth: typeof auth;
+  chat: typeof chat;
   email: typeof email;
   emailTemplates: typeof emailTemplates;
   http: typeof http;
@@ -67,4 +71,5 @@ export declare const internal: FilterApi<
 export declare const components: {
   betterAuth: import("@convex-dev/better-auth/_generated/component.js").ComponentApi<"betterAuth">;
   resend: import("@convex-dev/resend/_generated/component.js").ComponentApi<"resend">;
+  agent: import("@convex-dev/agent/_generated/component.js").ComponentApi<"agent">;
 };
