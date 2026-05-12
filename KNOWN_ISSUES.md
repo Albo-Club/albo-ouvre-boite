@@ -79,6 +79,26 @@ pnpm exec convex env set --prod APP_ENV production
 pnpm exec convex env set --prod SITE_URL "https://your-domain"
 ```
 
+## `vercel link` wipes `CONVEX_DEPLOYMENT` from `.env.local`
+
+The first `pnpm dlx vercel@latest link` follows up with an interactive
+"Would you like to pull environment variables now?" prompt. Saying **yes**
+makes Vercel overwrite `.env.local` with **only the vars defined on
+Vercel** — and since `CONVEX_DEPLOYMENT` is per-developer (never set on
+Vercel), it gets stripped. Next `pnpm run setup:prod` / `convex env list`
+then fails with `No CONVEX_DEPLOYMENT set`.
+
+**Two fixes**:
+
+- When linking the first time, answer **no** to the env pull prompt.
+- If it already happened, re-run `pnpm exec convex dev` once — it
+  re-binds your local repo to the existing dev deployment and rewrites
+  `CONVEX_DEPLOYMENT=dev:…` into `.env.local`. **Pick the existing
+  deployment**, do not let it create a new one.
+
+Never put `CONVEX_DEPLOYMENT` on Vercel: it's a per-developer dev
+binding, not a deploy target.
+
 ## Vite / Convex dev fails after partial install state
 
 If `pnpm dev` errors with one of:
