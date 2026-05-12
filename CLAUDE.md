@@ -247,6 +247,16 @@ export const remove = mutation({
 - ❌ `ConvexReactClient` recreated each render.
 - ❌ Loading BA plugin `admin()` (breaks signup validator).
 - ❌ Inline BA triggers (TS inference cycle with `internal.users.*`).
+- ❌ Enabling a new BA auth method without checking **both** conditions:
+  (1) the method produces a verified email on first use (magic link,
+  OAuth, or email/password with `requireEmailVerification: true`), and
+  (2) `account.accountLinking.enabled: true` is set in `createAuth`.
+  Skipping either creates duplicate BA users — and therefore duplicate
+  Convex `users` rows — for the same email. See `KNOWN_ISSUES.md`
+  "Account linking & verified email".
+- ❌ Dedup users by `betterAuthId` only in any new code path. Always
+  also fall back to email via `withIndex('by_email', ...)` — pattern in
+  `convex/lib/auth.ts:provisionAppUser`.
 - ❌ Anchor `#section` for nav between major sections.
 - ❌ Unrequested dark/light toggle.
 - ❌ `tailwind.config.js` (Tailwind v4 is CSS-first).
