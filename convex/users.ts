@@ -1,6 +1,7 @@
+import { ConvexError, v } from 'convex/values'
 import { mutation, query } from './_generated/server'
 import { authComponent } from './auth'
-import { provisionAppUser, safeAppUser } from './lib/auth'
+import { provisionAppUser, requireAppUser, safeAppUser } from './lib/auth'
 
 export const me = query({
   args: {},
@@ -61,5 +62,29 @@ export const provisionMe = mutation({
   handler: async (ctx) => {
     const user = await provisionAppUser(ctx)
     return user._id
+  },
+})
+
+export const updateProfile = mutation({
+  args: {
+    name: v.optional(v.string()),
+    avatarUrl: v.optional(v.string()),
+  },
+  handler: async (ctx, { name, avatarUrl }) => {
+    const user = await requireAppUser(ctx)
+    const patch: Partial<{ name: string; avatarUrl: string | undefined }> = {}
+    if (name !== undefined) {
+      const trimmed = name.trim()
+      if (!trimmed) throw new ConvexError('invalid_name')
+      patch.name = trimmed
+    }
+    if (avatarUrl !== undefined) {
+      const trimmed = avatarUrl.trim()
+      patch.avatarUrl = trimmed ? trimmed : undefined
+    }
+    if (Object.keys(patch).length > 0) {
+      await ctx.db.patch(user._id, patch)
+    }
+    return null
   },
 })
