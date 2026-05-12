@@ -126,6 +126,33 @@ audit.
 - **Sentry only on the front-end** — Convex Dashboard logs cover errors;
   Sentry-on-Convex would need a fetch-to-envelope helper.
 
+## Color theme picker SSR flash
+
+The 4-theme picker (`ThemePicker.tsx`) reads `localStorage` in a `useEffect`
+and applies `data-theme` to `<html>` after mount. Until then, the page
+renders with the default neutral theme, which means a brief flash of color
+on first paint when the user has a non-default theme saved.
+
+`next-themes` already prevents the dark/light flash via its own pre-mount
+script. The color theme is on a separate channel (data-theme attr vs class)
+and doesn't get that treatment — acceptable for v1 since only the `--primary`
+hue changes, not background colors.
+
+**Fix later**: inject a synchronous `<script>` in `__root.tsx` that reads
+the `app-color-theme` localStorage key and sets `data-theme` before React
+hydrates. Or migrate to a cookie-based scheme so SSR can render the right
+theme directly.
+
+## react-day-picker v10 vs shadcn calendar template
+
+`pnpm dlx shadcn@latest add calendar` generates a `calendar.tsx` whose
+`classNames` map includes a `table` key, which was valid in
+`react-day-picker` v9 but removed in v10. Symptom: `tsc` errors with
+`'table' does not exist in type 'Partial<ClassNames>'`.
+
+We dropped that one line. If you re-run the shadcn CLI with overwrite,
+re-apply the deletion (or it will reintroduce the type error).
+
 ## Convex dev typecheck
 
 `pnpm exec convex dev` runs its own typecheck (`--typecheck=enable`). If

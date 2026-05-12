@@ -42,6 +42,47 @@ Tester avec un user neuf "Alice" (`alice@test.local`).
 | A8 | Magic link via `/login`                            | Email reçu, clic → session ouverte                                   |
 | A9 | Tenter `/app/acme` non authentifié (fenêtre fresh) | Redirige vers `/login` avec `?redirect=`                              |
 
+## Niveau 2 — App shell UI (10 min)
+
+Connecté en tant qu'Alice sur `/app/acme/`.
+
+| #    | Étape                                                          | Résultat attendu                                                  |
+| ---- | -------------------------------------------------------------- | ----------------------------------------------------------------- |
+| SH1  | Sidebar visible avec groupes Platform / Billing / Workspace    | OK ; items admin-only masqués si rôle "member"                     |
+| SH2  | Clic sur `SidebarTrigger` (header)                             | Sidebar collapse en `icon` ; cookie `sidebar_state` persiste       |
+| SH3  | Redimensionner < 768px                                         | Sidebar passe en `Sheet` mobile, ouverture via burger              |
+| SH4  | Naviguer Dashboard → Items → Calendar → Tasks → Billing        | Breadcrumb du header se met à jour à chaque route                  |
+| SH5  | Dashboard : 4 KPI cards + AreaChart + PieChart + recent items  | Counts cohérents avec items.list / listMembers réels               |
+| SH6  | Toggle dark mode (icône soleil/lune dans header)               | Page bascule light ↔ dark, sidebar + charts adaptés                |
+| SH7  | Theme picker (footer sidebar) → choisir Blue / Emerald / Violet| Primary + chart-1 changent ; survit au reload (localStorage)       |
+| SH8  | Org switcher (header sidebar)                                  | Liste les orgs ; clic switch route + persiste `lastOrgSlug`        |
+| SH9  | NavUser (footer sidebar) → profile / switch org / sign out     | Mêmes destinations qu'avant refonte                                |
+| SH10 | Bouton AI dans header                                          | Ouvre le modal chat existant (non-régression)                      |
+
+## Niveau 2 — Data table items (5 min)
+
+| #   | Étape                                                | Résultat attendu                                                  |
+| --- | ---------------------------------------------------- | ----------------------------------------------------------------- |
+| T1  | Filtre global (champ "Filter items…")                | Réduit les rows en temps réel (title/description/createdBy)        |
+| T2  | Tri par "Created at" (clic header → dropdown)        | Asc/Desc fonctionne, indicateur visible                            |
+| T3  | Pagination (créer >10 items)                         | Boutons next/prev/first/last + page size 10/20/30/50                |
+| T4  | Sélection multiple via checkbox                      | Compteur "X of N row(s) selected" + bouton "Delete X" si admin     |
+| T5  | Bulk delete (admin only)                             | Demande confirmation, supprime tout, toast succès                  |
+| T6  | "New item" → Dialog → submit                         | Item créé, dialog se ferme, ligne apparaît en haut (real-time)     |
+| T7  | Actions row (menu `…`) → Edit / Delete               | Edit ouvre le même Dialog en mode update ; Delete demande confirm  |
+
+## Niveau 2 — Pages démo (mock, 3 min)
+
+| #   | Étape                                                | Résultat attendu                                                  |
+| --- | ---------------------------------------------------- | ----------------------------------------------------------------- |
+| D1  | `/app/acme/billing` Overview                         | 3 cards (plan, next invoice, usage) + alert "demo data"            |
+| D2  | `/app/acme/billing` Invoices                         | Table 8 lignes avec badges Paid/Pending/Failed colorés             |
+| D3  | `/app/acme/billing` Payment methods → "Add card"     | Dialog s'ouvre (placeholder), ferme sans erreur                    |
+| D4  | `/app/acme/calendar`                                 | Calendar avec points sous les dates ayant un event                 |
+| D5  | Cliquer une date dans le calendar                    | Panneau droit liste les events du jour (mock)                      |
+| D6  | `/app/acme/tasks`                                    | 3 colonnes kanban avec 9 tasks, badges priorité                    |
+| D7  | Cliquer flèches `→` / `←` sur une task               | La carte se déplace de colonne (state local)                       |
+
 ## Niveau 2 — Multi-tenant (15 min)
 
 Toujours connecté en tant qu'Alice. Préparer un 2e navigateur pour Bob.
