@@ -51,7 +51,7 @@ Connecté en tant qu'Alice sur `/app/acme/`.
 | SH1  | Sidebar visible avec groupes Platform / Billing / Workspace    | OK ; items admin-only masqués si rôle "member"                     |
 | SH2  | Clic sur `SidebarTrigger` (header)                             | Sidebar collapse en `icon` ; cookie `sidebar_state` persiste       |
 | SH3  | Redimensionner < 768px                                         | Sidebar passe en `Sheet` mobile, ouverture via burger              |
-| SH4  | Naviguer Dashboard → Items → Calendar → Tasks → Billing        | Breadcrumb du header se met à jour à chaque route                  |
+| SH4  | Naviguer Dashboard → Items → Locations → Calendar → Tasks → Billing | Breadcrumb du header se met à jour à chaque route             |
 | SH5  | Dashboard : 4 KPI cards + AreaChart + PieChart + recent items  | Counts cohérents avec items.list / listMembers réels               |
 | SH6  | Toggle dark mode (icône soleil/lune dans header)               | Page bascule light ↔ dark, sidebar + charts adaptés                |
 | SH7  | Theme picker (footer sidebar) → choisir Blue / Emerald / Violet| Primary + chart-1 changent ; survit au reload (localStorage)       |
@@ -82,6 +82,9 @@ Connecté en tant qu'Alice sur `/app/acme/`.
 | D5  | Cliquer une date dans le calendar                    | Panneau droit liste les events du jour (mock)                      |
 | D6  | `/app/acme/tasks`                                    | 3 colonnes kanban avec 9 tasks, badges priorité                    |
 | D7  | Cliquer flèches `→` / `←` sur une task               | La carte se déplace de colonne (state local)                       |
+| D8  | `/app/acme/map` (Locations)                          | Carte Leaflet de France + 8 pins colorés ; card "Portefeuille" à droite avec compte par statut |
+| D9  | Cliquer un pin sur la carte                          | Popup s'ouvre avec titre, adresse, capacité, prix formaté, badge statut |
+| D10 | Reload `/app/acme/map` 3-4 fois                      | Pas de flash blanc ni erreur d'hydratation (le composant Leaflet est monté en client-only via `useEffect`) |
 
 ## Niveau 2 — Multi-tenant (15 min)
 

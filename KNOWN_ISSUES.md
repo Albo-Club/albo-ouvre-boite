@@ -281,6 +281,54 @@ the `app-color-theme` localStorage key and sets `data-theme` before React
 hydrates. Or migrate to a cookie-based scheme so SSR can render the right
 theme directly.
 
+## Leaflet (and any `window`-touching lib) needs client-only mount
+
+`react-leaflet` and the `leaflet/dist/leaflet.css` import both reference
+`window` at module load time. TanStack Start renders routes on the server
+by default — importing them at the top of a route file crashes SSR with
+`ReferenceError: window is not defined`.
+
+**Pattern** used in `src/routes/app/$orgSlug/map.tsx` :
+
+```tsx
+function LocationsMap() {
+  const [mods, setMods] = useState<LeafletModules | null>(null)
+
+  useEffect(() => {
+    let cancelled = false
+    Promise.all([
+      import('react-leaflet'),
+      import('leaflet'),
+      import('leaflet/dist/leaflet.css'), // side-effect, client-only
+    ]).then(([rl, L]) => {
+      if (cancelled) return
+      setMods({ MapContainer: rl.MapContainer, /* … */ divIcon: L.divIcon })
+    })
+    return () => { cancelled = true }
+  }, [])
+
+  if (!mods) return <Skeleton />
+  return <mods.MapContainer>…</mods.MapContainer>
+}
+```
+
+Two non-obvious points :
+
+1. **Custom `divIcon` markers, not the default Leaflet icon.** The default
+   `L.Icon.Default` ships PNGs whose URLs assume `/marker-icon.png` at the
+   site root — bundlers (Vite included) don't rewrite those paths, so pins
+   render as broken-image placeholders. `divIcon({ html: '<span …/>' })`
+   sidesteps the whole thing and lets us color-code by status.
+2. **The Popup uses inline HTML/`style={{…}}`, not Tailwind classes.**
+   Leaflet's `<Popup>` renders its content outside the React tree (into a
+   Leaflet-controlled DOM node), so Tailwind utility classes inside it get
+   applied but the popup container itself ignores theme switching. Inline
+   styles with explicit hex are the safe baseline. If you ever need
+   theme-aware popups, read `STATUS_COLOR` from `data-theme` instead.
+
+Same pattern applies to any future browser-only library (Chart.js,
+Mermaid, Three.js, etc.) on TanStack Start.
+
 ## react-day-picker v10 vs shadcn calendar template
 
 `pnpm dlx shadcn@latest add calendar` generates a `calendar.tsx` whose

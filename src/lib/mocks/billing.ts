@@ -31,9 +31,9 @@ export const currentPlan = {
 }
 
 export const usage = [
-  { label: 'API calls', used: 18_420, included: 50_000 },
-  { label: 'AI tokens', used: 312_000, included: 1_000_000 },
-  { label: 'Storage (GB)', used: 4.2, included: 20 },
+  { label: 'Listings actifs', used: 142, included: 200 },
+  { label: 'Visites planifiées (mois)', used: 87, included: 500 },
+  { label: 'Photos & docs (GB)', used: 4.2, included: 20 },
 ]
 
 export const invoices: Invoice[] = [

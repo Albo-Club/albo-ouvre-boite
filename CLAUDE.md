@@ -65,27 +65,48 @@ Strong success criteria let you loop independently. Weak criteria ("make it work
 
 ## 5. Keep the Docs and Skills Fresh
 
-**Surface non-obvious knowledge. Drift kills future you.**
+**Tidy-room rule** : every doc line earns its keep, every fact lives in exactly
+one file. Surface non-obvious knowledge ; drift kills future you.
 
-When you finish a non-trivial task:
+### Pre-PR doc audit (run it yourself, every PR, without being prompted)
 
-- If the fix or pattern would save the next person (or future-you) an hour
-  of debugging, document it. README for "how to use", KNOWN_ISSUES for
-  rough edges and traps, CLAUDE.md only for behavioral guidelines.
-- Don't add docs for the obvious — diffs already explain what changed.
-  Document the **why** and the **gotcha**, not the **what**.
-- When you notice a doc has gone stale (claims something the code no
-  longer does, references a path/flag that no longer exists, contradicts
-  an upstream lib's current API), fix it in the same commit as the code
-  change that made it stale. Don't leave stale claims to rot.
-- Skills (`.agents/skills/`) are pulled from upstream — never edit them
-  in place (`pnpm run sync:skills` will overwrite). If an upstream skill
-  is wrong or missing, raise it upstream or capture the deviation in
-  CLAUDE.md / KNOWN_ISSUES so this repo overrides it.
-- When `pnpm run sync:skills:check` reports drift, treat it as a real
-  signal: read the new SKILL.md, check whether project patterns still
-  match, update CLAUDE.md / KNOWN_ISSUES if the upstream guidance has
-  changed. Don't mute the check.
+Before pushing the final commit, walk through these four questions. If none
+fire, write nothing — the diff and commit message already document the *what*.
+Docs are for the *why* and the *trap*.
+
+1. **Touched a route, page, env var, or workflow listed in `TESTING.md`** ?
+   → update the matching row in the same PR.
+2. **Hit a non-obvious gotcha that'd cost the next dev > 30 min** (SSR trap,
+   pinned version, bundler quirk, API edge case) ? → add a section to
+   `KNOWN_ISSUES.md`. Include the *why* and the workaround pattern.
+3. **Found a stale claim while reading existing docs** (file path that no
+   longer exists, flag that was renamed, API that changed) ? → fix it in the
+   same commit as the change that made it stale.
+4. **Discovered a behavioral rule worth applying to every future PR** ? → add
+   it here in `CLAUDE.md`. Only for *repeatable* guidance, never as a
+   changelog of what shipped.
+
+### Where things live (don't duplicate across files)
+
+- `README.md` — how to use, quickstart, public-facing onboarding.
+- `TESTING.md` — manual + automated validation steps, organized per route /
+  feature. Update when adding or changing a verifiable surface.
+- `KNOWN_ISSUES.md` — traps, pinned versions, SSR/bundler/browser gotchas,
+  "we tried X, here's why we chose Y". One section per trap.
+- `CLAUDE.md` — repeatable behavioral rules for future agents. Never a
+  changelog of completed work.
+- `AGENTS.md` — pointer to the agent-skill workflow. Static, rarely changes.
+
+If you're about to add the same info to two of these files, you're doing it
+wrong — link, don't duplicate.
+
+### Skills
+
+`.agents/skills/` is pulled from upstream — never edit in place
+(`pnpm run sync:skills` overwrites). When upstream is wrong or missing,
+override here via `CLAUDE.md` / `KNOWN_ISSUES.md`. When
+`pnpm run sync:skills:check` reports drift, read the new SKILL.md and
+update project overrides if needed — don't mute the check.
 
 ---
 

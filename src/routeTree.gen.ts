@@ -21,6 +21,7 @@ import { Route as AcceptInviteTokenRouteImport } from './routes/accept-invite.$t
 import { Route as AppOrgSlugRouteRouteImport } from './routes/app/$orgSlug/route'
 import { Route as AppOrgSlugIndexRouteImport } from './routes/app/$orgSlug/index'
 import { Route as AppOrgSlugTasksRouteImport } from './routes/app/$orgSlug/tasks'
+import { Route as AppOrgSlugMapRouteImport } from './routes/app/$orgSlug/map'
 import { Route as AppOrgSlugItemsRouteImport } from './routes/app/$orgSlug/items'
 import { Route as AppOrgSlugCalendarRouteImport } from './routes/app/$orgSlug/calendar'
 import { Route as AppOrgSlugBillingRouteImport } from './routes/app/$orgSlug/billing'
@@ -91,6 +92,11 @@ const AppOrgSlugTasksRoute = AppOrgSlugTasksRouteImport.update({
   path: '/tasks',
   getParentRoute: () => AppOrgSlugRouteRoute,
 } as any)
+const AppOrgSlugMapRoute = AppOrgSlugMapRouteImport.update({
+  id: '/map',
+  path: '/map',
+  getParentRoute: () => AppOrgSlugRouteRoute,
+} as any)
 const AppOrgSlugItemsRoute = AppOrgSlugItemsRouteImport.update({
   id: '/items',
   path: '/items',
@@ -156,6 +162,7 @@ export interface FileRoutesByFullPath {
   '/app/$orgSlug/billing': typeof AppOrgSlugBillingRoute
   '/app/$orgSlug/calendar': typeof AppOrgSlugCalendarRoute
   '/app/$orgSlug/items': typeof AppOrgSlugItemsRoute
+  '/app/$orgSlug/map': typeof AppOrgSlugMapRoute
   '/app/$orgSlug/tasks': typeof AppOrgSlugTasksRoute
   '/app/$orgSlug/': typeof AppOrgSlugIndexRoute
   '/app/$orgSlug/settings/general': typeof AppOrgSlugSettingsGeneralRoute
@@ -176,6 +183,7 @@ export interface FileRoutesByTo {
   '/app/$orgSlug/billing': typeof AppOrgSlugBillingRoute
   '/app/$orgSlug/calendar': typeof AppOrgSlugCalendarRoute
   '/app/$orgSlug/items': typeof AppOrgSlugItemsRoute
+  '/app/$orgSlug/map': typeof AppOrgSlugMapRoute
   '/app/$orgSlug/tasks': typeof AppOrgSlugTasksRoute
   '/app/$orgSlug': typeof AppOrgSlugIndexRoute
   '/app/$orgSlug/settings/general': typeof AppOrgSlugSettingsGeneralRoute
@@ -200,6 +208,7 @@ export interface FileRoutesById {
   '/app/$orgSlug/billing': typeof AppOrgSlugBillingRoute
   '/app/$orgSlug/calendar': typeof AppOrgSlugCalendarRoute
   '/app/$orgSlug/items': typeof AppOrgSlugItemsRoute
+  '/app/$orgSlug/map': typeof AppOrgSlugMapRoute
   '/app/$orgSlug/tasks': typeof AppOrgSlugTasksRoute
   '/app/$orgSlug/': typeof AppOrgSlugIndexRoute
   '/app/$orgSlug/settings/general': typeof AppOrgSlugSettingsGeneralRoute
@@ -225,6 +234,7 @@ export interface FileRouteTypes {
     | '/app/$orgSlug/billing'
     | '/app/$orgSlug/calendar'
     | '/app/$orgSlug/items'
+    | '/app/$orgSlug/map'
     | '/app/$orgSlug/tasks'
     | '/app/$orgSlug/'
     | '/app/$orgSlug/settings/general'
@@ -245,6 +255,7 @@ export interface FileRouteTypes {
     | '/app/$orgSlug/billing'
     | '/app/$orgSlug/calendar'
     | '/app/$orgSlug/items'
+    | '/app/$orgSlug/map'
     | '/app/$orgSlug/tasks'
     | '/app/$orgSlug'
     | '/app/$orgSlug/settings/general'
@@ -268,6 +279,7 @@ export interface FileRouteTypes {
     | '/app/$orgSlug/billing'
     | '/app/$orgSlug/calendar'
     | '/app/$orgSlug/items'
+    | '/app/$orgSlug/map'
     | '/app/$orgSlug/tasks'
     | '/app/$orgSlug/'
     | '/app/$orgSlug/settings/general'
@@ -371,6 +383,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppOrgSlugTasksRouteImport
       parentRoute: typeof AppOrgSlugRouteRoute
     }
+    '/app/$orgSlug/map': {
+      id: '/app/$orgSlug/map'
+      path: '/map'
+      fullPath: '/app/$orgSlug/map'
+      preLoaderRoute: typeof AppOrgSlugMapRouteImport
+      parentRoute: typeof AppOrgSlugRouteRoute
+    }
     '/app/$orgSlug/items': {
       id: '/app/$orgSlug/items'
       path: '/items'
@@ -462,6 +481,7 @@ interface AppOrgSlugRouteRouteChildren {
   AppOrgSlugBillingRoute: typeof AppOrgSlugBillingRoute
   AppOrgSlugCalendarRoute: typeof AppOrgSlugCalendarRoute
   AppOrgSlugItemsRoute: typeof AppOrgSlugItemsRoute
+  AppOrgSlugMapRoute: typeof AppOrgSlugMapRoute
   AppOrgSlugTasksRoute: typeof AppOrgSlugTasksRoute
   AppOrgSlugIndexRoute: typeof AppOrgSlugIndexRoute
 }
@@ -471,6 +491,7 @@ const AppOrgSlugRouteRouteChildren: AppOrgSlugRouteRouteChildren = {
   AppOrgSlugBillingRoute: AppOrgSlugBillingRoute,
   AppOrgSlugCalendarRoute: AppOrgSlugCalendarRoute,
   AppOrgSlugItemsRoute: AppOrgSlugItemsRoute,
+  AppOrgSlugMapRoute: AppOrgSlugMapRoute,
   AppOrgSlugTasksRoute: AppOrgSlugTasksRoute,
   AppOrgSlugIndexRoute: AppOrgSlugIndexRoute,
 }
