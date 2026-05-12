@@ -25,6 +25,7 @@ import {
 import { requireOrgMember } from './lib/auth'
 import { chatAgent } from './agent'
 import { authComponent } from './auth'
+import { consumeLimit } from './rateLimiters'
 
 type AnyCtx =
   | GenericQueryCtx<DataModel>
@@ -132,6 +133,7 @@ export const sendMessage = mutation({
   },
   handler: async (ctx, { orgId, threadId, prompt }) => {
     const { user } = await requireOrgMember(ctx, orgId)
+    await consumeLimit(ctx, 'chatSend', user._id)
     const scope = scopeKey(orgId, user._id)
     await authorizeThread(ctx, threadId, scope)
     const { messageId } = await chatAgent.saveMessage(ctx, {

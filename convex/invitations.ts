@@ -5,6 +5,7 @@ import { invitationRoleValidator } from './schema'
 import { provisionAppUser, requireOrgRole } from './lib/auth'
 import { RESEND_FROM, resend } from './email'
 import { invitationEmail } from './emailTemplates'
+import { consumeLimit } from './rateLimiters'
 
 const TOKEN_BYTES = 32
 const EXPIRES_MS = 1000 * 60 * 60 * 24 * 7 // 7 days
@@ -24,6 +25,7 @@ export const create = mutation({
   },
   handler: async (ctx, { orgId, email, role }) => {
     const { user: inviter } = await requireOrgRole(ctx, orgId, 'admin')
+    await consumeLimit(ctx, 'invitationCreate', inviter._id)
     const org = await ctx.db.get(orgId)
     if (!org) throw new ConvexError('not_found')
 

@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState } from 'react'
 import { useUIMessages } from '@convex-dev/agent/react'
 import { useConvexMutation } from '@convex-dev/react-query'
+import { ConvexError } from 'convex/values'
+import { toast } from 'sonner'
 
 import { api } from '../../convex/_generated/api'
 import type { Id } from '../../convex/_generated/dataModel'
@@ -57,6 +59,20 @@ export function AiChat({
     setInput('')
     try {
       await sendMessage({ orgId, threadId, prompt })
+    } catch (err) {
+      const data = err instanceof ConvexError ? err.data : null
+      const code =
+        typeof data === 'string'
+          ? data
+          : data && typeof data === 'object' && 'code' in data
+            ? (data as { code: string }).code
+            : ''
+      toast.error(
+        code === 'rate_limited'
+          ? 'Slow down — too many messages'
+          : 'Could not send message',
+      )
+      setInput(prompt)
     } finally {
       setSending(false)
     }

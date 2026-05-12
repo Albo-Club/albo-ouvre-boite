@@ -33,6 +33,17 @@ const errorMessages: Record<string, string> = {
   invalid_email: 'Invalid email',
   insufficient_role: 'You need to be admin or owner to invite',
   not_a_member: 'You are not a member of this organization',
+  rate_limited: 'Too many invitations — slow down and try again later',
+}
+
+function errorCode(err: unknown): string | null {
+  if (!(err instanceof ConvexError)) return null
+  const data = err.data
+  if (typeof data === 'string') return data
+  if (data && typeof data === 'object' && 'code' in data) {
+    return (data as { code: string }).code
+  }
+  return null
 }
 
 export const Route = createFileRoute('/app/$orgSlug/settings/invitations')({
@@ -67,7 +78,7 @@ function InvitationsSettings() {
         toast.success(`Invitation sent to ${value.email}`)
         formApi.reset()
       } catch (err) {
-        const code = err instanceof ConvexError ? (err.data as string) : ''
+        const code = errorCode(err) ?? ''
         toast.error(errorMessages[code] ?? 'Could not send invitation')
       } finally {
         setSending(false)

@@ -9,6 +9,7 @@ import { components } from './_generated/api'
 import type { DataModel } from './_generated/dataModel'
 import { RESEND_FROM, resend } from './email'
 import { magicLinkEmail } from './emailTemplates'
+import { consumeLimit } from './rateLimiters'
 
 const siteUrl = process.env.SITE_URL!
 
@@ -25,8 +26,10 @@ export const createAuth = (ctx: GenericCtx<DataModel>) =>
     plugins: [
       magicLink({
         sendMagicLink: async ({ email, url }) => {
+          const mutCtx = requireRunMutationCtx(ctx)
+          await consumeLimit(mutCtx, 'magicLink', email.toLowerCase().trim())
           const { subject, html, text } = magicLinkEmail({ url })
-          await resend.sendEmail(requireRunMutationCtx(ctx), {
+          await resend.sendEmail(mutCtx, {
             from: RESEND_FROM,
             to: email,
             subject,
