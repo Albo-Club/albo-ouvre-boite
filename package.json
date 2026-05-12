@@ -8,6 +8,7 @@
     "dev:vite": "vite dev",
     "dev:convex": "convex dev",
     "build": "vite build && tsc --noEmit",
+    "build:vercel": "if [ -n \"$VERCEL\" ] && [ -n \"$CONVEX_DEPLOY_KEY\" ]; then npx convex deploy --cmd 'pnpm build'; else echo '[albo] Skipping convex deploy (not Vercel prod build or CONVEX_DEPLOY_KEY missing).'; pnpm build; fi",
     "start": "node .output/server/index.mjs",
     "typecheck": "tsc --noEmit",
     "format": "prettier --write .",

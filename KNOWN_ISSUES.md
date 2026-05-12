@@ -5,27 +5,101 @@ fixes land so renovate (which respects `pnpm.overrides`) can be unblocked.
 
 ## Account linking & verified email (anti-doublon)
 
-`convex/auth.ts` requires `emailVerification` on email/password sign-up
-**and** enables `account.accountLinking.enabled`. The two are coupled by
-design — don't relax one without the other.
+### What went wrong (the trap)
 
-**Why coupled**: with account linking enabled, BA links two accounts when
-they share an email. If email/password were untrusted (no verification),
-an attacker could register `victim@example.com` with their own password,
-then wait for the victim to magic-link and silently inherit access. The
-`requireEmailVerification: true` requirement closes that hole: a
-password account can only ever be linked once the email is verified
-through a click on the link sent to that mailbox.
+Initial config in `convex/auth.ts` had:
+- `emailAndPassword.requireEmailVerification: false` — password sign-up
+  produced an **untrusted** BA account (BA can't confirm the user owns
+  the mailbox).
+- `magicLink` plugin — produced a **trusted** account on first click.
+- **No `account.accountLinking`** — BA's default is `enabled: false`.
 
-Defense in depth: `provisionAppUser` (`convex/lib/auth.ts`) falls back to
-a lookup by `email` if the `betterAuthId` lookup misses, and re-points
-the existing `users` row to the new `betterAuthId` instead of inserting
-a duplicate. This heals legacy doublons as users come back in.
+When a single human signed up via `/register` (password) then later
+clicked a magic link with the same email, BA created **two distinct BA
+users** (different `betterAuthId`). Our `provisionAppUser` then inserted
+**two `users` rows** into Convex with the same email, because it
+dedup'd only by `betterAuthId`.
 
-**Legacy users** : comptes prod créés avant ce fix ont `emailVerified:
-false` côté BA. Au prochain `signIn.email`, ils seront bloqués — l'écran
-`/login` affiche un bouton "Resend verification email" pour débloquer.
-Pas de migration automatique.
+Result : prod had two duplicate `users` rows for one human.
+
+### The rule (anti-récidive)
+
+**Before adding or modifying any auth method in `convex/auth.ts`**, check
+all three :
+
+1. **All enabled methods must be trusted.** A method is trusted when BA
+   marks `emailVerified: true` after the first sign-in. Sources of
+   trust : magic link, OAuth (Google/GitHub/…), or email/password with
+   `requireEmailVerification: true`. **Never enable email/password with
+   verification off if any other method is enabled.**
+2. **`account.accountLinking.enabled: true` in `createAuth(...)`.**
+   Without it, two trusted methods with the same email still produce
+   two BA users. With it, BA auto-links on the second sign-in.
+3. **Convex-side dedup**: `provisionAppUser` in `convex/lib/auth.ts`
+   already falls back from `betterAuthId` lookup to email lookup, and
+   re-points the existing row's `betterAuthId` instead of inserting.
+   If you ever write a new "create app user" code path, copy that
+   pattern — don't dedup on `betterAuthId` alone.
+
+### Security coupling
+
+Conditions (1) and (2) are coupled. If you enable account linking but
+let one method stay untrusted, an attacker can register
+`victim@example.com` with their own password (no verification needed),
+wait for the victim to OAuth/magic-link with the same email, and BA
+will silently link the attacker's password account to the victim's
+session → account takeover.
+
+Verified email closes the hole : the attacker's password account stays
+unverified, so BA refuses to link it.
+
+### Legacy users
+
+Comptes prod créés avant ce fix ont `emailVerified: false` côté BA. Au
+prochain `signIn.email`, ils seront bloqués — l'écran `/login` détecte
+`EMAIL_NOT_VERIFIED` et propose "Resend verification email" pour
+débloquer. Pas de migration automatique.
+
+Pour les doublons `users` déjà créés en prod, `provisionAppUser` les
+convergera vers une seule rangée au prochain login du user, mais le
+second BA user reste en base. Cleanup manuel via dashboard Convex.
+
+## Production deploy is wired into the Vercel build
+
+`vercel.json` runs `npx convex deploy --cmd 'pnpm build'`, so every
+`main` push that lands on Vercel **also** deploys Convex functions and
+schema in lockstep. You should never run `pnpm exec convex deploy --prod`
+by hand for a normal release — the Vercel deployment is the source of
+truth.
+
+**Required Vercel env vars** (set in Project Settings → Environment
+Variables, scoped to **Production** only) :
+
+- `CONVEX_DEPLOY_KEY` — generated from the Convex dashboard
+  (Project → Settings → URL & Deploy Key → "Generate Production Deploy
+  Key"). Vercel forwards it to the build step ; the Convex CLI uses it
+  to push functions/schema to the prod deployment.
+
+The shell guard in `package.json` → `build:vercel` requires **both**
+`VERCEL=1` (auto-set by Vercel) and `CONVEX_DEPLOY_KEY` before running
+`convex deploy`. Falls back to plain `pnpm build` otherwise. Effects :
+
+- Preview deployments without a Convex preview key → frontend builds
+  but runs against the current prod Convex backend. Fine for read-only
+  UI changes ; **never ship preview deploys that depend on
+  un-deployed schema/function changes**. If you need preview-isolated
+  Convex, generate a Preview Deploy Key in the Convex dashboard and
+  add `CONVEX_DEPLOY_KEY` scoped to Preview in Vercel.
+- Local `pnpm build:vercel` → `$VERCEL` is empty, so the script
+  always skips `convex deploy` even if a dev happens to have a deploy
+  key in their shell env. Safe to run locally for build smoke-tests.
+
+**When you DO need the manual command** :
+- Local dev (`pnpm exec convex dev` — different command, runs the dev
+  deployment with hot reload).
+- Emergency hotfix where Vercel is broken : `pnpm exec convex deploy
+  --prod` works but is a footgun (frontend still pointing at old
+  code). Prefer reverting the bad commit and letting Vercel redeploy.
 
 ## pnpm.overrides
 
