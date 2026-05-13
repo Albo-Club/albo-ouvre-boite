@@ -32,10 +32,46 @@ if (
 
 export const authComponent = createClient<DataModel>(components.betterAuth)
 
+const isProd = process.env.APP_ENV === 'production'
+
 export const createAuth = (ctx: GenericCtx<DataModel>) =>
   betterAuth({
     baseURL: siteUrl,
+    trustedOrigins: [siteUrl],
     database: authComponent.adapter(ctx),
+    // Per-endpoint rate-limit. Storage `database` is backed by the Convex
+    // adapter (auto-created `rateLimit` table). The global window/max apply
+    // to anything not in customRules. Tight limits on sensitive paths.
+    rateLimit: {
+      enabled: true,
+      window: 10,
+      max: 100,
+      storage: 'database',
+      customRules: {
+        '/sign-in/email': { window: 60, max: 5 },
+        '/sign-up/email': { window: 60, max: 3 },
+        '/forgot-password': { window: 60, max: 3 },
+        '/reset-password': { window: 60, max: 5 },
+        '/sign-in/magic-link': { window: 60, max: 3 },
+        '/magic-link/verify': { window: 60, max: 5 },
+        '/email-verification/send': { window: 60, max: 3 },
+        '/verify-email': { window: 60, max: 10 },
+        '/change-email': { window: 60, max: 3 },
+        '/change-password': { window: 60, max: 5 },
+        '/delete-user': { window: 60, max: 3 },
+      },
+    },
+    // Force secure cookies in prod, sensible defaults everywhere. Without
+    // explicit attributes BA's defaults vary by adapter — pin them.
+    advanced: {
+      useSecureCookies: isProd,
+      cookiePrefix: 'albo',
+      defaultCookieAttributes: {
+        sameSite: 'lax',
+        secure: isProd,
+        httpOnly: true,
+      },
+    },
     onAPIError: {
       onError: (error: unknown) => {
         console.error('[ba-api-error]', {
@@ -102,7 +138,13 @@ export const createAuth = (ctx: GenericCtx<DataModel>) =>
     user: {
       changeEmail: {
         enabled: true,
-        sendChangeEmailVerification: async (data: {
+        // BA expects `sendChangeEmailConfirmation` — sending to the CURRENT
+        // address so the legitimate owner approves before BA dispatches the
+        // verification to the new one. The previous typo
+        // (`sendChangeEmailVerification`) silently dropped this layer, letting
+        // a hijacked session swap the email without notifying the rightful
+        // user. See update-user.mjs in better-auth.
+        sendChangeEmailConfirmation: async (data: {
           user: { email: string }
           newEmail: string
           url: string

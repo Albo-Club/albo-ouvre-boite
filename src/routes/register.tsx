@@ -5,6 +5,7 @@ import { z } from 'zod'
 import { toast } from 'sonner'
 
 import { authClient } from '~/lib/auth-client'
+import { classifyAuthError, formatAuthError } from '~/lib/auth-errors'
 import { Button } from '~/components/ui/button'
 import { Input } from '~/components/ui/input'
 import {
@@ -51,7 +52,15 @@ function RegisterPage() {
       const { error } = await authClient.signUp.email(value)
       setLoading(false)
       if (error) {
-        toast.error(error.message ?? 'Sign up failed')
+        const code = classifyAuthError(error)
+        // Anti-enumeration: surface the same "Check your inbox" screen
+        // whether the email is fresh or already taken. The legitimate owner
+        // can recover via /forgot-password; the attacker learns nothing.
+        if (code === 'EMAIL_ALREADY_REGISTERED') {
+          setSentTo(value.email)
+          return
+        }
+        toast.error(formatAuthError(code, 'signup'))
         return
       }
       setSentTo(value.email)
