@@ -41,7 +41,7 @@ function SettingsLayout() {
   ]
 
   return (
-    <main className="mx-auto max-w-4xl space-y-6 p-6">
+    <main className="flex-1 space-y-6 p-6">
       <header className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-semibold tracking-tight">Settings</h1>
@@ -58,8 +58,8 @@ function SettingsLayout() {
         </Link>
       </header>
 
-      <div className="grid gap-6 md:grid-cols-[200px_1fr]">
-        <nav className="flex flex-row gap-1 md:flex-col">
+      <div className="flex flex-col gap-6 md:flex-row">
+        <nav className="flex flex-row gap-1 md:w-48 md:shrink-0 md:flex-col">
           {tabs
             .filter((t) => !t.adminOnly || canManage)
             .map((t) => {
@@ -83,7 +83,7 @@ function SettingsLayout() {
               )
             })}
         </nav>
-        <div className="min-w-0">
+        <div className="min-w-0 flex-1">
           <Outlet />
         </div>
       </div>
