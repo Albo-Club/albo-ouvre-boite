@@ -12,6 +12,7 @@ import {
   changeEmailVerificationEmail,
   deleteAccountVerificationEmail,
   magicLinkEmail,
+  resetPasswordEmail,
   verificationEmail,
 } from './emailTemplates'
 import { consumeLimit } from './rateLimiters'
@@ -47,6 +48,28 @@ export const createAuth = (ctx: GenericCtx<DataModel>) =>
     emailAndPassword: {
       enabled: true,
       requireEmailVerification: true,
+      sendResetPassword: async (data: {
+        user: { email: string }
+        url: string
+      }) => {
+        const mutCtx = requireRunMutationCtx(ctx)
+        await consumeLimit(
+          mutCtx,
+          'passwordResetSend',
+          data.user.email.toLowerCase().trim(),
+        )
+        const { subject, html, text } = resetPasswordEmail({ url: data.url })
+        await resend.sendEmail(mutCtx, {
+          from: RESEND_FROM,
+          to: data.user.email,
+          subject,
+          html,
+          text,
+        })
+      },
+      // Invalidate every other session on reset — basic account-takeover
+      // mitigation if the previous password was leaked.
+      revokeSessionsOnPasswordReset: true,
     },
     emailVerification: {
       sendOnSignUp: true,

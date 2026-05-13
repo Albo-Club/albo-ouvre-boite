@@ -39,8 +39,13 @@ Tester avec un user neuf "Alice" (`alice@test.local`).
 | A5 | Sign in avec mauvais mot de passe                  | Erreur visible, pas de session                                      |
 | A6 | Sign in correct                                    | Re-redirige vers `/app/acme` (dernière org)                          |
 | A7 | `/app/me` → change password                        | Submit OK, sign out + re-sign in avec nouveau mdp marche             |
-| A8 | Magic link via `/login`                            | Email reçu, clic → session ouverte                                   |
+| A8 | Magic link via `/login` (email enregistré)         | Email reçu, clic → session ouverte                                   |
+| A8b| Magic link via `/login` (email **non** enregistré) | Toast privacy-respecting ; **aucune** row créée dans `users` ni BA   |
 | A9 | Tenter `/app/acme` non authentifié (fenêtre fresh) | Redirige vers `/login` avec `?redirect=`                              |
+| A10| `/forgot-password` → submit email enregistré       | Email reçu, lien `/reset-password?token=...` ouvre le form           |
+| A11| `/reset-password` → nouveau mdp ≥ 8 chars          | Toast succès, redirect `/login`, sign-in avec nouveau mdp OK         |
+| A12| Sessions ouvertes avant reset                      | Invalidées après reset (revokeSessionsOnPasswordReset)               |
+| A13| `/reset-password?token=expired` ou sans token      | Page "Invalid or expired link" + bouton renvoyer un lien             |
 
 ## Niveau 2 — App shell UI (10 min)
 

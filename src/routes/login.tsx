@@ -215,6 +215,12 @@ function LoginPage() {
             >
               {magicLoading ? 'Sending…' : 'Email me a magic link'}
             </Button>
+            <Link
+              to="/forgot-password"
+              className="text-muted-foreground text-sm underline"
+            >
+              Forgot your password?
+            </Link>
             <p className="text-muted-foreground text-sm">
               No account?{' '}
               <Link

@@ -209,6 +209,32 @@ export function verificationEmail({ url }: { url: string }) {
   return { subject, html, text }
 }
 
+export function resetPasswordEmail({ url }: { url: string }) {
+  const subject = `Reset your ${APP_NAME} password`
+  const heading = `Reset your password`
+  const intro = `We received a request to reset your ${APP_NAME} password. Click the button below to choose a new one. This link expires in 1 hour.`
+  const fallback = `If the button doesn't work, copy this URL into your browser:<br><span style="color:${MUTED}; word-break:break-all;">${url}</span>`
+  const footer = `If you didn't request a password reset, ignore this email and your password stays unchanged.`
+  const preheader = `Reset your ${APP_NAME} password.`
+
+  const html = layout({
+    preheader,
+    heading,
+    paragraphs: [intro, fallback],
+    cta: { label: 'Reset password', url },
+    footer,
+  })
+
+  const text = plainText([
+    `Reset your ${APP_NAME} password.`,
+    `Open this link to choose a new password (expires in 1 hour):`,
+    url,
+    `If you didn't request this, ignore this email.`,
+  ])
+
+  return { subject, html, text }
+}
+
 export function magicLinkEmail({ url }: { url: string }) {
   const subject = `Your ${APP_NAME} sign-in link`
   const heading = `Sign in to ${APP_NAME}`
