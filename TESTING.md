@@ -46,6 +46,16 @@ Tester avec un user neuf "Alice" (`alice@test.local`).
 | A11| `/reset-password` → nouveau mdp ≥ 8 chars          | Toast succès, redirect `/login`, sign-in avec nouveau mdp OK         |
 | A12| Sessions ouvertes avant reset                      | Invalidées après reset (revokeSessionsOnPasswordReset)               |
 | A13| `/reset-password?token=expired` ou sans token      | Page "Invalid or expired link" + bouton renvoyer un lien             |
+| A14| `/register` avec email **déjà** enregistré         | Affiche la **même** page "Check your inbox" que pour un signup neuf (anti-enumeration), aucun email envoyé |
+| A15| Sign-in 6× en 60s avec mauvais mot de passe        | À partir de la 6e tentative : 429 BA, toast "Too many attempts"      |
+| A16| Sign-up 4× en 60s avec emails différents           | À partir de la 4e tentative : 429 BA                                  |
+| A17| `/app/me` → change email vers nouvelle adresse     | Email de **demande d'approbation** arrive à l'adresse **courante** (sujet "Approve email change") ; clic → vérification envoyée à la nouvelle |
+| A18| DevTools → cookies prod                            | `albo.session_token` a `Secure; HttpOnly; SameSite=Lax`              |
+| A19| `/register` avec password 11 caractères            | Erreur Zod "At least 12 characters" ; serveur 400 si court-circuit Zod |
+| A20| `/register` avec password connu type `Password1234` | Validator onBlurAsync HIBP affiche "appeared in known data breaches"  |
+| A21| `/register`, `/reset-password`, `/me`              | Strength meter zxcvbn affiche 4 barres + label (Very weak → Excellent) |
+| A22| Clic sur l'icône œil dans n'importe quel champ password | Bascule visible/masqué, focus reste sur l'input, aria-pressed mis à jour |
+| A23| Cookie `albo.session_token` après sign-in          | Max-Age ≈ 604800 (7 jours) ; `__Secure-` prefix optionnel selon hôte |
 
 ## Niveau 2 — App shell UI (10 min)
 

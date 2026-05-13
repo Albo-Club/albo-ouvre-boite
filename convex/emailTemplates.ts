@@ -122,27 +122,30 @@ export function changeEmailVerificationEmail({
   url: string
   newEmail: string
 }) {
-  const subject = `Confirm your new email on ${APP_NAME}`
-  const heading = `Confirm your new email`
-  const intro = `You asked to change your email to <strong>${newEmail}</strong>. Click below to confirm.`
-  const followup = `If you didn't request this change, ignore this email and your current address stays unchanged.`
-  const footer = `Your account email is updated only after you confirm.`
-  const preheader = `Confirm change to ${newEmail}.`
+  // Sent to the CURRENT address. Acts as approval gate: a hijacked session
+  // can request the change, but only the legitimate owner of the current
+  // inbox can authorize it.
+  const subject = `Approve email change on ${APP_NAME}`
+  const heading = `Approve email change`
+  const intro = `Someone requested to change your ${APP_NAME} account email to <strong>${newEmail}</strong>.`
+  const followup = `If this was you, click below to approve. <strong>If not, ignore this email</strong> — your current address stays unchanged and the request is dropped.`
+  const footer = `Your account email is updated only after you approve here.`
+  const preheader = `Approve change to ${newEmail}.`
 
   const html = layout({
     preheader,
     heading,
     paragraphs: [intro, followup],
-    cta: { label: 'Confirm new email', url },
+    cta: { label: 'Approve email change', url },
     footer,
   })
 
   const text = plainText([
-    `Confirm your new email on ${APP_NAME}.`,
-    `You asked to change your email to ${newEmail}.`,
-    `Open this link to confirm:`,
+    `Approve email change on ${APP_NAME}.`,
+    `Someone requested to change your account email to ${newEmail}.`,
+    `If this was you, open this link to approve:`,
     url,
-    `If you didn't request this change, ignore this email.`,
+    `If not, ignore this email — your current address stays unchanged.`,
   ])
 
   return { subject, html, text }

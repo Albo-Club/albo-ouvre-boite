@@ -5,8 +5,10 @@ import { z } from 'zod'
 import { toast } from 'sonner'
 
 import { authClient } from '~/lib/auth-client'
+import { classifyAuthError, formatAuthError } from '~/lib/auth-errors'
 import { Button } from '~/components/ui/button'
 import { Input } from '~/components/ui/input'
+import { PasswordInput } from '~/components/auth/password-input'
 import {
   Field,
   FieldError,
@@ -55,15 +57,12 @@ function LoginPage() {
       const { error } = await authClient.signIn.email(value)
       setLoading(false)
       if (error) {
-        if (
-          error.code === 'EMAIL_NOT_VERIFIED' ||
-          error.status === 403 ||
-          /verif/i.test(error.message ?? '')
-        ) {
+        const code = classifyAuthError(error)
+        if (code === 'EMAIL_NOT_VERIFIED') {
           setUnverifiedEmail(value.email)
           return
         }
-        toast.error(error.message ?? 'Sign in failed')
+        toast.error(formatAuthError(code, 'signin'))
         return
       }
       setUnverifiedEmail(null)
@@ -81,7 +80,7 @@ function LoginPage() {
     })
     setResendLoading(false)
     if (error) {
-      toast.error(error.message ?? 'Could not resend verification email')
+      toast.error(formatAuthError(classifyAuthError(error), 'verify'))
       return
     }
     toast.success('Verification email sent — check your inbox.')
@@ -183,10 +182,9 @@ function LoginPage() {
                   return (
                     <Field data-invalid={invalid || undefined}>
                       <FieldLabel htmlFor={field.name}>Password</FieldLabel>
-                      <Input
+                      <PasswordInput
                         id={field.name}
                         name={field.name}
-                        type="password"
                         autoComplete="current-password"
                         value={field.state.value}
                         onBlur={field.handleBlur}

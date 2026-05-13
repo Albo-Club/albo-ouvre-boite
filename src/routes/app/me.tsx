@@ -8,8 +8,11 @@ import { useConvexMutation, useConvexQuery } from '@convex-dev/react-query'
 
 import { api } from '../../../convex/_generated/api'
 import { authClient } from '~/lib/auth-client'
+import { isPasswordPwned } from '~/lib/hibp'
 import { Button } from '~/components/ui/button'
 import { Input } from '~/components/ui/input'
+import { PasswordInput } from '~/components/auth/password-input'
+import { PasswordStrength } from '~/components/auth/password-strength'
 import { ImageUpload } from '~/components/ImageUpload'
 import {
   Field,
@@ -45,7 +48,7 @@ const emailSchema = z.object({
 const passwordSchema = z
   .object({
     currentPassword: z.string().min(1, 'Required'),
-    newPassword: z.string().min(8, 'At least 8 characters'),
+    newPassword: z.string().min(12, 'At least 12 characters'),
   })
   .refine((v) => v.currentPassword !== v.newPassword, {
     message: 'New password must be different',
@@ -377,10 +380,9 @@ function ProfilePage() {
                       <FieldLabel htmlFor={field.name}>
                         Current password
                       </FieldLabel>
-                      <Input
+                      <PasswordInput
                         id={field.name}
                         name={field.name}
-                        type="password"
                         autoComplete="current-password"
                         value={field.state.value}
                         onBlur={field.handleBlur}
@@ -394,22 +396,39 @@ function ProfilePage() {
                   )
                 }}
               </passwordForm.Field>
-              <passwordForm.Field name="newPassword">
+              <passwordForm.Field
+                name="newPassword"
+                validators={{
+                  onBlurAsync: async ({ value }) => {
+                    if (!value || value.length < 12) return undefined
+                    const { pwned } = await isPasswordPwned(value)
+                    return pwned
+                      ? {
+                          message:
+                            'This password has appeared in known data breaches. Pick another.',
+                        }
+                      : undefined
+                  },
+                }}
+              >
                 {(field) => {
                   const invalid =
                     field.state.meta.isTouched && !field.state.meta.isValid
                   return (
                     <Field data-invalid={invalid || undefined}>
                       <FieldLabel htmlFor={field.name}>New password</FieldLabel>
-                      <Input
+                      <PasswordInput
                         id={field.name}
                         name={field.name}
-                        type="password"
                         autoComplete="new-password"
                         value={field.state.value}
                         onBlur={field.handleBlur}
                         onChange={(e) => field.handleChange(e.target.value)}
                         aria-invalid={invalid || undefined}
+                      />
+                      <PasswordStrength
+                        value={field.state.value}
+                        userInputs={[me.user.email, me.user.name ?? '']}
                       />
                       {invalid && (
                         <FieldError errors={field.state.meta.errors} />

@@ -70,6 +70,102 @@ Pour les doublons `users` déjà créés en prod, `provisionAppUser` les
 convergera vers une seule rangée au prochain login du user, mais le
 second BA user reste en base. Cleanup manuel via dashboard Convex.
 
+## Auth hardening (Phase 0)
+
+### `sendChangeEmailConfirmation`, pas `sendChangeEmailVerification`
+
+The handler that fires on **email-change** lives under
+`user.changeEmail.sendChangeEmailConfirmation` in Better Auth (verified
+in `node_modules/better-auth/dist/api/routes/update-user.mjs:427`). An
+earlier revision used `sendChangeEmailVerification`, which **does not
+exist** — BA silently swallowed the callback and only sent the
+verification email to the *new* address. A hijacked session could
+change the email to attacker@evil.com without the legitimate owner of
+the current inbox ever being notified.
+
+Rule: if you rename or relocate the change-email handler, grep BA
+source for the exact key BA reads (`ctx.context.options.user.changeEmail.<…>`)
+and match it byte-for-byte. The TypeScript types here are permissive
+(extra keys are accepted), so a typo compiles but ships broken.
+
+### Anti-enumeration on `/register`
+
+When a signup hits `USER_ALREADY_EXISTS`, the UI renders the *exact
+same* "Check your inbox" screen as a successful new signup
+(`src/routes/register.tsx`). No verification email is actually sent in
+the duplicate case — BA aborts at 422. An attacker can no longer
+enumerate registered emails by watching the signup response.
+
+Trade-off : a legit user who signs up twice (e.g. forgot they already
+have an account) gets the success screen but no email, then bounces.
+The "try a different email" link on that screen and the
+`/forgot-password` flow are the recovery paths. Accepted cost for
+closing the enumeration leak — same pattern shipped by Linear and
+Stripe.
+
+### Cookie attributes are explicit, secure flag is APP_ENV-gated
+
+`convex/auth.ts` pins:
+
+```
+advanced: {
+  useSecureCookies: APP_ENV === 'production',
+  cookiePrefix: 'albo',
+  defaultCookieAttributes: { sameSite: 'lax', secure: APP_ENV === 'production', httpOnly: true },
+}
+```
+
+`secure: true` is required in prod but breaks local dev over plain
+`http://localhost` (the cookie is set but the browser refuses to send
+it back). The `APP_ENV === 'production'` check keeps localhost working
+in dev while forcing the flag everywhere else. If you ever spin up a
+staging deploy, set `APP_ENV=production` so the cookie hardening
+applies — same trap as the `SITE_URL` guard below.
+
+### Per-endpoint rate-limit storage
+
+BA's built-in `rateLimit` block with `storage: 'database'` is wired
+into the Convex adapter — no separate component to install. BA writes
+to an auto-created `rateLimit` table on the BA-side schema. We rely
+on it for `/sign-in/email`, `/sign-up/email`, `/forgot-password`,
+`/reset-password`, `/sign-in/magic-link`, `/email-verification/send`,
+`/change-email`, `/change-password`, `/delete-user`.
+
+`convex/rateLimiters.ts` (the `@convex-dev/rate-limiter` component) is
+*separate* — it covers application-level limits (invitations, chat,
+email-send wrappers). Do not confuse the two : BA's limiter is on the
+auth HTTP edge, ours is on Convex mutations/actions.
+
+### Password policy (Phase 1)
+
+- BA: `minPasswordLength: 12`, `maxPasswordLength: 128`.
+- Zod schemas in `/register`, `/reset-password`, `/me` mirror the
+  minimum. Both layers must agree — if you tighten the Convex side,
+  bump the Zod min in the same commit or signup passes client
+  validation and 400s on submit.
+- HIBP k-anonymity check on every new-password field (`onBlurAsync`
+  validator). `src/lib/hibp.ts` soft-fails on network errors so an
+  outage at api.pwnedpasswords.com doesn't block signups; the
+  server-side minimum still applies.
+- zxcvbn-ts strength meter is indicative, not blocking. The wordlist
+  is ~1.2 MB but lazy-loaded only when a password field mounts.
+
+### eslint must be a direct devDependency
+
+`eslint.config.mjs` does `import { defineConfig } from 'eslint/config'`,
+which requires `eslint` to be resolvable from the project root. pnpm
+10's strict isolation does not hoist transitive devDeps, so without
+`"eslint": "^10"` in `devDependencies` the lint script fails with
+`Cannot find package 'eslint'`.
+
+This was silently broken before Phase 1 (the `| tail -40` wrapper in
+the lint script swallowed the failing exit code). Adding `eslint` to
+`devDependencies` fixes the run; it also surfaces ~240 pre-existing
+lint errors (`sort-imports`, `import/order`, `@typescript-eslint/array-type`)
+across non-auth routes that pre-date Phase 0/1 and want a separate
+cleanup PR. The new Phase 1 files (`hibp.ts`, `auth-errors.ts`,
+`password-input.tsx`, `password-strength.tsx`) lint clean.
+
 ## Production deploy is wired into the Vercel build
 
 `vercel.json` runs `npx convex deploy --cmd 'pnpm build'`, so every

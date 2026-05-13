@@ -5,8 +5,10 @@ import { z } from 'zod'
 import { toast } from 'sonner'
 
 import { authClient } from '~/lib/auth-client'
+import { isPasswordPwned } from '~/lib/hibp'
 import { Button } from '~/components/ui/button'
-import { Input } from '~/components/ui/input'
+import { PasswordInput } from '~/components/auth/password-input'
+import { PasswordStrength } from '~/components/auth/password-strength'
 import {
   Field,
   FieldError,
@@ -24,7 +26,7 @@ import {
 
 const schema = z
   .object({
-    newPassword: z.string().min(8, 'At least 8 characters'),
+    newPassword: z.string().min(12, 'At least 12 characters'),
     confirmPassword: z.string().min(1, 'Confirm your password'),
   })
   .refine((v) => v.newPassword === v.confirmPassword, {
@@ -102,7 +104,8 @@ function ResetPasswordPage() {
         <CardHeader>
           <CardTitle>Choose a new password</CardTitle>
           <CardDescription>
-            Pick something you haven't used before. At least 8 characters.
+            Pick something you haven't used before. At least 12 characters, and not one
+            that has appeared in a known data breach.
           </CardDescription>
         </CardHeader>
         <form
@@ -115,23 +118,37 @@ function ResetPasswordPage() {
         >
           <CardContent>
             <FieldGroup>
-              <form.Field name="newPassword">
+              <form.Field
+                name="newPassword"
+                validators={{
+                  onBlurAsync: async ({ value }) => {
+                    if (!value || value.length < 12) return undefined
+                    const { pwned } = await isPasswordPwned(value)
+                    return pwned
+                      ? {
+                          message:
+                            'This password has appeared in known data breaches. Pick another.',
+                        }
+                      : undefined
+                  },
+                }}
+              >
                 {(field) => {
                   const invalid =
                     field.state.meta.isTouched && !field.state.meta.isValid
                   return (
                     <Field data-invalid={invalid || undefined}>
                       <FieldLabel htmlFor={field.name}>New password</FieldLabel>
-                      <Input
+                      <PasswordInput
                         id={field.name}
                         name={field.name}
-                        type="password"
                         autoComplete="new-password"
                         value={field.state.value}
                         onBlur={field.handleBlur}
                         onChange={(e) => field.handleChange(e.target.value)}
                         aria-invalid={invalid || undefined}
                       />
+                      <PasswordStrength value={field.state.value} />
                       {invalid && (
                         <FieldError errors={field.state.meta.errors} />
                       )}
@@ -148,10 +165,9 @@ function ResetPasswordPage() {
                       <FieldLabel htmlFor={field.name}>
                         Confirm password
                       </FieldLabel>
-                      <Input
+                      <PasswordInput
                         id={field.name}
                         name={field.name}
-                        type="password"
                         autoComplete="new-password"
                         value={field.state.value}
                         onBlur={field.handleBlur}
