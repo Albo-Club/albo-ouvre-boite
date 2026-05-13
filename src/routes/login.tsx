@@ -103,11 +103,12 @@ function LoginPage() {
       callbackURL: redirect ?? '/app',
     })
     setMagicLoading(false)
+    // Privacy-respecting: never reveal whether the email exists. Show the
+    // same confirmation regardless of outcome, log the error for debug.
     if (error) {
-      toast.error(error.message ?? 'Could not send magic link')
-      return
+      console.warn('[magic-link]', error.code ?? error.status, error.message)
     }
-    toast.success('Magic link sent — check your inbox.')
+    toast.success('If an account exists for that email, a link is on its way.')
   }
 
   const isInviteFlow = redirect?.startsWith('/accept-invite/') ?? false
@@ -214,6 +215,12 @@ function LoginPage() {
             >
               {magicLoading ? 'Sending…' : 'Email me a magic link'}
             </Button>
+            <Link
+              to="/forgot-password"
+              className="text-muted-foreground text-sm underline"
+            >
+              Forgot your password?
+            </Link>
             <p className="text-muted-foreground text-sm">
               No account?{' '}
               <Link

@@ -40,6 +40,12 @@ all three :
    re-points the existing row's `betterAuthId` instead of inserting.
    If you ever write a new "create app user" code path, copy that
    pattern — don't dedup on `betterAuthId` alone.
+4. **Magic link must not auto-sign-up**:
+   `magicLink({ disableSignUp: true })` is mandatory. Our only legit
+   entry point is `/register` (password + verification). Without it,
+   any random email gets a verified BA account on first link click,
+   bypassing the `/register` flow and leaving password-less accounts
+   that later 500 on `signIn.email`.
 
 ### Security coupling
 
