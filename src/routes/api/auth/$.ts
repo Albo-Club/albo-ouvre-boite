@@ -10,7 +10,19 @@ const ba = convexBetterAuthReactStart({
 export const Route = createFileRoute('/api/auth/$')({
   server: {
     handlers: {
-      ANY: ({ request }) => ba.handler(request),
+      ANY: async ({ request }) => {
+        try {
+          return await ba.handler(request)
+        } catch (err) {
+          console.error('[ts-auth-handler]', {
+            url: request.url,
+            method: request.method,
+            error: err instanceof Error ? err.message : String(err),
+            stack: err instanceof Error ? err.stack : undefined,
+          })
+          throw err
+        }
+      },
     },
   },
 })

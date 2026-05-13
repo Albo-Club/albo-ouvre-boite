@@ -35,6 +35,15 @@ export const createAuth = (ctx: GenericCtx<DataModel>) =>
   betterAuth({
     baseURL: siteUrl,
     database: authComponent.adapter(ctx),
+    onAPIError: {
+      onError: (error: unknown) => {
+        console.error('[ba-api-error]', {
+          message: error instanceof Error ? error.message : String(error),
+          name: error instanceof Error ? error.name : undefined,
+          stack: error instanceof Error ? error.stack : undefined,
+        })
+      },
+    },
     emailAndPassword: {
       enabled: true,
       requireEmailVerification: true,
