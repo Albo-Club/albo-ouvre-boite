@@ -83,7 +83,7 @@ function SettingsLayout() {
               )
             })}
         </nav>
-        <div>
+        <div className="min-w-0">
           <Outlet />
         </div>
       </div>
