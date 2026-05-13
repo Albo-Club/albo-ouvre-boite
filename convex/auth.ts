@@ -58,7 +58,7 @@ export const createAuth = (ctx: GenericCtx<DataModel>) =>
         const mutCtx = requireRunMutationCtx(ctx)
         await consumeLimit(
           mutCtx,
-          'magicLink',
+          'verificationSend',
           data.user.email.toLowerCase().trim(),
         )
         const { subject, html, text } = verificationEmail({ url: data.url })
@@ -127,9 +127,18 @@ export const createAuth = (ctx: GenericCtx<DataModel>) =>
     },
     plugins: [
       magicLink({
+        // We only let people in via /register. Without this, the plugin
+        // silently creates a BA user on first link click — which breaks
+        // the provisioning invariant and leaves password-less accounts
+        // behind that can later 500 on signIn.email. See KNOWN_ISSUES.md.
+        disableSignUp: true,
         sendMagicLink: async ({ email, url }) => {
           const mutCtx = requireRunMutationCtx(ctx)
-          await consumeLimit(mutCtx, 'magicLink', email.toLowerCase().trim())
+          await consumeLimit(
+            mutCtx,
+            'magicLinkSend',
+            email.toLowerCase().trim(),
+          )
           const { subject, html, text } = magicLinkEmail({ url })
           await resend.sendEmail(mutCtx, {
             from: RESEND_FROM,

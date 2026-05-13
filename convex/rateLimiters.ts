@@ -11,11 +11,33 @@ export const rateLimiter = new RateLimiter(components.rateLimiter, {
     period: HOUR,
     capacity: 5,
   },
-  // Magic link emails: per recipient email.
-  magicLink: { kind: 'token bucket', rate: 5, period: HOUR, capacity: 2 },
+  // Magic-link sign-in emails: per recipient email.
+  magicLinkSend: { kind: 'token bucket', rate: 5, period: HOUR, capacity: 2 },
+  // Email-verification resends: per recipient email. Separate bucket so a
+  // user re-asking for a verification link doesn't eat into magic-link quota.
+  verificationSend: {
+    kind: 'token bucket',
+    rate: 5,
+    period: HOUR,
+    capacity: 3,
+  },
+  // Password-reset emails: per recipient email.
+  passwordResetSend: {
+    kind: 'token bucket',
+    rate: 3,
+    period: HOUR,
+    capacity: 2,
+  },
   // Chat messages: per user. AI calls are expensive.
   chatSend: { kind: 'token bucket', rate: 30, period: MINUTE, capacity: 10 },
 })
+
+type LimitName =
+  | 'invitationCreate'
+  | 'magicLinkSend'
+  | 'verificationSend'
+  | 'passwordResetSend'
+  | 'chatSend'
 
 /**
  * Throws a friendly ConvexError when a limit is hit. The data payload includes
@@ -23,7 +45,7 @@ export const rateLimiter = new RateLimiter(components.rateLimiter, {
  */
 export async function consumeLimit(
   ctx: Parameters<typeof rateLimiter.limit>[0],
-  name: 'invitationCreate' | 'magicLink' | 'chatSend',
+  name: LimitName,
   key: string,
 ): Promise<void> {
   const result = await rateLimiter.limit(ctx, name, { key })
