@@ -9,10 +9,12 @@ import { classifyAuthError, formatAuthError } from '~/lib/auth-errors'
 import { isPasswordPwned } from '~/lib/hibp'
 import { Button } from '~/components/ui/button'
 import { Input } from '~/components/ui/input'
+import { Spinner } from '~/components/ui/spinner'
 import { PasswordInput } from '~/components/auth/password-input'
 import { PasswordStrength } from '~/components/auth/password-strength'
 import {
   Field,
+  FieldDescription,
   FieldError,
   FieldGroup,
   FieldLabel,
@@ -46,6 +48,7 @@ function RegisterPage() {
   const { redirect } = Route.useSearch()
   const [loading, setLoading] = useState(false)
   const [sentTo, setSentTo] = useState<string | null>(null)
+  const [resendLoading, setResendLoading] = useState(false)
 
   const form = useForm({
     defaultValues: { name: '', email: '', password: '' },
@@ -72,6 +75,26 @@ function RegisterPage() {
 
   const isInviteFlow = redirect?.startsWith('/accept-invite/') ?? false
 
+  const onResendVerification = async () => {
+    if (!sentTo) return
+    setResendLoading(true)
+    const { error } = await authClient.sendVerificationEmail({
+      email: sentTo,
+      callbackURL: redirect ?? '/app',
+    })
+    setResendLoading(false)
+    if (error) {
+      const code = classifyAuthError(error)
+      console.warn('[register-resend]', error.code ?? error.status, error.message)
+      if (code === 'NETWORK' || code === 'RATE_LIMITED') {
+        toast.error(formatAuthError(code, 'verify'))
+        return
+      }
+      // Other errors: stay anti-enum, show the same neutral confirmation.
+    }
+    toast.success('If an account exists for that email, another link is on its way.')
+  }
+
   if (sentTo) {
     return (
       <main className="flex min-h-svh items-center justify-center p-4">
@@ -87,6 +110,16 @@ function RegisterPage() {
             </CardDescription>
           </CardHeader>
           <CardFooter className="flex-col gap-3">
+            <Button
+              type="button"
+              variant="outline"
+              className="w-full"
+              onClick={onResendVerification}
+              disabled={resendLoading}
+            >
+              {resendLoading && <Spinner />}
+              Resend verification email
+            </Button>
             <p className="text-muted-foreground text-sm">
               Didn't get it? Check spam, or{' '}
               <button
@@ -202,6 +235,10 @@ function RegisterPage() {
                         onChange={(e) => field.handleChange(e.target.value)}
                         aria-invalid={invalid || undefined}
                       />
+                      <FieldDescription>
+                        Avoid passwords you&apos;ve used elsewhere. The meter
+                        below shows real-time strength.
+                      </FieldDescription>
                       <PasswordStrength
                         value={field.state.value}
                         userInputs={[
@@ -220,7 +257,8 @@ function RegisterPage() {
           </CardContent>
           <CardFooter className="flex-col gap-3">
             <Button type="submit" className="w-full" disabled={loading}>
-              {loading ? 'Creating…' : 'Sign up'}
+              {loading && <Spinner />}
+              Sign up
             </Button>
             <p className="text-muted-foreground text-sm">
               Already have an account?{' '}

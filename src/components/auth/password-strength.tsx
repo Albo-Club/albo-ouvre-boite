@@ -33,6 +33,11 @@ interface PasswordStrengthProps {
   value: string
   /** Optional list of user-known strings to penalize (email, name…). */
   userInputs?: Array<string>
+  /** Server-side minimum. The meter never displays "good"/"excellent" until
+   * this length is met — avoids the contradictory signal of a strong meter
+   * sitting next to a "too short" validator error. Defaults to 12 to match
+   * the BA `emailAndPassword.minPasswordLength` config. */
+  minLength?: number
   className?: string
 }
 
@@ -45,6 +50,7 @@ interface PasswordStrengthProps {
 export function PasswordStrength({
   value,
   userInputs,
+  minLength = 12,
   className,
 }: PasswordStrengthProps) {
   const [result, setResult] = useState<ZxcvbnResult | null>(null)
@@ -68,11 +74,19 @@ export function PasswordStrength({
     }
   }, [value, userInputs])
 
-  if (!value || !result) return null
+  if (!value) return null
 
-  const score = result.score // 0..4
-  const label = SCORE_LABEL[score]
-  const tone = SCORE_TONE[score]
+  const tooShort = value.length < minLength
+  const score = result?.score ?? 0 // 0..4
+  // Below min-length, force the affordance to "Too short" regardless of
+  // entropy — otherwise zxcvbn happily reports "Excellent" for an 11-char
+  // password that the Zod validator will then reject as "At least 12
+  // characters", and the user sees two contradictory signals.
+  const displayScore = tooShort ? 0 : score
+  const label = tooShort
+    ? `Too short — ${minLength - value.length} more character${minLength - value.length === 1 ? '' : 's'} to go`
+    : (SCORE_LABEL[score] ?? 'Checking…')
+  const tone = SCORE_TONE[displayScore]
 
   return (
     <div
@@ -86,14 +100,21 @@ export function PasswordStrength({
             key={i}
             className={cn(
               'h-1 flex-1 rounded-full transition-colors',
-              i < score + 1 ? tone : 'bg-muted',
+              i < displayScore + 1 ? tone : 'bg-muted',
             )}
           />
         ))}
       </div>
       <p className="text-muted-foreground text-xs">
-        Strength: <span className="text-foreground font-medium">{label}</span>
-        {result.feedback.warning ? ` — ${result.feedback.warning}` : ''}
+        {tooShort ? (
+          <span className="text-destructive font-medium">{label}</span>
+        ) : (
+          <>
+            Strength:{' '}
+            <span className="text-foreground font-medium">{label}</span>
+            {result?.feedback.warning ? ` — ${result.feedback.warning}` : ''}
+          </>
+        )}
       </p>
     </div>
   )

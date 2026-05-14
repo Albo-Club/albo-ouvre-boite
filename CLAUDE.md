@@ -185,6 +185,28 @@ CLI `pnpm dlx shadcn@latest add <component>` ou le MCP shadcn si configuré.
 Ne JAMAIS modifier `src/components/ui/*` à la main pour le restyler — passer
 par les tokens CSS.
 
+**Better Auth UI** (`better-auth-ui.com`, `daveyplate/better-auth-ui`,
+shadcn registry, v1.6.x, actif) : kit drop-in officieux pour Better Auth qui
+shippe `<SignIn>`, `<SignUp>`, `<ForgotPassword>`, `<ResetPassword>`,
+`<SignOut>`, `<Settings>`, `<AccountSettings>`, `<ChangeEmail>`,
+`<ChangePassword>`, `<SecuritySettings>`, `<ActiveSessions>`,
+`<LinkedAccounts>`, `<UserButton>`, `<UserAvatar>`, plus des hooks React
+(`useSession`, `useListSessions`, `useChangePassword`, …) et des templates
+email (`<EmailVerificationEmail>`, `<MagicLinkEmail>`, `<PasswordChangedEmail>`,
+`<NewDeviceEmail>`, …). Install via `pnpm dlx shadcn@latest add
+https://better-auth-ui.com/r/auth.json`. Inventaire complet :
+`better-auth-ui.com/llms.txt`.
+
+**Quand consulter** : nouveaux projets ou nouvelles surfaces auth (passkey,
+multi-session, OAuth providers, OTP, sessions actives, captcha). Ne **pas**
+migrer rétroactivement `/login`, `/register`, `/forgot-password`,
+`/reset-password` : on a déjà du custom au-dessus (anti-enum, classifier
+d'erreurs, HIBP, zxcvbn meter, FieldDescription, inline alert) que le kit
+ne couvre pas. Pour les **gaps** identifiés vs Better Auth UI (sessions
+actives, notifs post-event, linked accounts), évaluer au cas par cas si on
+adopte les composants drop-in ou si on roule à la main pour rester
+cohérent avec le reste du projet.
+
 **Guidelines Convex spécifiques projet** : `convex/_generated/ai/guidelines.md`
 (régénéré par `convex dev`). Lecture obligatoire avant patterns Convex non
 triviaux — il override tout, y compris les skills upstream.
@@ -278,6 +300,14 @@ export const remove = mutation({
 - ❌ Dedup users by `betterAuthId` only in any new code path. Always
   also fall back to email via `withIndex('by_email', ...)` — pattern in
   `convex/lib/auth.ts:provisionAppUser`.
+- ❌ Surfacing Better Auth errors via `error.message` (or worse, a regex
+  on it) in any new client code. Always classify through
+  `classifyAuthError()` + `formatAuthError(code, ctx)` from
+  `src/lib/auth-errors.ts`. Reason: BA codes are granular (USER_NOT_FOUND
+  vs INVALID_PASSWORD vs INVALID_EMAIL_OR_PASSWORD) and surfacing them raw
+  leaks enumeration. Raw `error.message` is also locale-fragile and may
+  change between BA versions. The classifier collapses safe equivalence
+  classes and centralises the user-facing copy.
 - ❌ Anchor `#section` for nav between major sections.
 - ❌ Unrequested dark/light toggle.
 - ❌ `tailwind.config.js` (Tailwind v4 is CSS-first).

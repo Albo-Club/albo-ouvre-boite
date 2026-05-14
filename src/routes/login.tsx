@@ -6,8 +6,10 @@ import { toast } from 'sonner'
 
 import { authClient } from '~/lib/auth-client'
 import { classifyAuthError, formatAuthError } from '~/lib/auth-errors'
+import { Alert, AlertDescription } from '~/components/ui/alert'
 import { Button } from '~/components/ui/button'
 import { Input } from '~/components/ui/input'
+import { Spinner } from '~/components/ui/spinner'
 import { PasswordInput } from '~/components/auth/password-input'
 import {
   Field,
@@ -48,11 +50,13 @@ function LoginPage() {
   const [magicLoading, setMagicLoading] = useState(false)
   const [unverifiedEmail, setUnverifiedEmail] = useState<string | null>(null)
   const [resendLoading, setResendLoading] = useState(false)
+  const [submitError, setSubmitError] = useState<string | null>(null)
 
   const form = useForm({
     defaultValues: { email: '', password: '' },
     validators: { onChange: schema, onSubmit: schema },
     onSubmit: async ({ value }) => {
+      setSubmitError(null)
       setLoading(true)
       const { error } = await authClient.signIn.email(value)
       setLoading(false)
@@ -62,7 +66,7 @@ function LoginPage() {
           setUnverifiedEmail(value.email)
           return
         }
-        toast.error(formatAuthError(code, 'signin'))
+        setSubmitError(formatAuthError(code, 'signin'))
         return
       }
       setUnverifiedEmail(null)
@@ -96,16 +100,22 @@ function LoginPage() {
       }))
       return
     }
+    setSubmitError(null)
     setMagicLoading(true)
     const { error } = await authClient.signIn.magicLink({
       email,
       callbackURL: redirect ?? '/app',
     })
     setMagicLoading(false)
-    // Privacy-respecting: never reveal whether the email exists. Show the
-    // same confirmation regardless of outcome, log the error for debug.
     if (error) {
+      const code = classifyAuthError(error)
       console.warn('[magic-link]', error.code ?? error.status, error.message)
+      // NETWORK / RATE_LIMITED: surface so the user knows the link wasn't sent.
+      // Other codes stay anti-enum and fall through to the neutral success toast.
+      if (code === 'NETWORK' || code === 'RATE_LIMITED') {
+        setSubmitError(formatAuthError(code, 'signin'))
+        return
+      }
     }
     toast.success('If an account exists for that email, a link is on its way.')
   }
@@ -132,6 +142,11 @@ function LoginPage() {
           }}
         >
           <CardContent>
+            {submitError && !unverifiedEmail && (
+              <Alert variant="destructive" className="mb-4">
+                <AlertDescription>{submitError}</AlertDescription>
+              </Alert>
+            )}
             {unverifiedEmail && (
               <div className="border-border bg-muted/50 text-foreground mb-4 rounded-md border p-3 text-sm">
                 <p className="mb-2">
@@ -144,9 +159,8 @@ function LoginPage() {
                   onClick={onResendVerification}
                   disabled={resendLoading}
                 >
-                  {resendLoading
-                    ? 'Sending…'
-                    : 'Resend verification email'}
+                  {resendLoading && <Spinner />}
+                  Resend verification email
                 </Button>
               </div>
             )}
@@ -202,7 +216,8 @@ function LoginPage() {
           </CardContent>
           <CardFooter className="flex-col gap-3">
             <Button type="submit" className="w-full" disabled={loading}>
-              {loading ? 'Signing in…' : 'Sign in'}
+              {loading && <Spinner />}
+              Sign in
             </Button>
             <Button
               type="button"
@@ -211,7 +226,8 @@ function LoginPage() {
               onClick={onMagicLink}
               disabled={magicLoading}
             >
-              {magicLoading ? 'Sending…' : 'Email me a magic link'}
+              {magicLoading && <Spinner />}
+              Email me a magic link
             </Button>
             <Link
               to="/forgot-password"

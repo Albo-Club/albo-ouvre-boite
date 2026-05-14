@@ -447,3 +447,30 @@ re-apply the deletion (or it will reintroduce the type error).
 that fails the deploy is rejected. Use `pnpm typecheck` separately to keep
 the local feedback loop tight; the Convex check catches the same errors at
 deploy time anyway.
+
+## Post-event notification coverage
+
+`notifications.notifyPasswordChanged` fires from the client right after
+`authClient.changePassword()` succeeds on `/app/me`. **It does NOT fire on
+the `/forgot-password` → `/reset-password` flow** because that path runs
+server-side inside Better Auth and we don't have a clean hook (BA exposes
+`sendResetPassword` for sending the *link*, not a post-reset callback). The
+existing `revokeSessionsOnPasswordReset: true` covers the takeover-mitigation
+side (all sessions revoked, user must re-auth) so a hijacker is locked out;
+the missing piece is the *informational* email to the rightful owner.
+
+Two paths if/when this matters:
+1. Add `databaseHooks.account.update.after(account)` in `convex/auth.ts` and
+   gate on `providerId === 'credential'`. Risk: BA's `databaseHooks` type
+   surface is heavy and may trigger the TS inference cycle that CLAUDE.md
+   anti-pattern flags. Try in isolation.
+2. Add a thin wrapper around `authClient.resetPassword()` that, on success,
+   POSTs to a public Convex mutation. Symmetric to the `/me` pattern but
+   needs the user's email — derivable from the JWT BA sets on the response,
+   or by passing it through the reset-password page state.
+
+**NewDeviceEmail** is not implemented for the same scoping reason: detecting
+"new device" requires storing UA fingerprints in our schema (BA's component
+tables aren't queryable from `ctx.db` directly). Tracked as Phase 3 work
+behind a dedicated PR — needs a `deviceFingerprints` table + a session-create
+hook + an action to send the email.

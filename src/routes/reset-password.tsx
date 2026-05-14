@@ -1,16 +1,20 @@
 import { useState } from 'react'
 import { createFileRoute, Link, useNavigate } from '@tanstack/react-router'
 import { useForm } from '@tanstack/react-form'
+import { Check } from 'lucide-react'
 import { z } from 'zod'
 import { toast } from 'sonner'
 
 import { authClient } from '~/lib/auth-client'
+import { classifyAuthError, formatAuthError } from '~/lib/auth-errors'
 import { isPasswordPwned } from '~/lib/hibp'
 import { Button } from '~/components/ui/button'
+import { Spinner } from '~/components/ui/spinner'
 import { PasswordInput } from '~/components/auth/password-input'
 import { PasswordStrength } from '~/components/auth/password-strength'
 import {
   Field,
+  FieldDescription,
   FieldError,
   FieldGroup,
   FieldLabel,
@@ -65,9 +69,7 @@ function ResetPasswordPage() {
       })
       setLoading(false)
       if (resetError) {
-        toast.error(
-          resetError.message ?? 'Could not reset password. The link may have expired.',
-        )
+        toast.error(formatAuthError(classifyAuthError(resetError), 'reset'))
         return
       }
       toast.success('Password updated. Sign in with your new password.')
@@ -148,6 +150,10 @@ function ResetPasswordPage() {
                         onChange={(e) => field.handleChange(e.target.value)}
                         aria-invalid={invalid || undefined}
                       />
+                      <FieldDescription>
+                        Avoid passwords you&apos;ve used elsewhere. The meter
+                        below shows real-time strength.
+                      </FieldDescription>
                       <PasswordStrength value={field.state.value} />
                       {invalid && (
                         <FieldError errors={field.state.meta.errors} />
@@ -157,35 +163,65 @@ function ResetPasswordPage() {
                 }}
               </form.Field>
               <form.Field name="confirmPassword">
-                {(field) => {
-                  const invalid =
-                    field.state.meta.isTouched && !field.state.meta.isValid
-                  return (
-                    <Field data-invalid={invalid || undefined}>
-                      <FieldLabel htmlFor={field.name}>
-                        Confirm password
-                      </FieldLabel>
-                      <PasswordInput
-                        id={field.name}
-                        name={field.name}
-                        autoComplete="new-password"
-                        value={field.state.value}
-                        onBlur={field.handleBlur}
-                        onChange={(e) => field.handleChange(e.target.value)}
-                        aria-invalid={invalid || undefined}
-                      />
-                      {invalid && (
-                        <FieldError errors={field.state.meta.errors} />
-                      )}
-                    </Field>
-                  )
-                }}
+                {(field) => (
+                  <form.Subscribe
+                    selector={(s) => ({
+                      newPw: s.values.newPassword,
+                      confirmPw: s.values.confirmPassword,
+                    })}
+                  >
+                    {({ newPw, confirmPw }) => {
+                      // Cross-field match feedback. Stays silent while the
+                      // user is still typing (confirm shorter than new); kicks
+                      // in once they've typed enough to potentially match.
+                      const match =
+                        newPw.length > 0 &&
+                        confirmPw.length > 0 &&
+                        newPw === confirmPw
+                      const readyToCompare =
+                        newPw.length > 0 && confirmPw.length >= newPw.length
+                      const mismatch =
+                        readyToCompare && confirmPw.length > 0 && !match
+                      return (
+                        <Field data-invalid={mismatch || undefined}>
+                          <FieldLabel htmlFor={field.name}>
+                            Confirm password
+                          </FieldLabel>
+                          <PasswordInput
+                            id={field.name}
+                            name={field.name}
+                            autoComplete="new-password"
+                            value={field.state.value}
+                            onBlur={field.handleBlur}
+                            onChange={(e) =>
+                              field.handleChange(e.target.value)
+                            }
+                            aria-invalid={mismatch || undefined}
+                          />
+                          {match && (
+                            <p className="flex items-center gap-1.5 text-xs font-medium text-emerald-700 dark:text-emerald-400">
+                              <Check className="size-3.5" aria-hidden="true" />
+                              Passwords match
+                            </p>
+                          )}
+                          {mismatch && (
+                            <p className="text-destructive text-xs">
+                              Passwords do not match — they are case-sensitive,
+                              check capitalization.
+                            </p>
+                          )}
+                        </Field>
+                      )
+                    }}
+                  </form.Subscribe>
+                )}
               </form.Field>
             </FieldGroup>
           </CardContent>
           <CardFooter className="flex-col gap-3">
             <Button type="submit" className="w-full" disabled={loading}>
-              {loading ? 'Updating…' : 'Update password'}
+              {loading && <Spinner />}
+              Update password
             </Button>
           </CardFooter>
         </form>

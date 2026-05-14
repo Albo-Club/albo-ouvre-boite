@@ -8,9 +8,12 @@ import { useConvexMutation, useConvexQuery } from '@convex-dev/react-query'
 
 import { api } from '../../../convex/_generated/api'
 import { authClient } from '~/lib/auth-client'
+import { classifyAuthError, formatAuthError } from '~/lib/auth-errors'
 import { isPasswordPwned } from '~/lib/hibp'
 import { Button } from '~/components/ui/button'
 import { Input } from '~/components/ui/input'
+import { Skeleton } from '~/components/ui/skeleton'
+import { Spinner } from '~/components/ui/spinner'
 import { PasswordInput } from '~/components/auth/password-input'
 import { PasswordStrength } from '~/components/auth/password-strength'
 import { ImageUpload } from '~/components/ImageUpload'
@@ -36,6 +39,13 @@ import {
   DialogHeader,
   DialogTitle,
 } from '~/components/ui/dialog'
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from '~/components/ui/tabs'
+import { ActiveSessions } from '~/components/auth/active-sessions'
 
 const profileSchema = z.object({
   name: z.string().min(1, 'Name is required').max(80, 'Too long'),
@@ -70,6 +80,9 @@ function ProfilePage() {
 
   const setMyAvatar = useConvexMutation(api.files.setMyAvatar)
   const removeMyAvatar = useConvexMutation(api.files.removeMyAvatar)
+  const notifyPasswordChanged = useConvexMutation(
+    api.notifications.notifyPasswordChanged,
+  )
   const [sendingMagic, setSendingMagic] = useState(false)
   const [savingEmail, setSavingEmail] = useState(false)
   const [confirmDelete, setConfirmDelete] = useState(false)
@@ -109,7 +122,7 @@ function ProfilePage() {
       })
       setSavingEmail(false)
       if (error) {
-        toast.error(error.message ?? 'Could not request email change')
+        toast.error(formatAuthError(classifyAuthError(error), 'change'))
         return
       }
       toast.success(
@@ -131,10 +144,15 @@ function ProfilePage() {
       })
       setChangingPassword(false)
       if (error) {
-        toast.error(error.message ?? 'Could not change password')
+        toast.error(formatAuthError(classifyAuthError(error), 'change'))
         return
       }
-      toast.success('Password changed')
+      // Fire-and-forget: post-event notification email. Never await — a
+      // notification failure must not surface as a password-change failure.
+      notifyPasswordChanged({}).catch((err) => {
+        console.warn('[notifyPasswordChanged]', err)
+      })
+      toast.success('Password changed. Other sessions have been signed out.')
       formApi.reset()
     },
   })
@@ -147,8 +165,17 @@ function ProfilePage() {
 
   if (!me || me.kind !== 'ready') {
     return (
-      <main className="flex min-h-svh items-center justify-center">
-        <p className="text-muted-foreground text-sm">Loading…</p>
+      <main className="mx-auto max-w-2xl space-y-6 p-6">
+        <header className="flex items-center justify-between">
+          <div className="space-y-2">
+            <Skeleton className="h-8 w-40" />
+            <Skeleton className="h-4 w-56" />
+          </div>
+          <Skeleton className="h-9 w-20" />
+        </header>
+        {[0, 1, 2].map((i) => (
+          <Skeleton key={i} className="h-48 w-full rounded-xl" />
+        ))}
       </main>
     )
   }
@@ -168,8 +195,7 @@ function ProfilePage() {
     })
     setSendingMagic(false)
     if (error) {
-      const msg = error.message ?? 'Could not send magic link'
-      toast.error(/rate|slow/i.test(msg) ? 'Too many requests — wait a bit' : msg)
+      toast.error(formatAuthError(classifyAuthError(error), 'signin'))
       return
     }
     toast.success(`Magic link sent to ${me.user.email}`)
@@ -180,7 +206,7 @@ function ProfilePage() {
     const { error } = await authClient.deleteUser({ callbackURL: '/login' })
     setDeleting(false)
     if (error) {
-      toast.error(error.message ?? 'Could not request deletion')
+      toast.error(formatAuthError(classifyAuthError(error), 'change'))
       return
     }
     toast.success(
@@ -215,6 +241,14 @@ function ProfilePage() {
         )}
       </header>
 
+      <Tabs defaultValue="profile" className="space-y-6">
+        <TabsList>
+          <TabsTrigger value="profile">Profile</TabsTrigger>
+          <TabsTrigger value="security">Security</TabsTrigger>
+          <TabsTrigger value="sessions">Sessions</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="profile" className="space-y-6">
       <Card>
         <CardHeader>
           <CardTitle>Profile</CardTitle>
@@ -276,7 +310,8 @@ function ProfilePage() {
               </profileForm.Field>
 
               <Button type="submit" disabled={savingProfile}>
-                {savingProfile ? 'Saving…' : 'Save changes'}
+                {savingProfile && <Spinner />}
+                Save changes
               </Button>
             </FieldGroup>
           </CardContent>
@@ -329,13 +364,17 @@ function ProfilePage() {
                 }}
               </emailForm.Field>
               <Button type="submit" disabled={savingEmail}>
-                {savingEmail ? 'Sending…' : 'Send confirmation email'}
+                {savingEmail && <Spinner />}
+                Send confirmation email
               </Button>
             </FieldGroup>
           </CardContent>
         </form>
       </Card>
 
+        </TabsContent>
+
+        <TabsContent value="security" className="space-y-6">
       <Card>
         <CardHeader>
           <CardTitle>Magic link</CardTitle>
@@ -349,7 +388,8 @@ function ProfilePage() {
             onClick={handleMagicLink}
             disabled={sendingMagic}
           >
-            {sendingMagic ? 'Sending…' : 'Email me a magic link'}
+            {sendingMagic && <Spinner />}
+            Email me a magic link
           </Button>
         </CardContent>
       </Card>
@@ -426,6 +466,10 @@ function ProfilePage() {
                         onChange={(e) => field.handleChange(e.target.value)}
                         aria-invalid={invalid || undefined}
                       />
+                      <FieldDescription>
+                        Avoid passwords you&apos;ve used elsewhere. The meter
+                        below shows real-time strength.
+                      </FieldDescription>
                       <PasswordStrength
                         value={field.state.value}
                         userInputs={[me.user.email, me.user.name ?? '']}
@@ -438,7 +482,8 @@ function ProfilePage() {
                 }}
               </passwordForm.Field>
               <Button type="submit" disabled={changingPassword}>
-                {changingPassword ? 'Changing…' : 'Change password'}
+                {changingPassword && <Spinner />}
+                Change password
               </Button>
             </FieldGroup>
           </CardContent>
@@ -456,7 +501,8 @@ function ProfilePage() {
             onClick={handleSignOut}
             disabled={signingOut}
           >
-            {signingOut ? 'Signing out…' : 'Sign out'}
+            {signingOut && <Spinner />}
+            Sign out
           </Button>
         </CardContent>
       </Card>
@@ -479,6 +525,24 @@ function ProfilePage() {
           </Button>
         </CardContent>
       </Card>
+
+        </TabsContent>
+
+        <TabsContent value="sessions" className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>Active sessions</CardTitle>
+              <CardDescription>
+                Devices currently signed in to your account. Revoke any that
+                you don&apos;t recognize.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <ActiveSessions />
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
 
       <Dialog
         open={confirmDelete}
@@ -503,7 +567,8 @@ function ProfilePage() {
               onClick={handleDelete}
               disabled={deleting}
             >
-              {deleting ? 'Sending…' : 'Send confirmation'}
+              {deleting && <Spinner />}
+              Send confirmation
             </Button>
           </DialogFooter>
         </DialogContent>

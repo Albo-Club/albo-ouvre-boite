@@ -56,6 +56,24 @@ Tester avec un user neuf "Alice" (`alice@test.local`).
 | A21| `/register`, `/reset-password`, `/me`              | Strength meter zxcvbn affiche 4 barres + label (Very weak → Excellent) |
 | A22| Clic sur l'icône œil dans n'importe quel champ password | Bascule visible/masqué, focus reste sur l'input, aria-pressed mis à jour |
 | A23| Cookie `albo.session_token` après sign-in          | Max-Age ≈ 604800 (7 jours) ; `__Secure-` prefix optionnel selon hôte |
+| A24| `/login` avec mauvais mdp                           | Erreur surfacée en **inline `<Alert>` destructive** au-dessus du form (pas en toast) — survit après que le user clique ailleurs |
+| A25| `/register` → "Check your inbox" → "Resend verification email" | Toast "If an account exists for that email, another link is on its way." ; un 2e email arrive |
+| A26| `/forgot-password` → "Check your inbox" → "Resend reset link" | Toast neutre identique ; un 2e email arrive si l'adresse existe |
+| A27| `/login` magic-link avec navigateur **offline**     | Inline `<Alert>` "Network error. Check your connection…" (**pas** de toast "link is on its way" trompeur) |
+| A28| `/forgot-password` submit avec navigateur **offline**| Reste sur le form + inline `<Alert>` "Network error" (ne passe **pas** à l'écran "Check your inbox") |
+| A29| `/me` → magic-link spammé 4× en 60s                | Toast "Too many attempts — please wait a moment…" (via classifier, plus de message BA cru) |
+| A30| `/register`, `/reset-password`, `/me` password fields | Texte `FieldDescription` "Avoid passwords you've used elsewhere. The meter below shows real-time strength." sous l'input (la règle 12-char est communiquée par le meter, plus dans la description) |
+| A31| Submit n'importe quel form auth                    | **Spinner Lucide** (`size-4 animate-spin`) apparaît à gauche du label, label statique (plus de "Signing in…") |
+| A32| Navigation `/app/me` (charge lente, throttle 3G)    | **Skeleton** Cards en placeholder (header h-8 + 3 Cards h-48) au lieu de "Loading…" centré |
+| A33| `/app/me` page chargée                              | 3 **onglets** : `Profile` / `Security` / `Sessions`. Default = Profile (avatar + name + email read-only) |
+| A34| Onglet `Security`                                   | Cards : Magic link / Password / Sign out / Delete account |
+| A35| Onglet `Sessions`                                   | Liste BA active sessions (icône device, browser/OS, IP, "X min ago"). Session courante = badge **Current** vert, pas de bouton Revoke. Autres sessions = bouton Revoke |
+| A36| Sessions → clic Revoke sur une autre session        | Spinner sur le bouton, toast "Session revoked", liste refresh sans la session révoquée |
+| A37| `/app/me` Security → change password (succès)       | Toast "Password changed. Other sessions have been signed out." **+ email "Your albo password was changed"** arrive à l'adresse du compte (notif post-event, anti-takeover) |
+| A38| ⚠️ Coverage gap connue : password **reset** via /forgot→/reset-password | **Pas** d'email "Your password was changed" envoyé (le hook BA `revokeSessionsOnPasswordReset: true` couvre la révocation sessions). NewDeviceEmail reporté à PR dédiée (cf. KNOWN_ISSUES) |
+| A39| `/register` ou `/reset-password` ou `/me` — taper un password de < 12 chars | Meter affiche **1 barre rouge** (destructive) + texte **rouge** "Too short — N more characters to go" (au lieu de "Strength: Excellent" trompeur). À 12+ chars, bascule sur la lecture zxcvbn normale |
+| A40| `/reset-password` — newPassword et confirmPassword **identiques** | Affichage **vert** avec icône ✓ "Passwords match" sous le confirm. Pas d'erreur rouge |
+| A41| `/reset-password` — confirmPassword ne matche pas (ex: casse différente) | Une fois que confirm ≥ longueur de new : "Passwords do not match — they are case-sensitive, check capitalization." en rouge. Pas de flash rouge mi-saisie |
 
 ## Niveau 2 — App shell UI (10 min)
 

@@ -238,6 +238,41 @@ export function resetPasswordEmail({ url }: { url: string }) {
   return { subject, html, text }
 }
 
+export function passwordChangedEmail({
+  email,
+  resetUrl,
+}: {
+  email: string
+  resetUrl: string
+}) {
+  // Post-event notification — fired AFTER the password is already changed.
+  // Sent to the same address that owns the account, so a legitimate user who
+  // just changed their own password will recognise it, and a victim of an
+  // account takeover will see the breach and can recover via the reset link.
+  const subject = `Your ${APP_NAME} password was changed`
+  const heading = `Password changed`
+  const intro = `The password for <strong>${email}</strong> was just changed on ${APP_NAME}.`
+  const followup = `If you made this change, no action is needed. <strong>If you didn't, your account may be compromised</strong> — reset your password now and review your active sessions.`
+  const footer = `For your safety, all other sessions were signed out automatically.`
+  const preheader = `Password changed for ${email}.`
+
+  const html = layout({
+    preheader,
+    heading,
+    paragraphs: [intro, followup],
+    cta: { label: 'Reset password', url: resetUrl },
+    footer,
+  })
+
+  const text = plainText([
+    `Your ${APP_NAME} password was just changed.`,
+    `If you didn't do this, reset your password now: ${resetUrl}`,
+    `For your safety, all other sessions were signed out automatically.`,
+  ])
+
+  return { subject, html, text }
+}
+
 export function magicLinkEmail({ url }: { url: string }) {
   const subject = `Your ${APP_NAME} sign-in link`
   const heading = `Sign in to ${APP_NAME}`
