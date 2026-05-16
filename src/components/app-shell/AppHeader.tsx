@@ -13,6 +13,7 @@ import {
 import { Button } from '~/components/ui/button'
 import { Separator } from '~/components/ui/separator'
 import { SidebarTrigger } from '~/components/ui/sidebar'
+import { UserButton } from '~/components/auth/user-button'
 import { ThemeToggle } from './ThemeToggle'
 
 type Crumb = { label: string; href?: string }
@@ -96,6 +97,7 @@ export function AppHeader({
           AI
         </Button>
         <ThemeToggle />
+        <UserButton />
       </div>
     </header>
   )

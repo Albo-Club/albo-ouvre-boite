@@ -12,6 +12,7 @@ import { Input } from '~/components/ui/input'
 import { Spinner } from '~/components/ui/spinner'
 import { PasswordInput } from '~/components/auth/password-input'
 import { PasswordStrength } from '~/components/auth/password-strength'
+import { VerificationSentCard } from '~/components/auth/verification-sent'
 import {
   Field,
   FieldDescription,
@@ -97,43 +98,33 @@ function RegisterPage() {
 
   if (sentTo) {
     return (
-      <main className="flex min-h-svh items-center justify-center p-4">
-        <Card className="w-full max-w-sm">
-          <CardHeader>
-            <CardTitle>Check your inbox</CardTitle>
-            <CardDescription>
-              We sent a verification link to <strong>{sentTo}</strong>. Click it
-              to confirm your email and sign in.
-              {isInviteFlow
-                ? ' Your invitation will be ready right after.'
-                : ''}
-            </CardDescription>
-          </CardHeader>
-          <CardFooter className="flex-col gap-3">
-            <Button
+      <VerificationSentCard
+        description={
+          <>
+            We sent a verification link to <strong>{sentTo}</strong>. Click it
+            to confirm your email and sign in. The link expires in 1 hour.
+            {isInviteFlow
+              ? ' Your invitation will be ready right after.'
+              : ''}
+          </>
+        }
+        onResend={onResendVerification}
+        resendLabel="Resend verification email"
+        isResending={resendLoading}
+        footer={
+          <p className="text-muted-foreground text-sm">
+            Didn't get it? Check spam, or{' '}
+            <button
               type="button"
-              variant="outline"
-              className="w-full"
-              onClick={onResendVerification}
-              disabled={resendLoading}
+              className="underline"
+              onClick={() => setSentTo(null)}
             >
-              {resendLoading && <Spinner />}
-              Resend verification email
-            </Button>
-            <p className="text-muted-foreground text-sm">
-              Didn't get it? Check spam, or{' '}
-              <button
-                type="button"
-                className="underline"
-                onClick={() => setSentTo(null)}
-              >
-                try a different email
-              </button>
-              .
-            </p>
-          </CardFooter>
-        </Card>
-      </main>
+              try a different email
+            </button>
+            .
+          </p>
+        }
+      />
     )
   }
 
@@ -223,6 +214,7 @@ function RegisterPage() {
                 {(field) => {
                   const invalid =
                     field.state.meta.isTouched && !field.state.meta.isValid
+                  const isValidating = field.state.meta.isValidating
                   return (
                     <Field data-invalid={invalid || undefined}>
                       <FieldLabel htmlFor={field.name}>Password</FieldLabel>
@@ -236,8 +228,21 @@ function RegisterPage() {
                         aria-invalid={invalid || undefined}
                       />
                       <FieldDescription>
-                        Avoid passwords you&apos;ve used elsewhere. The meter
-                        below shows real-time strength.
+                        {isValidating ? (
+                          <span
+                            className="flex items-center gap-1.5"
+                            aria-live="polite"
+                          >
+                            <Spinner className="size-3" />
+                            Checking against known data breaches…
+                          </span>
+                        ) : (
+                          <>
+                            Avoid passwords you&apos;ve used elsewhere. We check
+                            against publicly leaked databases — only a short
+                            hash prefix is sent, never your full password.
+                          </>
+                        )}
                       </FieldDescription>
                       <PasswordStrength
                         value={field.state.value}

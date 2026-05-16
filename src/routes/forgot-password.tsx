@@ -24,6 +24,7 @@ import {
   CardHeader,
   CardTitle,
 } from '~/components/ui/card'
+import { VerificationSentCard } from '~/components/auth/verification-sent'
 
 const schema = z.object({
   email: z.email('Invalid email'),
@@ -87,32 +88,22 @@ function ForgotPasswordPage() {
 
   if (sentTo) {
     return (
-      <main className="flex min-h-svh items-center justify-center p-4">
-        <Card className="w-full max-w-sm">
-          <CardHeader>
-            <CardTitle>Check your inbox</CardTitle>
-            <CardDescription>
-              If an account exists for <strong>{sentTo}</strong>, we just sent a
-              link to reset the password. The link expires in 1 hour.
-            </CardDescription>
-          </CardHeader>
-          <CardFooter className="flex-col gap-3">
-            <Button
-              type="button"
-              variant="outline"
-              className="w-full"
-              onClick={onResend}
-              disabled={resendLoading}
-            >
-              {resendLoading && <Spinner />}
-              Resend reset link
-            </Button>
-            <Link to="/login" className="text-sm underline">
-              Back to sign in
-            </Link>
-          </CardFooter>
-        </Card>
-      </main>
+      <VerificationSentCard
+        description={
+          <>
+            If an account exists for <strong>{sentTo}</strong>, we just sent a
+            link to reset the password. The link expires in 1 hour.
+          </>
+        }
+        onResend={onResend}
+        resendLabel="Resend reset link"
+        isResending={resendLoading}
+        footer={
+          <Link to="/login" className="text-sm underline">
+            Back to sign in
+          </Link>
+        }
+      />
     )
   }
 

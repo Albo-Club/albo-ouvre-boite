@@ -5,6 +5,14 @@ import { toast } from 'sonner'
 import { authClient } from '~/lib/auth-client'
 import { classifyAuthError, formatAuthError } from '~/lib/auth-errors'
 import { Button } from '~/components/ui/button'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '~/components/ui/dialog'
 import { Skeleton } from '~/components/ui/skeleton'
 import { Spinner } from '~/components/ui/spinner'
 
@@ -26,6 +34,8 @@ export function ActiveSessions() {
 
   const [sessions, setSessions] = useState<Array<BaSession> | null>(null)
   const [revokingId, setRevokingId] = useState<string | null>(null)
+  const [confirmRevokeAll, setConfirmRevokeAll] = useState(false)
+  const [revokingAll, setRevokingAll] = useState(false)
 
   async function refresh() {
     const { data, error } = await authClient.listSessions()
@@ -52,6 +62,19 @@ export function ActiveSessions() {
     void refresh()
   }
 
+  async function handleRevokeOthers() {
+    setRevokingAll(true)
+    const { error } = await authClient.revokeOtherSessions()
+    setRevokingAll(false)
+    setConfirmRevokeAll(false)
+    if (error) {
+      toast.error(formatAuthError(classifyAuthError(error)))
+      return
+    }
+    toast.success('Signed out of other devices.')
+    void refresh()
+  }
+
   if (sessions === null) {
     return (
       <div className="space-y-3">
@@ -74,9 +97,23 @@ export function ActiveSessions() {
     return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
   })
 
+  const hasOthers = sorted.some((s) => s.id !== currentSessionId)
+
   return (
-    <ul className="divide-border divide-y rounded-md border">
-      {sorted.map((s) => {
+    <div className="space-y-3">
+      {hasOthers && (
+        <div className="flex justify-end">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setConfirmRevokeAll(true)}
+          >
+            Sign out of other devices
+          </Button>
+        </div>
+      )}
+      <ul className="divide-border divide-y rounded-md border">
+        {sorted.map((s) => {
         const isCurrent = s.id === currentSessionId
         const { label, Icon } = describeUserAgent(s.userAgent)
         const when = formatRelative(new Date(s.createdAt))
@@ -113,7 +150,36 @@ export function ActiveSessions() {
           </li>
         )
       })}
-    </ul>
+      </ul>
+      <Dialog open={confirmRevokeAll} onOpenChange={setConfirmRevokeAll}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Sign out of other devices?</DialogTitle>
+            <DialogDescription>
+              You&apos;ll stay signed in here. Every other browser and device
+              will need to sign back in.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setConfirmRevokeAll(false)}
+              disabled={revokingAll}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={() => void handleRevokeOthers()}
+              disabled={revokingAll}
+            >
+              {revokingAll && <Spinner />}
+              Sign out other devices
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </div>
   )
 }
 

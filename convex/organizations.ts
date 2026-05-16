@@ -38,12 +38,43 @@ export const listMembers = query({
 
 const SLUG_RE = /^[a-z0-9-]{3,40}$/
 
+// Reserved slugs that would clash with platform routes or have semantic
+// ambiguity (`me/admin/...`). Keep this aligned with `src/routes/` top-level
+// segments. If a new route is added under `app/$orgSlug/...` that uses a
+// previously unreserved word, add it here.
+const RESERVED_SLUGS = new Set([
+  'admin', 'api', 'app', 'auth', 'login', 'register', 'logout', 'signin',
+  'signup', 'sign-in', 'sign-up', 'me', 'settings', 'billing',
+  'invitations', 'onboarding', 'reset-password', 'forgot-password',
+  'verify-email', 'accept-invite', 'help', 'docs', 'support', 'status',
+  'www', 'public', 'static', 'assets', 'health', 'about', 'terms',
+  'privacy', 'pricing', 'home',
+])
+
+export const checkSlug = query({
+  args: { slug: v.string() },
+  handler: async (ctx, { slug }) => {
+    const normalized = slug.toLowerCase().trim()
+    if (!SLUG_RE.test(normalized)) return { available: false, reason: 'invalid' as const }
+    if (RESERVED_SLUGS.has(normalized))
+      return { available: false, reason: 'reserved' as const }
+    const conflict = await ctx.db
+      .query('organizations')
+      .withIndex('by_slug', (q) => q.eq('slug', normalized))
+      .unique()
+    if (conflict) return { available: false, reason: 'taken' as const }
+    return { available: true } as const
+  },
+})
+
 export const create = mutation({
   args: { name: v.string(), slug: v.string() },
   handler: async (ctx, { name, slug }) => {
     const user = await requireAppUser(ctx)
     const normalizedSlug = slug.toLowerCase().trim()
     if (!SLUG_RE.test(normalizedSlug)) throw new ConvexError('invalid_slug')
+    if (RESERVED_SLUGS.has(normalizedSlug))
+      throw new ConvexError('slug_reserved')
     const trimmedName = name.trim()
     if (!trimmedName) throw new ConvexError('invalid_name')
 

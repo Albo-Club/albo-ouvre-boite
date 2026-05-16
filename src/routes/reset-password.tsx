@@ -84,15 +84,19 @@ function ResetPasswordPage() {
           <CardHeader>
             <CardTitle>Invalid or expired link</CardTitle>
             <CardDescription>
-              This reset link is no longer valid. Request a new one to continue.
+              Reset links expire after one hour and can only be used once.
+              Request a new one to continue.
             </CardDescription>
           </CardHeader>
           <CardFooter className="flex-col gap-3">
+            <Button asChild className="w-full">
+              <Link to="/forgot-password">Send a new reset link</Link>
+            </Button>
             <Link
-              to="/forgot-password"
-              className="text-sm underline"
+              to="/login"
+              className="text-muted-foreground text-sm underline"
             >
-              Send a new reset link
+              Back to sign in
             </Link>
           </CardFooter>
         </Card>
@@ -138,6 +142,7 @@ function ResetPasswordPage() {
                 {(field) => {
                   const invalid =
                     field.state.meta.isTouched && !field.state.meta.isValid
+                  const isValidating = field.state.meta.isValidating
                   return (
                     <Field data-invalid={invalid || undefined}>
                       <FieldLabel htmlFor={field.name}>New password</FieldLabel>
@@ -151,8 +156,21 @@ function ResetPasswordPage() {
                         aria-invalid={invalid || undefined}
                       />
                       <FieldDescription>
-                        Avoid passwords you&apos;ve used elsewhere. The meter
-                        below shows real-time strength.
+                        {isValidating ? (
+                          <span
+                            className="flex items-center gap-1.5"
+                            aria-live="polite"
+                          >
+                            <Spinner className="size-3" />
+                            Checking against known data breaches…
+                          </span>
+                        ) : (
+                          <>
+                            Avoid passwords you&apos;ve used elsewhere. We check
+                            against publicly leaked databases — only a short
+                            hash prefix is sent, never your full password.
+                          </>
+                        )}
                       </FieldDescription>
                       <PasswordStrength value={field.state.value} />
                       {invalid && (
@@ -198,18 +216,20 @@ function ResetPasswordPage() {
                             }
                             aria-invalid={mismatch || undefined}
                           />
-                          {match && (
-                            <p className="flex items-center gap-1.5 text-xs font-medium text-emerald-700 dark:text-emerald-400">
-                              <Check className="size-3.5" aria-hidden="true" />
-                              Passwords match
-                            </p>
-                          )}
-                          {mismatch && (
-                            <p className="text-destructive text-xs">
-                              Passwords do not match — they are case-sensitive,
-                              check capitalization.
-                            </p>
-                          )}
+                          <div aria-live="polite">
+                            {match && (
+                              <p className="flex items-center gap-1.5 text-xs font-medium text-emerald-700 dark:text-emerald-400">
+                                <Check className="size-3.5" aria-hidden="true" />
+                                Passwords match
+                              </p>
+                            )}
+                            {mismatch && (
+                              <p className="text-destructive text-xs">
+                                Passwords do not match — they are case-sensitive,
+                                check capitalization.
+                              </p>
+                            )}
+                          </div>
                         </Field>
                       )
                     }}

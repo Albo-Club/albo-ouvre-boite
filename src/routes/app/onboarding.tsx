@@ -4,11 +4,13 @@ import { useForm } from '@tanstack/react-form'
 import { z } from 'zod'
 import { toast } from 'sonner'
 import { ConvexError } from 'convex/values'
-import { useConvexMutation } from '@convex-dev/react-query'
+import { useConvexMutation, useConvexQuery } from '@convex-dev/react-query'
+import { Check, X } from 'lucide-react'
 
 import { api } from '../../../convex/_generated/api'
 import { Button } from '~/components/ui/button'
 import { Input } from '~/components/ui/input'
+import { Spinner } from '~/components/ui/spinner'
 import {
   Field,
   FieldDescription,
@@ -25,11 +27,13 @@ import {
   CardTitle,
 } from '~/components/ui/card'
 
+const SLUG_RE = /^[a-z0-9-]{3,40}$/
+
 const schema = z.object({
   name: z.string().min(1, 'Name is required').max(80),
   slug: z
     .string()
-    .regex(/^[a-z0-9-]{3,40}$/, '3–40 chars, lowercase letters, digits, dashes'),
+    .regex(SLUG_RE, '3–40 chars, lowercase letters, digits, dashes'),
 })
 
 export const Route = createFileRoute('/app/onboarding')({
@@ -55,6 +59,7 @@ function OnboardingPage() {
         const code = err instanceof ConvexError ? (err.data as string) : ''
         const messages: Record<string, string> = {
           slug_taken: 'That slug is already taken',
+          slug_reserved: 'That slug is reserved — pick another',
           invalid_slug: 'Invalid slug shape',
           invalid_name: 'Invalid name',
         }
@@ -129,6 +134,7 @@ function OnboardingPage() {
                       <FieldDescription>
                         Used in URLs: <code>/app/{field.state.value || 'your-slug'}</code>
                       </FieldDescription>
+                      <SlugAvailability slug={field.state.value} />
                       {invalid && (
                         <FieldError errors={field.state.meta.errors} />
                       )}
@@ -140,11 +146,61 @@ function OnboardingPage() {
           </CardContent>
           <CardFooter>
             <Button type="submit" className="w-full" disabled={loading}>
-              {loading ? 'Creating…' : 'Create organization'}
+              {loading && <Spinner />}
+              Create organization
             </Button>
           </CardFooter>
         </form>
       </Card>
     </main>
+  )
+}
+
+function SlugAvailability({ slug }: { slug: string }) {
+  // Only query when the shape is valid — saves a roundtrip on every keystroke
+  // while the user is mid-typing. Convex subscriptions are cheap but skipping
+  // the obvious-invalid case keeps the UI calm.
+  const shapeValid = SLUG_RE.test(slug)
+  const result = useConvexQuery(
+    api.organizations.checkSlug,
+    shapeValid ? { slug } : 'skip',
+  )
+
+  if (!shapeValid) return null
+  if (result === undefined) {
+    return (
+      <p
+        className="text-muted-foreground flex items-center gap-1.5 text-xs"
+        aria-live="polite"
+      >
+        <Spinner className="size-3" />
+        Checking availability…
+      </p>
+    )
+  }
+  if (result.available) {
+    return (
+      <p
+        className="flex items-center gap-1.5 text-xs font-medium text-emerald-700 dark:text-emerald-400"
+        aria-live="polite"
+      >
+        <Check className="size-3.5" aria-hidden="true" />
+        Slug is available
+      </p>
+    )
+  }
+  const reasonText: Record<typeof result.reason, string> = {
+    invalid: 'Invalid slug shape',
+    reserved: 'This slug is reserved',
+    taken: 'This slug is already taken',
+  }
+  return (
+    <p
+      className="text-destructive flex items-center gap-1.5 text-xs"
+      aria-live="polite"
+    >
+      <X className="size-3.5" aria-hidden="true" />
+      {reasonText[result.reason]}
+    </p>
   )
 }
