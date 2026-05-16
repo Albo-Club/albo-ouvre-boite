@@ -474,3 +474,39 @@ Two paths if/when this matters:
 tables aren't queryable from `ctx.db` directly). Tracked as Phase 3 work
 behind a dedicated PR — needs a `deviceFingerprints` table + a session-create
 hook + an action to send the email.
+
+## Hydration & session timing — never re-instantiate `ConvexQueryClient`
+
+### Symptom (dev-only)
+
+In localhost, hard-refreshing `/app/*` redirects to `/login` for a beat,
+then snaps back. Opening a second tab to `/app/*` does the same. Prod is
+fine (network is fast enough that the gap closes inside React's batching).
+
+### Root cause
+
+`src/router.tsx` is `getRouter()` — TanStack Start calls it on the server
+AND again on the client during hydration. If `getRouter()` creates
+`new ConvexQueryClient(...)` on every call, each call opens a fresh
+WebSocket. The new socket has no JWT yet, so `useConvexAuth()` reports
+`{ isLoading: false, isAuthenticated: false }` for the round-trip while
+BA's cookieCache already knows the user is signed in. Any guard that
+redirects on `!isAuthenticated` will fire during that gap.
+
+### Rule
+
+1. **Memoize `ConvexQueryClient` and `QueryClient` at module scope on the
+   client** (`typeof window !== 'undefined'` check). Reuse across all
+   `getRouter()` calls. See the `getOrCreateClients()` helper in
+   `src/router.tsx`. On the server, always create fresh — the singleton
+   would leak state across requests.
+
+2. **Don't redirect on `useConvexAuth()` alone**. Use the `useAuthState()`
+   hook in `src/lib/auth-state.ts`, which combines Convex's signal with
+   Better Auth's `useSession()`. Only redirect when BA confirms no
+   session (`isSignedOut`), not when Convex is mid-refresh.
+
+3. **Anti-pattern** already listed in `CLAUDE.md` (« ❌ `ConvexReactClient`
+   recreated each render ») — this is the same bug at the router level.
+   If you add a new route guard, prefer `useAuthState()` over
+   `useConvexAuth()` directly.

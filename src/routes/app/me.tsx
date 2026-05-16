@@ -46,6 +46,7 @@ import {
   TabsTrigger,
 } from '~/components/ui/tabs'
 import { ActiveSessions } from '~/components/auth/active-sessions'
+import { LinkedAccounts } from '~/components/auth/linked-accounts'
 
 const profileSchema = z.object({
   name: z.string().min(1, 'Name is required').max(80, 'Too long'),
@@ -126,7 +127,7 @@ function ProfilePage() {
         return
       }
       toast.success(
-        `Confirmation sent to ${me.user.email}. Click the link to apply the change.`,
+        `Confirmation sent to ${me.user.email}. Click the link to apply the change — it expires in 1 hour.`,
       )
       formApi.reset()
     },
@@ -210,7 +211,7 @@ function ProfilePage() {
       return
     }
     toast.success(
-      `Confirmation sent to ${me?.kind === 'ready' ? me.user.email : 'your email'}. Click the link to permanently delete.`,
+      `Confirmation sent to ${me?.kind === 'ready' ? me.user.email : 'your email'}. Click the link within 1 hour to permanently delete.`,
     )
     setConfirmDelete(false)
   }
@@ -391,6 +392,19 @@ function ProfilePage() {
             {sendingMagic && <Spinner />}
             Email me a magic link
           </Button>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Connected accounts</CardTitle>
+          <CardDescription>
+            Methods that can sign you in. Add a social provider for a faster
+            sign-in option.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <LinkedAccounts />
         </CardContent>
       </Card>
 

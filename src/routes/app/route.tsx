@@ -1,8 +1,8 @@
 import { useEffect } from 'react'
 import { createFileRoute, Outlet, useNavigate } from '@tanstack/react-router'
-import { useConvexAuth } from 'convex/react'
 import { useConvexMutation, useConvexQuery } from '@convex-dev/react-query'
 import { api } from '../../../convex/_generated/api'
+import { useAuthState } from '~/lib/auth-state'
 
 export const Route = createFileRoute('/app')({
   component: AppLayout,
@@ -10,7 +10,7 @@ export const Route = createFileRoute('/app')({
 
 function AppLayout() {
   const navigate = useNavigate()
-  const { isLoading: authLoading, isAuthenticated } = useConvexAuth()
+  const { isLoading, isAuthenticated, isSignedOut } = useAuthState()
   const me = useConvexQuery(
     api.users.me,
     isAuthenticated ? {} : 'skip',
@@ -18,10 +18,13 @@ function AppLayout() {
   const provisionMe = useConvexMutation(api.users.provisionMe)
 
   useEffect(() => {
-    if (!authLoading && !isAuthenticated) {
+    // Only redirect when BA confirms no session. Don't redirect on the
+    // transient `convexAuth=false while BA session loading` state — that
+    // caused tab-A→tab-B and hard-refresh logouts in dev.
+    if (isSignedOut) {
       navigate({ to: '/login' })
     }
-  }, [authLoading, isAuthenticated, navigate])
+  }, [isSignedOut, navigate])
 
   useEffect(() => {
     if (me?.kind === 'unprovisioned') {
@@ -29,7 +32,7 @@ function AppLayout() {
     }
   }, [me?.kind, provisionMe])
 
-  if (authLoading || !isAuthenticated || !me || me.kind !== 'ready') {
+  if (isLoading || !isAuthenticated || !me || me.kind !== 'ready') {
     return (
       <main className="flex min-h-svh items-center justify-center">
         <p className="text-muted-foreground text-sm">Loading…</p>

@@ -18,7 +18,8 @@
     "setup:prod": "node scripts/setup-prod.mjs",
     "init": "node scripts/init.mjs",
     "upgrade-template": "node scripts/upgrade-template.mjs",
-    "test:smoke": "node scripts/e2e-smoke.mjs"
+    "test:smoke": "node scripts/e2e-smoke.mjs",
+    "test:cookies": "bash scripts/test-cookies.sh"
   },
   "dependencies": {
     "@ai-sdk/anthropic": "^3.0.76",

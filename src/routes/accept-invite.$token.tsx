@@ -9,10 +9,17 @@ import { ConvexError } from 'convex/values'
 
 import { api } from '../../convex/_generated/api'
 import { authClient } from '~/lib/auth-client'
+import { classifyAuthError, formatAuthError } from '~/lib/auth-errors'
+import { isPasswordPwned } from '~/lib/hibp'
 import { Button } from '~/components/ui/button'
 import { Input } from '~/components/ui/input'
+import { Spinner } from '~/components/ui/spinner'
+import { PasswordInput } from '~/components/auth/password-input'
+import { PasswordStrength } from '~/components/auth/password-strength'
+import { VerificationSentCard } from '~/components/auth/verification-sent'
 import {
   Field,
+  FieldDescription,
   FieldError,
   FieldGroup,
   FieldLabel,
@@ -192,7 +199,8 @@ function SwitchAccountCard({
               window.location.reload()
             }}
           >
-            {loading ? 'Signing out…' : 'Sign out & switch account'}
+            {loading && <Spinner />}
+            Sign out & switch account
           </Button>
         </CardFooter>
       </Card>
@@ -223,7 +231,7 @@ function SignInToAccept({
       })
       setLoading(false)
       if (error) {
-        toast.error(error.message ?? 'Sign in failed')
+        toast.error(formatAuthError(classifyAuthError(error), 'signin'))
         return
       }
       // useConvexAuth flips → auto-accept effect fires in parent
@@ -238,7 +246,7 @@ function SignInToAccept({
     })
     setMagicLoading(false)
     if (error) {
-      toast.error(error.message ?? 'Could not send magic link')
+      toast.error(formatAuthError(classifyAuthError(error), 'signin'))
       return
     }
     toast.success('Magic link sent — check your inbox.')
@@ -280,9 +288,9 @@ function SignInToAccept({
                   return (
                     <Field data-invalid={invalid || undefined}>
                       <FieldLabel htmlFor={field.name}>Password</FieldLabel>
-                      <Input
+                      <PasswordInput
                         id={field.name}
-                        type="password"
+                        name={field.name}
                         autoComplete="current-password"
                         autoFocus
                         value={field.state.value}
@@ -301,7 +309,8 @@ function SignInToAccept({
           </CardContent>
           <CardFooter className="flex-col gap-3">
             <Button type="submit" className="w-full" disabled={loading}>
-              {loading ? 'Signing in…' : 'Accept invitation'}
+              {loading && <Spinner />}
+              Accept invitation
             </Button>
             <Button
               type="button"
@@ -310,7 +319,8 @@ function SignInToAccept({
               onClick={onMagicLink}
               disabled={magicLoading}
             >
-              {magicLoading ? 'Sending…' : 'Email me a magic link'}
+              {magicLoading && <Spinner />}
+              Email me a magic link
             </Button>
           </CardFooter>
         </form>
@@ -321,7 +331,7 @@ function SignInToAccept({
 
 const signUpSchema = z.object({
   name: z.string().min(1, 'Name is required'),
-  password: z.string().min(8, 'At least 8 characters'),
+  password: z.string().min(12, 'At least 12 characters'),
 })
 
 function SignUpToAccept({
@@ -344,7 +354,7 @@ function SignUpToAccept({
       })
       setLoading(false)
       if (error) {
-        toast.error(error.message ?? 'Sign up failed')
+        toast.error(formatAuthError(classifyAuthError(error), 'signup'))
         return
       }
       setVerificationSent(true)
@@ -354,18 +364,16 @@ function SignUpToAccept({
 
   if (verificationSent) {
     return (
-      <main className="flex min-h-svh items-center justify-center p-4">
-        <Card className="w-full max-w-sm">
-          <CardHeader>
-            <CardTitle>Check your inbox</CardTitle>
-            <CardDescription>
-              We sent a verification link to <strong>{preview.email}</strong>.
-              Click it to confirm your email — your invitation to{' '}
-              <strong>{preview.orgName}</strong> will be accepted automatically.
-            </CardDescription>
-          </CardHeader>
-        </Card>
-      </main>
+      <VerificationSentCard
+        description={
+          <>
+            We sent a verification link to <strong>{preview.email}</strong>.
+            Click it to confirm your email — your invitation to{' '}
+            <strong>{preview.orgName}</strong> will be accepted automatically.
+            The link expires in 1 hour.
+          </>
+        }
+      />
     )
   }
 
@@ -422,21 +430,60 @@ function SignUpToAccept({
                   )
                 }}
               </form.Field>
-              <form.Field name="password">
+              <form.Field
+                name="password"
+                validators={{
+                  onBlurAsync: async ({ value }) => {
+                    if (!value || value.length < 12) return undefined
+                    const { pwned } = await isPasswordPwned(value)
+                    return pwned
+                      ? {
+                          message:
+                            'This password has appeared in known data breaches. Pick another.',
+                        }
+                      : undefined
+                  },
+                }}
+              >
                 {(field) => {
                   const invalid =
                     field.state.meta.isTouched && !field.state.meta.isValid
+                  const isValidating = field.state.meta.isValidating
                   return (
                     <Field data-invalid={invalid || undefined}>
                       <FieldLabel htmlFor={field.name}>Password</FieldLabel>
-                      <Input
+                      <PasswordInput
                         id={field.name}
-                        type="password"
+                        name={field.name}
                         autoComplete="new-password"
                         value={field.state.value}
                         onBlur={field.handleBlur}
                         onChange={(e) => field.handleChange(e.target.value)}
                         aria-invalid={invalid || undefined}
+                      />
+                      <FieldDescription>
+                        {isValidating ? (
+                          <span
+                            className="flex items-center gap-1.5"
+                            aria-live="polite"
+                          >
+                            <Spinner className="size-3" />
+                            Checking against known data breaches…
+                          </span>
+                        ) : (
+                          <>
+                            Avoid passwords you&apos;ve used elsewhere. We check
+                            against publicly leaked databases — only a short
+                            hash prefix is sent, never your full password.
+                          </>
+                        )}
+                      </FieldDescription>
+                      <PasswordStrength
+                        value={field.state.value}
+                        userInputs={[
+                          preview.email,
+                          form.getFieldValue('name'),
+                        ]}
                       />
                       {invalid && (
                         <FieldError errors={field.state.meta.errors} />
@@ -449,7 +496,8 @@ function SignUpToAccept({
           </CardContent>
           <CardFooter>
             <Button type="submit" className="w-full" disabled={loading}>
-              {loading ? 'Creating account…' : 'Accept invitation'}
+              {loading && <Spinner />}
+              Accept invitation
             </Button>
           </CardFooter>
         </form>
