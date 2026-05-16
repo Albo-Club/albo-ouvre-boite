@@ -23,29 +23,25 @@ sidebar wired in, transactional emails, rate-limiting, and CI/CD on day one.
 
 ```bash
 pnpm install
-pnpm exec convex dev     # one-time: provisions the deployment
-pnpm exec convex env set BETTER_AUTH_SECRET "$(openssl rand -hex 32)"
-pnpm exec convex env set SITE_URL "http://localhost:3000"
-pnpm exec convex env set APP_ENV development
-pnpm exec convex env set RESEND_API_KEY re_...
-pnpm exec convex env set RESEND_FROM "hello@yourdomain.com"
-pnpm exec convex env set RESEND_TEST_MODE false
-pnpm exec convex env set ANTHROPIC_API_KEY sk-ant-...
-cp .env.example .env.local
-# fill VITE_CONVEX_URL + CONVEX_DEPLOYMENT
+pnpm setup     # interactive wizard — rebrand + Convex + API keys
 pnpm dev
 ```
 
+`pnpm setup` walks you through everything :
+
+1. **Project name** — rebrands page titles, agent identity, cookie prefix.
+2. **Convex backend** — opens a browser to log in, provisions your dev
+   deployment, writes `CONVEX_DEPLOYMENT` + `VITE_CONVEX_URL` to `.env.local`.
+3. **API keys** — prompts for Anthropic + Resend with direct dashboard links
+   so you don't have to hunt for the URLs.
+4. **Better Auth secret** — auto-generated.
+
+It's idempotent — re-run any time, each step skips if already done.
+
 The first user across the deployment becomes `superAdmin: true` automatically.
 
-## Personalize a fresh copy
-
-```bash
-pnpm run init my-project --reset-git
-```
-
-Renames the package, replaces `albo` / `Albo` in user-facing strings, and
-optionally resets git history to a clean initial commit.
+If you'd rather rebrand without touching Convex, `pnpm run init my-project
+--reset-git` runs just the rename step.
 
 ## Project layout
 
@@ -63,7 +59,6 @@ convex/                Convex backend
   chat.ts              threads, sendMessage, listMessages, HTTP /api/chat
   rateLimiters.ts      named limits + consumeLimit helper
   lib/auth.ts          requireAppUser, requireOrgMember, requireOrgRole, …
-  lib/webhooks.ts      isValidHmac() for incoming webhooks
   emailTemplates.ts    inline-styled HTML + plain text
 src/
   routes/              File-based routes (TanStack Router)
