@@ -67,7 +67,7 @@ Connecté en tant qu'Alice sur `/app/acme/`.
 
 | #    | Étape                                                          | Résultat attendu                                                  |
 | ---- | -------------------------------------------------------------- | ----------------------------------------------------------------- |
-| SH1  | Sidebar visible avec groupes Platform / Billing / Workspace    | OK ; items admin-only masqués si rôle "member"                     |
+| SH1  | Sidebar `inset` (carte flottante arrondie) : groupes Platform / Billing en haut ; Members / Invitations / Settings épinglés en bas (nav secondaire `mt-auto`, sans label) | OK ; items admin-only masqués si rôle "member"                     |
 | SH2  | Clic sur `SidebarTrigger` (header)                             | Sidebar collapse en `icon` ; cookie `sidebar_state` persiste       |
 | SH3  | Redimensionner < 768px                                         | Sidebar passe en `Sheet` mobile, ouverture via burger              |
 | SH4  | Naviguer Dashboard → Items → Locations → Calendar → Tasks → Billing | Breadcrumb du header se met à jour à chaque route             |

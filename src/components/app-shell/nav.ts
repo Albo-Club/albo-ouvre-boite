@@ -23,6 +23,7 @@ export type NavLeaf = {
 export type NavGroup = {
   label: string
   items: NavLeaf[]
+  secondary?: boolean
 }
 
 export function getNavGroups(): NavGroup[] {
@@ -79,6 +80,7 @@ export function getNavGroups(): NavGroup[] {
     },
     {
       label: 'Workspace',
+      secondary: true,
       items: [
         {
           title: 'Members',

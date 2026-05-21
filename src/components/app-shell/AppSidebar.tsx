@@ -12,12 +12,13 @@ import {
   SidebarMenuBadge,
   SidebarMenuButton,
   SidebarMenuItem,
-  SidebarRail,
 } from '~/components/ui/sidebar'
 import { OrgSwitcher } from './OrgSwitcher'
 import { NavUser } from './NavUser'
 import { ThemePicker } from './ThemePicker'
 import { getNavGroups } from './nav'
+
+type NavLeaf = ReturnType<typeof getNavGroups>[number]['items'][number]
 
 type Org = {
   _id: string
@@ -49,8 +50,34 @@ export function AppSidebar({
   const groups = getNavGroups()
   const isAdmin = myRole === 'admin' || myRole === 'owner'
 
+  const renderItem = (item: NavLeaf, size?: 'sm') => {
+    const Icon = item.icon
+    const href = item.to.replace('$orgSlug', currentSlug)
+    const isActive =
+      item.to === '/app/$orgSlug'
+        ? location.pathname === href
+        : location.pathname === href ||
+          location.pathname.startsWith(href + '/')
+    return (
+      <SidebarMenuItem key={item.title}>
+        <SidebarMenuButton
+          asChild
+          isActive={isActive}
+          tooltip={item.title}
+          size={size}
+        >
+          <Link to={item.to} params={{ orgSlug: currentSlug }}>
+            {Icon ? <Icon /> : null}
+            <span>{item.title}</span>
+          </Link>
+        </SidebarMenuButton>
+        {item.badge && <SidebarMenuBadge>{item.badge}</SidebarMenuBadge>}
+      </SidebarMenuItem>
+    )
+  }
+
   return (
-    <Sidebar collapsible="icon">
+    <Sidebar variant="inset" collapsible="icon">
       <SidebarHeader>
         <OrgSwitcher orgs={orgs} currentSlug={currentSlug} />
       </SidebarHeader>
@@ -61,39 +88,18 @@ export function AppSidebar({
           )
           if (visibleItems.length === 0) return null
           return (
-            <SidebarGroup key={group.label}>
-              <SidebarGroupLabel>{group.label}</SidebarGroupLabel>
+            <SidebarGroup
+              key={group.label}
+              className={group.secondary ? 'mt-auto' : undefined}
+            >
+              {!group.secondary && (
+                <SidebarGroupLabel>{group.label}</SidebarGroupLabel>
+              )}
               <SidebarGroupContent>
                 <SidebarMenu>
-                  {visibleItems.map((item) => {
-                    const Icon = item.icon
-                    const href = item.to.replace('$orgSlug', currentSlug)
-                    const isActive =
-                      item.to === '/app/$orgSlug'
-                        ? location.pathname === href
-                        : location.pathname === href ||
-                          location.pathname.startsWith(href + '/')
-                    return (
-                      <SidebarMenuItem key={item.title}>
-                        <SidebarMenuButton
-                          asChild
-                          isActive={isActive}
-                          tooltip={item.title}
-                        >
-                          <Link
-                            to={item.to}
-                            params={{ orgSlug: currentSlug }}
-                          >
-                            {Icon ? <Icon /> : null}
-                            <span>{item.title}</span>
-                          </Link>
-                        </SidebarMenuButton>
-                        {item.badge && (
-                          <SidebarMenuBadge>{item.badge}</SidebarMenuBadge>
-                        )}
-                      </SidebarMenuItem>
-                    )
-                  })}
+                  {visibleItems.map((item) =>
+                    renderItem(item, group.secondary ? 'sm' : undefined),
+                  )}
                 </SidebarMenu>
               </SidebarGroupContent>
             </SidebarGroup>
@@ -113,7 +119,6 @@ export function AppSidebar({
           superAdmin={me.superAdmin}
         />
       </SidebarFooter>
-      <SidebarRail />
     </Sidebar>
   )
 }
