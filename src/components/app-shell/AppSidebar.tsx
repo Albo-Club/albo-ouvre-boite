@@ -12,6 +12,7 @@ import {
   SidebarMenuBadge,
   SidebarMenuButton,
   SidebarMenuItem,
+  SidebarRail,
 } from '~/components/ui/sidebar'
 import { OrgSwitcher } from './OrgSwitcher'
 import { NavUser } from './NavUser'
@@ -119,6 +120,7 @@ export function AppSidebar({
           superAdmin={me.superAdmin}
         />
       </SidebarFooter>
+      <SidebarRail />
     </Sidebar>
   )
 }

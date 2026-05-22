@@ -16,7 +16,6 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from '~/components/ui/sidebar'
-import { Logo } from '~/components/Logo'
 
 type Org = {
   _id: string
@@ -52,7 +51,7 @@ export function OrgSwitcher({
               size="lg"
               className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
             >
-              <div className="bg-sidebar-primary text-sidebar-primary-foreground flex aspect-square size-8 items-center justify-center rounded-lg">
+              <div className="bg-sidebar-primary text-sidebar-primary-foreground flex aspect-square size-8 shrink-0 items-center justify-center rounded-lg">
                 {current?.logoUrl ? (
                   <img
                     src={current.logoUrl}
@@ -60,7 +59,9 @@ export function OrgSwitcher({
                     className="size-8 rounded-lg object-cover"
                   />
                 ) : (
-                  <Logo className="size-4" />
+                  <span className="text-sm font-semibold">
+                    {(current?.name ?? currentSlug).slice(0, 1).toUpperCase()}
+                  </span>
                 )}
               </div>
               <div className="grid flex-1 text-left text-sm leading-tight">

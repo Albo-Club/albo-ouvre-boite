@@ -49,7 +49,7 @@ function OrgLayout() {
   }
 
   return (
-    <SidebarProvider>
+    <SidebarProvider className="h-svh overflow-hidden">
       <AppSidebar
         orgs={me.orgs}
         currentSlug={orgSlug}
@@ -61,13 +61,15 @@ function OrgLayout() {
           superAdmin: me.user.superAdmin,
         }}
       />
-      <SidebarInset>
+      <SidebarInset className="overflow-hidden">
         <AppHeader
           orgSlug={orgSlug}
           orgName={member.name}
           onOpenAiChat={() => setChatOpen(true)}
         />
-        <Outlet />
+        <div className="min-h-0 flex-1 overflow-y-auto">
+          <Outlet />
+        </div>
       </SidebarInset>
       {org && (
         <AiChat

@@ -68,15 +68,16 @@ Connecté en tant qu'Alice sur `/app/acme/`.
 | #    | Étape                                                          | Résultat attendu                                                  |
 | ---- | -------------------------------------------------------------- | ----------------------------------------------------------------- |
 | SH1  | Sidebar `inset` (carte flottante arrondie) : groupes Platform / Billing en haut ; Members / Invitations / Settings épinglés en bas (nav secondaire `mt-auto`, sans label) | OK ; items admin-only masqués si rôle "member"                     |
-| SH2  | Clic sur `SidebarTrigger` (header)                             | Sidebar collapse en `icon` ; cookie `sidebar_state` persiste       |
+| SH2  | Clic sur `SidebarTrigger` (header) OU sur la `SidebarRail` (bande fine au bord droit de la sidebar) | Sidebar collapse en `icon` ; cookie `sidebar_state` persiste ; icônes orga/profil non écrasées en mode `icon` |
 | SH3  | Redimensionner < 768px                                         | Sidebar passe en `Sheet` mobile, ouverture via burger              |
 | SH4  | Naviguer Dashboard → Items → Locations → Calendar → Tasks → Billing | Breadcrumb du header se met à jour à chaque route             |
 | SH5  | Dashboard : 4 KPI cards + AreaChart + PieChart + recent items  | Counts cohérents avec items.list / listMembers réels               |
 | SH6  | Toggle dark mode (icône soleil/lune dans header)               | Page bascule light ↔ dark, sidebar + charts adaptés                |
 | SH7  | Theme picker (footer sidebar) → choisir Blue / Emerald / Violet| Primary + chart-1 changent ; survit au reload (localStorage)       |
-| SH8  | Org switcher (header sidebar)                                  | Liste les orgs ; clic switch route + persiste `lastOrgSlug`        |
-| SH9  | NavUser (footer sidebar) → profile / switch org / sign out     | Mêmes destinations qu'avant refonte                                |
+| SH8  | Org switcher (header sidebar), orga **sans** logo             | Initiale (1ʳᵉ lettre) centrée dans le carré arrondi ; liste les orgs ; clic switch route + persiste `lastOrgSlug` |
+| SH9  | NavUser (footer sidebar) → profile / switch org / sign out     | Avatar **rond** ; sans photo, initiales prénom+nom (ex. `BB`) ; mêmes destinations qu'avant refonte |
 | SH10 | Bouton AI dans header                                          | Ouvre le modal chat existant (non-régression)                      |
+| SH11 | Ouvrir une page au contenu plus haut que l'écran (ex. Items long) | Le cadre `inset` reste calé sur la hauteur du viewport ; le scroll se fait **dans** le cadre, bord bas arrondi toujours visible |
 
 ## Niveau 2 — Data table items (5 min)
 
