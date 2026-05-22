@@ -38,7 +38,12 @@ export function NavUser({
   const navigate = useNavigate()
   const { isMobile } = useSidebar()
   const displayName = name ?? email
-  const initials = (name ?? email).slice(0, 2).toUpperCase() || '?'
+  const source = name?.trim() || email
+  const parts = source.split(/\s+/).filter(Boolean)
+  const initials =
+    parts.length >= 2
+      ? (parts[0][0] + parts[parts.length - 1][0]).toUpperCase()
+      : source.slice(0, 2).toUpperCase() || '?'
 
   async function handleSignOut() {
     await authClient.signOut()
@@ -54,13 +59,11 @@ export function NavUser({
               size="lg"
               className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
             >
-              <Avatar className="size-8 rounded-lg">
+              <Avatar className="size-8">
                 {avatarUrl ? (
                   <AvatarImage src={avatarUrl} alt={displayName} />
                 ) : null}
-                <AvatarFallback className="rounded-lg">
-                  {initials}
-                </AvatarFallback>
+                <AvatarFallback>{initials}</AvatarFallback>
               </Avatar>
               <div className="grid flex-1 text-left text-sm leading-tight">
                 <span className="truncate font-semibold">{displayName}</span>
