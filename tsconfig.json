@@ -13,6 +13,11 @@
     "verbatimModuleSyntax": true,
     "noEmit": true,
 
+    /* Incremental: cache type info between runs so repeat `tsc` only re-checks
+       the delta. Stored under node_modules (already gitignored). */
+    "incremental": true,
+    "tsBuildInfoFile": "./node_modules/.cache/tsc/tsconfig.tsbuildinfo",
+
     /* Linting */
     "skipLibCheck": true,
     "strict": true,
