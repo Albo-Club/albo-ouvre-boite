@@ -2,6 +2,7 @@ import { createFileRoute, Link } from '@tanstack/react-router'
 
 import { Button } from '~/components/ui/button'
 import { Logo } from '~/components/Logo'
+import { useRedirectWhenAuthenticated } from '~/lib/auth-state'
 
 export const Route = createFileRoute('/')({
   component: Home,
@@ -17,6 +18,7 @@ export const Route = createFileRoute('/')({
 })
 
 function Home() {
+  useRedirectWhenAuthenticated()
   return (
     <main className="flex min-h-svh flex-col items-center justify-center gap-8 p-8">
       <Logo className="h-10" />

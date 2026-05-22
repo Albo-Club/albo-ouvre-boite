@@ -6,6 +6,7 @@ import { toast } from 'sonner'
 
 import { authClient } from '~/lib/auth-client'
 import { classifyAuthError, formatAuthError } from '~/lib/auth-errors'
+import { useRedirectWhenAuthenticated } from '~/lib/auth-state'
 import { Alert, AlertDescription } from '~/components/ui/alert'
 import { Button } from '~/components/ui/button'
 import { Input } from '~/components/ui/input'
@@ -44,6 +45,7 @@ export const Route = createFileRoute('/login')({
 })
 
 function LoginPage() {
+  useRedirectWhenAuthenticated()
   const { redirect } = Route.useSearch()
   const navigate = useNavigate()
   const [loading, setLoading] = useState(false)

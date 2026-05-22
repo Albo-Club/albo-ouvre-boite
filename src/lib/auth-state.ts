@@ -1,3 +1,5 @@
+import { useEffect } from 'react'
+import { useNavigate } from '@tanstack/react-router'
 import { useConvexAuth } from 'convex/react'
 import { authClient } from '~/lib/auth-client'
 
@@ -22,8 +24,6 @@ export function useAuthState() {
   const baSession = authClient.useSession()
 
   const baPending = baSession.isPending
-  const baRefetching = baSession.isRefetching
-  const baError = baSession.error
   const hasBaUser = !!baSession.data?.user
 
   // Loading: either side hasn't decided yet, OR BA has a user but Convex
@@ -33,17 +33,8 @@ export function useAuthState() {
   // Authenticated: both sides must agree. (Both true.)
   const isAuthenticated = convexAuth && hasBaUser
 
-  // Signed out: only when BA has *positively* settled on "no session" — not
-  // pending, not refetching, no user, AND no transient fetch error. A
-  // failed/aborted/cold `/get-session` (network blip, Vercel function cold
-  // start, request aborted mid-hydration, cross-tab focus refetch) leaves
-  // `data:null` with `isPending:false`; the previous `!baPending && !hasBaUser`
-  // treated that like a real logout and redirected a still-authenticated user
-  // to /login on a new tab or after idle — even though the session cookie is
-  // valid and the very next fetch returns 200. Excluding the error/refetching
-  // states keeps a transient blip from logging the user out.
-  const isSignedOut =
-    !baPending && !baRefetching && !hasBaUser && baError == null
+  // Signed out: BA confirms no session AND it's not still loading.
+  const isSignedOut = !baPending && !hasBaUser
 
   return {
     isLoading,
@@ -51,4 +42,18 @@ export function useAuthState() {
     isSignedOut,
     user: baSession.data?.user ?? null,
   }
+}
+
+// Mirror of the `/app` guard for the *public* auth-entry pages (`/`, `/login`,
+// `/register`): send an already-authenticated visitor into the app instead of
+// showing them the landing/sign-in screen. Keys off the BA session alone (not
+// Convex) so the redirect fires as soon as a session is confirmed; the `/app`
+// guard then covers the Convex-JWT loading gap.
+export function useRedirectWhenAuthenticated() {
+  const navigate = useNavigate()
+  const { user } = useAuthState()
+
+  useEffect(() => {
+    if (user) navigate({ to: '/app' })
+  }, [user, navigate])
 }

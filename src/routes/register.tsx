@@ -6,6 +6,7 @@ import { toast } from 'sonner'
 
 import { authClient } from '~/lib/auth-client'
 import { classifyAuthError, formatAuthError } from '~/lib/auth-errors'
+import { useRedirectWhenAuthenticated } from '~/lib/auth-state'
 import { isPasswordPwned } from '~/lib/hibp'
 import { Button } from '~/components/ui/button'
 import { Input } from '~/components/ui/input'
@@ -46,6 +47,7 @@ export const Route = createFileRoute('/register')({
 })
 
 function RegisterPage() {
+  useRedirectWhenAuthenticated()
   const { redirect } = Route.useSearch()
   const [loading, setLoading] = useState(false)
   const [sentTo, setSentTo] = useState<string | null>(null)

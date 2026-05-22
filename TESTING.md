@@ -53,7 +53,7 @@ Tester avec un user neuf "Alice" (`alice@test.local`).
 | A14 | Resend (verification & reset)                          | 2e email arrive si email existe. Toast neutre privacy-respecting.                  |
 | A15 | Network error (offline) sur magic-link + forgot        | Inline `<Alert>` "Network error" (pas de fausse "link sent" trompeuse).            |
 | A16 | `/app/me` Sessions → list + Revoke + "Sign out others" | Session courante = badge Current sans bouton Revoke. Revoke autres OK. "Sign out other devices" demande confirm puis invalide tout sauf l'actuelle. |
-| A17 | **Cross-tab persistence** (régression localhost + prod cold-cache) | Sign-in onglet A → ouvrir onglet B sur `/app/acme` → reste loggé. Hard refresh chaque onglet 3× → toujours loggé. **Cold/idle (prod)** : en DevTools, supprimer `__Secure-albo.session_data` + `__Secure-albo.convex_jwt` (garder `…session_token`), ouvrir un nouvel onglet `/app` → reste loggé (pas de bounce `/login`), `get-session` = 200. |
+| A17 | **Cross-tab persistence** (régression localhost)        | Sign-in onglet A → ouvrir onglet B sur `/app/acme` → reste loggé. Hard refresh chaque onglet 3× → toujours loggé. |
 | A18 | Onboarding org avec slug réservé (`admin`, `api`, `me`) | Feedback inline "This slug is reserved" sous l'input. Submit toast "slug_reserved". |
 | A19 | Onboarding org avec slug déjà pris                      | Feedback inline "This slug is already taken" en temps réel (sans soumettre). Submit toast "slug_taken". |
 
