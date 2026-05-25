@@ -1,6 +1,7 @@
 import { useNavigate } from '@tanstack/react-router'
 import { useConvexMutation } from '@convex-dev/react-query'
-import { ChevronsUpDown, Plus, Check } from 'lucide-react'
+import { Check, ChevronsUpDown, Plus } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 
 import { api } from '../../../convex/_generated/api'
 import {
@@ -33,8 +34,13 @@ export function OrgSwitcher({
   currentSlug: string
 }) {
   const navigate = useNavigate()
+  const { t } = useTranslation(['nav', 'common'])
   const setLastOrg = useConvexMutation(api.organizations.setLastOrg)
   const current = orgs.find((o) => o.slug === currentSlug)
+  const roleLabel = (role: string | undefined) =>
+    role === 'owner' || role === 'admin' || role === 'member'
+      ? t(`common:roles.${role}`)
+      : '—'
 
   async function switchTo(slug: string) {
     if (slug === currentSlug) return
@@ -68,8 +74,8 @@ export function OrgSwitcher({
                 <span className="truncate font-semibold">
                   {current?.name ?? currentSlug}
                 </span>
-                <span className="text-muted-foreground truncate text-xs capitalize">
-                  {current?.role ?? '—'}
+                <span className="text-muted-foreground truncate text-xs">
+                  {roleLabel(current?.role)}
                 </span>
               </div>
               <ChevronsUpDown className="ml-auto size-4" />
@@ -82,7 +88,7 @@ export function OrgSwitcher({
             sideOffset={4}
           >
             <DropdownMenuLabel className="text-muted-foreground text-xs">
-              Organizations
+              {t('nav:orgSwitcher.label')}
             </DropdownMenuLabel>
             {orgs.map((org) => (
               <DropdownMenuItem
@@ -117,7 +123,9 @@ export function OrgSwitcher({
               <div className="bg-background flex size-6 items-center justify-center rounded border">
                 <Plus className="size-4" />
               </div>
-              <span className="text-muted-foreground">All organizations</span>
+              <span className="text-muted-foreground">
+                {t('nav:orgSwitcher.allOrganizations')}
+              </span>
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

@@ -1,0 +1,119 @@
+{
+  "tasks": {
+    "metaTitle": "Tasks — albo",
+    "title": "Tasks",
+    "subtitle": "Move cards between columns with the arrow buttons.",
+    "demoTitle": "Demo data",
+    "demoDescription": "Local-state kanban board with mock tasks. Plug it into a Convex `tasks` table for persistence.",
+    "empty": "No tasks",
+    "columns": {
+      "todo": "To do",
+      "in_progress": "In progress",
+      "done": "Done"
+    },
+    "priority": {
+      "low": "Low",
+      "medium": "Medium",
+      "high": "High"
+    },
+    "due": {
+      "today": "Today",
+      "tomorrow": "Tomorrow",
+      "yesterday": "Yesterday",
+      "inDays": "in {{count}}d",
+      "daysAgo": "{{count}}d ago"
+    },
+    "moveLeft": "Move left",
+    "moveRight": "Move right"
+  },
+  "calendar": {
+    "metaTitle": "Calendar — albo",
+    "title": "Calendar",
+    "subtitle": "Pick a date to view its events.",
+    "demoTitle": "Demo data",
+    "demoDescription": "These events are mock data — connect Google Calendar, Outlook, or your own events table.",
+    "noDate": "No date",
+    "eventCount_one": "{{count}} event",
+    "eventCount_other": "{{count}} events",
+    "nothingScheduled": "Nothing scheduled for this day.",
+    "duration": "{{count}} min",
+    "types": {
+      "meeting": "Meeting",
+      "review": "Review",
+      "focus": "Focus block",
+      "demo": "Demo"
+    }
+  },
+  "map": {
+    "metaTitle": "Locations — albo",
+    "title": "Locations",
+    "subtitle_one": "{{count}} office in your portfolio. Click a pin to view details.",
+    "subtitle_other": "{{count}} offices in your portfolio. Click a pin to view details.",
+    "demoTitle": "Demo data",
+    "demoDescription": "These offices are fictional — connect your own source (Convex, Airtable, ERP) to display your real spaces.",
+    "portfolio": "Portfolio",
+    "byStatus": "Breakdown by status",
+    "list": "List",
+    "officeCount_one": "{{count}} office",
+    "officeCount_other": "{{count}} offices",
+    "loadingMap": "Loading map…",
+    "desk_one": "{{count}} desk",
+    "desk_other": "{{count}} desks",
+    "perMonth": "{{price}} / month",
+    "perDeskPerMonth": "{{price}} / desk / month",
+    "status": {
+      "available": "Available",
+      "occupied": "Occupied",
+      "maintenance": "Maintenance"
+    }
+  },
+  "billing": {
+    "metaTitle": "Billing — albo",
+    "title": "Billing",
+    "subtitle": "Manage your plan, invoices, and payment methods.",
+    "demoTitle": "Demo data",
+    "demoDescription": "This page renders mock billing data — wire it to Stripe, LemonSqueezy, or your provider of choice.",
+    "tabs": {
+      "overview": "Overview",
+      "invoices": "Invoices",
+      "methods": "Payment methods"
+    },
+    "currentPlan": "Current plan",
+    "billedMonthly": "Billed monthly",
+    "perInterval": "/{{interval}}",
+    "interval": {
+      "month": "month",
+      "year": "year"
+    },
+    "seatsUsed": "{{used}} / {{total}} seats used",
+    "changePlan": "Change plan",
+    "nextInvoice": "Next invoice",
+    "autoCharged": "Auto-charged to your default card",
+    "scheduledFor": "Scheduled for {{date}}",
+    "viewDetails": "View details",
+    "usage": "Usage",
+    "thisCycle": "This billing cycle",
+    "invoicesOnFile_one": "{{count}} invoice on file",
+    "invoicesOnFile_other": "{{count}} invoices on file",
+    "table": {
+      "number": "Number",
+      "date": "Date",
+      "description": "Description",
+      "amount": "Amount",
+      "status": "Status"
+    },
+    "invoiceStatus": {
+      "paid": "Paid",
+      "pending": "Pending",
+      "failed": "Failed"
+    },
+    "downloadInvoice": "Download invoice",
+    "cardsLinked": "Cards linked to this organization",
+    "addCard": "Add card",
+    "default": "Default",
+    "expires": "Expires {{month}}/{{year}}",
+    "addCardTitle": "Add payment method",
+    "addCardDescription": "Connect Stripe Elements or LemonSqueezy here. This dialog is a demo placeholder.",
+    "saveCard": "Save card"
+  }
+}

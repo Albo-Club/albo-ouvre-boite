@@ -1,5 +1,11 @@
 import { Link, useLocation } from '@tanstack/react-router'
+import { useTranslation } from 'react-i18next'
 
+import { OrgSwitcher } from './OrgSwitcher'
+import { NavUser } from './NavUser'
+import { ThemePicker } from './ThemePicker'
+import { getNavGroups } from './nav'
+import { LanguageSwitcher } from '~/components/i18n/LanguageSwitcher'
 import {
   Sidebar,
   SidebarContent,
@@ -14,10 +20,6 @@ import {
   SidebarMenuItem,
   SidebarRail,
 } from '~/components/ui/sidebar'
-import { OrgSwitcher } from './OrgSwitcher'
-import { NavUser } from './NavUser'
-import { ThemePicker } from './ThemePicker'
-import { getNavGroups } from './nav'
 
 type NavLeaf = ReturnType<typeof getNavGroups>[number]['items'][number]
 
@@ -48,31 +50,33 @@ export function AppSidebar({
   me: Me
 }) {
   const location = useLocation()
+  const { t } = useTranslation(['nav', 'common'])
   const groups = getNavGroups()
   const isAdmin = myRole === 'admin' || myRole === 'owner'
 
   const renderItem = (item: NavLeaf, size?: 'sm') => {
     const Icon = item.icon
     const href = item.to.replace('$orgSlug', currentSlug)
+    const title = t(`nav:${item.titleKey}`)
     const isActive =
       item.to === '/app/$orgSlug'
         ? location.pathname === href
         : location.pathname === href ||
           location.pathname.startsWith(href + '/')
     return (
-      <SidebarMenuItem key={item.title}>
+      <SidebarMenuItem key={item.titleKey}>
         <SidebarMenuButton
           asChild
           isActive={isActive}
-          tooltip={item.title}
+          tooltip={title}
           size={size}
         >
           <Link to={item.to} params={{ orgSlug: currentSlug }}>
             {Icon ? <Icon /> : null}
-            <span>{item.title}</span>
+            <span>{title}</span>
           </Link>
         </SidebarMenuButton>
-        {item.badge && <SidebarMenuBadge>{item.badge}</SidebarMenuBadge>}
+        {item.demo && <SidebarMenuBadge>{t('common:demo')}</SidebarMenuBadge>}
       </SidebarMenuItem>
     )
   }
@@ -90,11 +94,11 @@ export function AppSidebar({
           if (visibleItems.length === 0) return null
           return (
             <SidebarGroup
-              key={group.label}
+              key={group.labelKey}
               className={group.secondary ? 'mt-auto' : undefined}
             >
               {!group.secondary && (
-                <SidebarGroupLabel>{group.label}</SidebarGroupLabel>
+                <SidebarGroupLabel>{t(`nav:${group.labelKey}`)}</SidebarGroupLabel>
               )}
               <SidebarGroupContent>
                 <SidebarMenu>
@@ -111,6 +115,9 @@ export function AppSidebar({
         <SidebarMenu>
           <SidebarMenuItem>
             <ThemePicker />
+          </SidebarMenuItem>
+          <SidebarMenuItem>
+            <LanguageSwitcher variant="sidebar" />
           </SidebarMenuItem>
         </SidebarMenu>
         <NavUser

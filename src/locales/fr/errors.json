@@ -1,0 +1,17 @@
+{
+  "auth": {
+    "INVALID_CREDENTIALS": "E-mail ou mot de passe incorrect.",
+    "EMAIL_NOT_VERIFIED": "Vérifiez votre e-mail pour continuer. Le lien vous attend dans votre boîte de réception.",
+    "EMAIL_ALREADY_REGISTERED": "Cet e-mail est déjà utilisé.",
+    "EMAIL_ALREADY_REGISTERED_signup": "Si cet e-mail n'est pas déjà pris, nous vous enverrons un lien de vérification.",
+    "EMAIL_INVALID": "Veuillez saisir une adresse e-mail valide.",
+    "PASSWORD_TOO_SHORT": "Le mot de passe est trop court.",
+    "PASSWORD_TOO_LONG": "Le mot de passe est trop long.",
+    "TOKEN_INVALID": "Ce lien est invalide. Veuillez en demander un nouveau.",
+    "TOKEN_EXPIRED": "Ce lien a expiré. Veuillez en demander un nouveau.",
+    "SESSION_EXPIRED": "Votre session a expiré. Veuillez vous reconnecter.",
+    "RATE_LIMITED": "Trop de tentatives — patientez un instant puis réessayez.",
+    "NETWORK": "Erreur réseau. Vérifiez votre connexion et réessayez.",
+    "UNKNOWN": "Une erreur est survenue. Veuillez réessayer."
+  }
+}

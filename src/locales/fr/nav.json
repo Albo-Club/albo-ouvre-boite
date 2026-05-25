@@ -1,0 +1,109 @@
+{
+  "appShell": {
+    "ai": "IA",
+    "breadcrumb": {
+      "items": "Éléments",
+      "calendar": "Calendrier",
+      "tasks": "Tâches",
+      "billing": "Facturation",
+      "settings": "Paramètres",
+      "members": "Membres",
+      "invitations": "Invitations",
+      "general": "Général"
+    }
+  },
+  "groups": {
+    "platform": "Plateforme",
+    "billing": "Facturation",
+    "workspace": "Espace de travail"
+  },
+  "items": {
+    "dashboard": "Tableau de bord",
+    "items": "Éléments",
+    "locations": "Emplacements",
+    "calendar": "Calendrier",
+    "tasks": "Tâches",
+    "payments": "Paiements",
+    "invoices": "Factures",
+    "members": "Membres",
+    "invitations": "Invitations",
+    "settings": "Paramètres"
+  },
+  "navUser": {
+    "switchOrg": "Changer d'organisation"
+  },
+  "orgSwitcher": {
+    "label": "Organisations",
+    "allOrganizations": "Toutes les organisations"
+  },
+  "theme": {
+    "label": "Thème",
+    "colorTheme": "Thème de couleur",
+    "neutral": "Neutre",
+    "blue": "Bleu",
+    "emerald": "Émeraude",
+    "violet": "Violet"
+  },
+  "loading": "Chargement…",
+  "redirecting": "Redirection…",
+  "onboarding": {
+    "metaTitle": "Créez votre organisation — albo",
+    "title": "Créez votre première organisation",
+    "description": "Votre espace de travail est rattaché à une organisation. Vous pourrez en créer d'autres plus tard.",
+    "name": "Nom",
+    "namePlaceholder": "Acme Inc.",
+    "slug": "Identifiant",
+    "slugPlaceholder": "acme",
+    "slugHintPrefix": "Utilisé dans les URL :",
+    "slugFallback": "votre-identifiant",
+    "submit": "Créer l'organisation",
+    "created": "Organisation créée",
+    "errors": {
+      "slugTaken": "Cet identifiant est déjà pris",
+      "slugReserved": "Cet identifiant est réservé — choisissez-en un autre",
+      "invalidSlug": "Format d'identifiant invalide",
+      "invalidName": "Nom invalide",
+      "couldNotCreate": "Impossible de créer l'organisation"
+    },
+    "availability": {
+      "checking": "Vérification de la disponibilité…",
+      "available": "Identifiant disponible",
+      "invalid": "Format d'identifiant invalide",
+      "reserved": "Cet identifiant est réservé",
+      "taken": "Cet identifiant est déjà pris"
+    }
+  },
+  "admin": {
+    "metaTitle": "Super-administration — albo",
+    "title": "Super-administration",
+    "subtitle": "Vue d'ensemble des utilisateurs et des organisations du déploiement.",
+    "back": "← Retour",
+    "granted": "Super-admin accordé",
+    "revoked": "Super-admin révoqué",
+    "lastSuperAdmin": "Vous êtes le dernier super-administrateur",
+    "actionFailed": "Échec de l'action",
+    "stats": {
+      "users": "Utilisateurs",
+      "organizations": "Organisations",
+      "memberships": "Adhésions",
+      "pendingInvites": "Invitations en attente"
+    },
+    "orgs": {
+      "title": "Organisations",
+      "description": "Toutes les organisations du déploiement.",
+      "empty": "Aucune organisation.",
+      "members_one": "{{count}} membre",
+      "members_other": "{{count}} membres"
+    },
+    "users": {
+      "title": "Utilisateurs",
+      "description": "Activez le statut super-admin pour accorder un accès à l'ensemble du déploiement.",
+      "empty": "Aucun utilisateur.",
+      "you": "(vous)",
+      "orgs_one": "{{count}} organisation",
+      "orgs_other": "{{count}} organisations",
+      "isSuperAdmin": "Super-admin",
+      "makeSuperAdmin": "Rendre super-admin"
+    }
+  }
+}

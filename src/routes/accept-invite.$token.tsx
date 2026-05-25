@@ -1,14 +1,17 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { useConvexAuth } from 'convex/react'
 import { useConvexMutation, useConvexQuery } from '@convex-dev/react-query'
 import { useForm } from '@tanstack/react-form'
+import { Trans, useTranslation } from 'react-i18next'
 import { z } from 'zod'
 import { toast } from 'sonner'
 import { ConvexError } from 'convex/values'
 
 import { api } from '../../convex/_generated/api'
 import { authClient } from '~/lib/auth-client'
+import { getI18n } from '~/lib/i18n'
+import { getLocale } from '~/lib/locale'
 import { classifyAuthError, formatAuthError } from '~/lib/auth-errors'
 import { isPasswordPwned } from '~/lib/hibp'
 import { Button } from '~/components/ui/button'
@@ -35,7 +38,16 @@ import {
 
 export const Route = createFileRoute('/accept-invite/$token')({
   component: AcceptInvitePage,
-  head: () => ({ meta: [{ title: 'Accept invitation — albo' }] }),
+  head: () => ({
+    meta: [
+      {
+        title: getI18n(getLocale()).getFixedT(
+          null,
+          'auth',
+        )('acceptInvite.metaTitle'),
+      },
+    ],
+  }),
 })
 
 type Preview = NonNullable<
@@ -43,6 +55,7 @@ type Preview = NonNullable<
 >
 
 function AcceptInvitePage() {
+  const { t } = useTranslation('auth')
   const { token } = Route.useParams()
   const navigate = useNavigate()
   const { isLoading: authLoading, isAuthenticated } = useConvexAuth()
@@ -63,45 +76,44 @@ function AcceptInvitePage() {
     ;(async () => {
       try {
         const { orgSlug } = await acceptMutation({ token })
-        toast.success('Invitation accepted')
+        toast.success(t('acceptInvite.accepted'))
         navigate({ to: '/app/$orgSlug', params: { orgSlug } })
       } catch (err) {
         const code = err instanceof ConvexError ? (err.data as string) : ''
-        const messages: Record<string, string> = {
-          not_found: 'This invitation does not exist',
-          already_accepted: 'This invitation was already accepted',
-          expired: 'This invitation has expired',
-          email_mismatch:
-            'This invitation was sent to a different email address',
-        }
-        setAcceptError(messages[code] ?? 'Could not accept this invitation.')
+        const known = ['not_found', 'already_accepted', 'expired', 'email_mismatch']
+        setAcceptError(
+          known.includes(code)
+            ? t(`acceptInvite.errors.${code}`)
+            : t('acceptInvite.errors.generic'),
+        )
         triedAccept.current = false
       }
     })()
   }, [preview, authLoading, isAuthenticated, me, token, navigate, acceptMutation])
 
-  if (!preview) return <LoadingCard message="Loading invitation…" />
+  if (!preview)
+    return <LoadingCard message={t('acceptInvite.loadingInvitation')} />
   if (preview.kind === 'not_found') {
     return (
       <InfoCard
-        title="Invitation not found"
-        message="The link you used is invalid or has been revoked."
+        title={t('acceptInvite.notFound.title')}
+        message={t('acceptInvite.notFound.message')}
       />
     )
   }
   if (preview.kind === 'expired') {
     return (
       <InfoCard
-        title="Invitation expired"
-        message="Ask the person who invited you to send a fresh link."
+        title={t('acceptInvite.expired.title')}
+        message={t('acceptInvite.expired.message')}
       />
     )
   }
   if (preview.kind === 'already_accepted') {
     return (
       <InfoCard
-        title="Already accepted"
-        message="This invitation has already been used."
+        title={t('acceptInvite.alreadyAccepted.title')}
+        message={t('acceptInvite.alreadyAccepted.message')}
       />
     )
   }
@@ -120,7 +132,9 @@ function AcceptInvitePage() {
     }
     return (
       <LoadingCard
-        message={acceptError ?? `Joining ${preview.orgName}…`}
+        message={
+          acceptError ?? t('acceptInvite.joining', { orgName: preview.orgName })
+        }
         error={!!acceptError}
       />
     )
@@ -134,18 +148,23 @@ function AcceptInvitePage() {
 }
 
 function LoadingCard({
-  message = 'Loading…',
+  message,
   error = false,
 }: {
   message?: string
   error?: boolean
 }) {
+  const { t } = useTranslation(['auth', 'common'])
   return (
     <main className="flex min-h-svh items-center justify-center p-4">
       <Card className="w-full max-w-sm">
         <CardHeader>
-          <CardTitle>{error ? 'Hold on' : 'One moment'}</CardTitle>
-          <CardDescription>{message}</CardDescription>
+          <CardTitle>
+            {error ? t('auth:acceptInvite.holdOn') : t('auth:acceptInvite.oneMoment')}
+          </CardTitle>
+          <CardDescription>
+            {message ?? t('common:loadingEllipsis')}
+          </CardDescription>
         </CardHeader>
         <CardContent />
       </Card>
@@ -174,18 +193,27 @@ function SwitchAccountCard({
   preview: Extract<Preview, { kind: 'ok' }>
   currentEmail: string
 }) {
+  const { t } = useTranslation('auth')
   const [loading, setLoading] = useState(false)
   return (
     <main className="flex min-h-svh items-center justify-center p-4">
       <Card className="w-full max-w-sm">
         <CardHeader>
-          <CardTitle>Wrong account</CardTitle>
+          <CardTitle>{t('acceptInvite.wrongAccount.title')}</CardTitle>
           <CardDescription>
             <span className="block break-all">
-              You're signed in as <strong>{currentEmail}</strong>.
+              <Trans
+                t={t}
+                i18nKey="acceptInvite.wrongAccount.signedInAs"
+                values={{ email: currentEmail }}
+              />
             </span>
             <span className="mt-2 block break-all">
-              This invitation is for <strong>{preview.email}</strong>.
+              <Trans
+                t={t}
+                i18nKey="acceptInvite.wrongAccount.invitationFor"
+                values={{ email: preview.email }}
+              />
             </span>
           </CardDescription>
         </CardHeader>
@@ -200,7 +228,7 @@ function SwitchAccountCard({
             }}
           >
             {loading && <Spinner />}
-            Sign out & switch account
+            {t('acceptInvite.wrongAccount.switch')}
           </Button>
         </CardFooter>
       </Card>
@@ -208,15 +236,20 @@ function SwitchAccountCard({
   )
 }
 
-const signInSchema = z.object({
-  password: z.string().min(1, 'Password is required'),
-})
-
 function SignInToAccept({
   preview,
 }: {
   preview: Extract<Preview, { kind: 'ok' }>
 }) {
+  const { t } = useTranslation(['auth', 'validation', 'errors'])
+  const te = (k: string) => t(`errors:${k}`)
+  const signInSchema = useMemo(
+    () =>
+      z.object({
+        password: z.string().min(1, t('validation:password.required')),
+      }),
+    [t],
+  )
   const [loading, setLoading] = useState(false)
   const [magicLoading, setMagicLoading] = useState(false)
 
@@ -231,7 +264,7 @@ function SignInToAccept({
       })
       setLoading(false)
       if (error) {
-        toast.error(formatAuthError(classifyAuthError(error), 'signin'))
+        toast.error(formatAuthError(classifyAuthError(error), 'signin', te))
         return
       }
       // useConvexAuth flips → auto-accept effect fires in parent
@@ -246,19 +279,25 @@ function SignInToAccept({
     })
     setMagicLoading(false)
     if (error) {
-      toast.error(formatAuthError(classifyAuthError(error), 'signin'))
+      toast.error(formatAuthError(classifyAuthError(error), 'signin', te))
       return
     }
-    toast.success('Magic link sent — check your inbox.')
+    toast.success(t('auth:magic.sentInbox'))
   }
 
   return (
     <main className="flex min-h-svh items-center justify-center p-4">
       <Card className="w-full max-w-sm">
         <CardHeader>
-          <CardTitle>Join {preview.orgName}</CardTitle>
+          <CardTitle>
+            {t('auth:acceptInvite.join', { orgName: preview.orgName })}
+          </CardTitle>
           <CardDescription>
-            Sign in to <strong>{preview.email}</strong> to accept.
+            <Trans
+              t={t}
+              i18nKey="auth:acceptInvite.signInDescription"
+              values={{ email: preview.email }}
+            />
           </CardDescription>
         </CardHeader>
         <form
@@ -272,7 +311,9 @@ function SignInToAccept({
           <CardContent>
             <FieldGroup>
               <Field>
-                <FieldLabel htmlFor="invite-email">Email</FieldLabel>
+                <FieldLabel htmlFor="invite-email">
+                  {t('auth:fields.email')}
+                </FieldLabel>
                 <Input
                   id="invite-email"
                   type="email"
@@ -287,7 +328,9 @@ function SignInToAccept({
                     field.state.meta.isTouched && !field.state.meta.isValid
                   return (
                     <Field data-invalid={invalid || undefined}>
-                      <FieldLabel htmlFor={field.name}>Password</FieldLabel>
+                      <FieldLabel htmlFor={field.name}>
+                        {t('auth:fields.password')}
+                      </FieldLabel>
                       <PasswordInput
                         id={field.name}
                         name={field.name}
@@ -310,7 +353,7 @@ function SignInToAccept({
           <CardFooter className="flex-col gap-3">
             <Button type="submit" className="w-full" disabled={loading}>
               {loading && <Spinner />}
-              Accept invitation
+              {t('auth:acceptInvite.accept')}
             </Button>
             <Button
               type="button"
@@ -320,7 +363,7 @@ function SignInToAccept({
               disabled={magicLoading}
             >
               {magicLoading && <Spinner />}
-              Email me a magic link
+              {t('auth:signIn.magicLink')}
             </Button>
           </CardFooter>
         </form>
@@ -329,16 +372,21 @@ function SignInToAccept({
   )
 }
 
-const signUpSchema = z.object({
-  name: z.string().min(1, 'Name is required'),
-  password: z.string().min(12, 'At least 12 characters'),
-})
-
 function SignUpToAccept({
   preview,
 }: {
   preview: Extract<Preview, { kind: 'ok' }>
 }) {
+  const { t } = useTranslation(['auth', 'validation', 'errors'])
+  const te = (k: string) => t(`errors:${k}`)
+  const signUpSchema = useMemo(
+    () =>
+      z.object({
+        name: z.string().min(1, t('validation:name.required')),
+        password: z.string().min(12, t('validation:password.min12')),
+      }),
+    [t],
+  )
   const [loading, setLoading] = useState(false)
   const [verificationSent, setVerificationSent] = useState(false)
 
@@ -354,7 +402,7 @@ function SignUpToAccept({
       })
       setLoading(false)
       if (error) {
-        toast.error(formatAuthError(classifyAuthError(error), 'signup'))
+        toast.error(formatAuthError(classifyAuthError(error), 'signup', te))
         return
       }
       setVerificationSent(true)
@@ -366,12 +414,11 @@ function SignUpToAccept({
     return (
       <VerificationSentCard
         description={
-          <>
-            We sent a verification link to <strong>{preview.email}</strong>.
-            Click it to confirm your email — your invitation to{' '}
-            <strong>{preview.orgName}</strong> will be accepted automatically.
-            The link expires in 1 hour.
-          </>
+          <Trans
+            t={t}
+            i18nKey="auth:acceptInvite.verifyDescription"
+            values={{ email: preview.email, orgName: preview.orgName }}
+          />
         }
       />
     )
@@ -381,10 +428,15 @@ function SignUpToAccept({
     <main className="flex min-h-svh items-center justify-center p-4">
       <Card className="w-full max-w-sm">
         <CardHeader>
-          <CardTitle>Join {preview.orgName}</CardTitle>
+          <CardTitle>
+            {t('auth:acceptInvite.join', { orgName: preview.orgName })}
+          </CardTitle>
           <CardDescription>
-            Set a name and password for <strong>{preview.email}</strong>. We’ll
-            email a link to verify before you join.
+            <Trans
+              t={t}
+              i18nKey="auth:acceptInvite.signUpDescription"
+              values={{ email: preview.email }}
+            />
           </CardDescription>
         </CardHeader>
         <form
@@ -398,7 +450,9 @@ function SignUpToAccept({
           <CardContent>
             <FieldGroup>
               <Field>
-                <FieldLabel htmlFor="invite-email">Email</FieldLabel>
+                <FieldLabel htmlFor="invite-email">
+                  {t('auth:fields.email')}
+                </FieldLabel>
                 <Input
                   id="invite-email"
                   type="email"
@@ -413,7 +467,9 @@ function SignUpToAccept({
                     field.state.meta.isTouched && !field.state.meta.isValid
                   return (
                     <Field data-invalid={invalid || undefined}>
-                      <FieldLabel htmlFor={field.name}>Your name</FieldLabel>
+                      <FieldLabel htmlFor={field.name}>
+                        {t('auth:fields.yourName')}
+                      </FieldLabel>
                       <Input
                         id={field.name}
                         autoComplete="name"
@@ -437,10 +493,7 @@ function SignUpToAccept({
                     if (!value || value.length < 12) return undefined
                     const { pwned } = await isPasswordPwned(value)
                     return pwned
-                      ? {
-                          message:
-                            'This password has appeared in known data breaches. Pick another.',
-                        }
+                      ? { message: t('validation:password.pwned') }
                       : undefined
                   },
                 }}
@@ -451,7 +504,9 @@ function SignUpToAccept({
                   const isValidating = field.state.meta.isValidating
                   return (
                     <Field data-invalid={invalid || undefined}>
-                      <FieldLabel htmlFor={field.name}>Password</FieldLabel>
+                      <FieldLabel htmlFor={field.name}>
+                        {t('auth:fields.password')}
+                      </FieldLabel>
                       <PasswordInput
                         id={field.name}
                         name={field.name}
@@ -468,14 +523,10 @@ function SignUpToAccept({
                             aria-live="polite"
                           >
                             <Spinner className="size-3" />
-                            Checking against known data breaches…
+                            {t('auth:password.checking')}
                           </span>
                         ) : (
-                          <>
-                            Avoid passwords you&apos;ve used elsewhere. We check
-                            against publicly leaked databases — only a short
-                            hash prefix is sent, never your full password.
-                          </>
+                          t('auth:password.hint')
                         )}
                       </FieldDescription>
                       <PasswordStrength
@@ -497,7 +548,7 @@ function SignUpToAccept({
           <CardFooter>
             <Button type="submit" className="w-full" disabled={loading}>
               {loading && <Spinner />}
-              Accept invitation
+              {t('auth:acceptInvite.accept')}
             </Button>
           </CardFooter>
         </form>

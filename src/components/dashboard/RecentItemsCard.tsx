@@ -1,4 +1,5 @@
 import { Link } from '@tanstack/react-router'
+import { Trans, useTranslation } from 'react-i18next'
 
 import { Button } from '~/components/ui/button'
 import {
@@ -31,37 +32,42 @@ export function RecentItemsCard({
   items: Array<ItemRow> | undefined
   orgSlug: string
 }) {
+  const { t } = useTranslation(['dashboard', 'common'])
   const recent = (items ?? []).slice(0, 5)
 
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between space-y-0">
         <div>
-          <CardTitle>Recent items</CardTitle>
-          <CardDescription>The 5 most recent items in this org</CardDescription>
+          <CardTitle>{t('dashboard:recent.title')}</CardTitle>
+          <CardDescription>{t('dashboard:recent.description')}</CardDescription>
         </div>
         <Button asChild variant="outline" size="sm">
           <Link to="/app/$orgSlug/items" params={{ orgSlug }}>
-            View all
+            {t('dashboard:recent.viewAll')}
           </Link>
         </Button>
       </CardHeader>
       <CardContent>
         {!items ? (
           <p className="text-muted-foreground py-6 text-center text-sm">
-            Loading…
+            {t('common:loadingEllipsis')}
           </p>
         ) : recent.length === 0 ? (
           <p className="text-muted-foreground py-6 text-center text-sm">
-            No items yet.{' '}
-            <Link
-              to="/app/$orgSlug/items"
-              params={{ orgSlug }}
-              className="underline"
-            >
-              Create one
-            </Link>
-            .
+            <Trans
+              t={t}
+              i18nKey="dashboard:recent.empty"
+              components={{
+                link: (
+                  <Link
+                    to="/app/$orgSlug/items"
+                    params={{ orgSlug }}
+                    className="underline"
+                  />
+                ),
+              }}
+            />
           </p>
         ) : (
           <ul className="divide-y">

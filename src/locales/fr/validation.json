@@ -1,0 +1,29 @@
+{
+  "required": "Ce champ est requis",
+  "name": {
+    "required": "Le nom est requis",
+    "tooLong": "Trop long"
+  },
+  "title": {
+    "required": "Le titre est requis",
+    "tooLong": "Trop long"
+  },
+  "description": {
+    "tooLong": "Trop longue"
+  },
+  "slug": {
+    "pattern": "3 à 40 caractères : minuscules, chiffres et tirets"
+  },
+  "email": {
+    "invalid": "E-mail invalide",
+    "enterValid": "Saisissez d'abord un e-mail valide"
+  },
+  "password": {
+    "required": "Le mot de passe est requis",
+    "min12": "Au moins 12 caractères",
+    "confirm": "Confirmez votre mot de passe",
+    "mismatch": "Les mots de passe ne correspondent pas",
+    "different": "Le nouveau mot de passe doit être différent",
+    "pwned": "Ce mot de passe est apparu dans des fuites de données connues. Choisissez-en un autre."
+  }
+}

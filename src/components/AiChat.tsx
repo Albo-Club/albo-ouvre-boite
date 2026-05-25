@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useUIMessages } from '@convex-dev/agent/react'
 import { useConvexMutation } from '@convex-dev/react-query'
 import { ConvexError } from 'convex/values'
@@ -19,6 +20,7 @@ export function AiChat({
   open: boolean
   onClose: () => void
 }) {
+  const { t } = useTranslation(['chat'])
   const [threadId, setThreadId] = useState<string | null>(null)
   const [input, setInput] = useState('')
   const [sending, setSending] = useState(false)
@@ -69,8 +71,8 @@ export function AiChat({
             : ''
       toast.error(
         code === 'rate_limited'
-          ? 'Slow down — too many messages'
-          : 'Could not send message',
+          ? t('chat:errors.rate_limited')
+          : t('chat:errors.default'),
       )
       setInput(prompt)
     } finally {
@@ -100,16 +102,21 @@ export function AiChat({
       >
         <header className="flex items-center justify-between border-b px-4 py-3">
           <div>
-            <h2 className="font-semibold">AI assistant</h2>
+            <h2 className="font-semibold">{t('chat:title')}</h2>
             <p className="text-muted-foreground text-xs">
-              Powered by Claude. Scoped to this organization.
+              {t('chat:subtitle')}
             </p>
           </div>
           <div className="flex gap-1">
             <Button size="sm" variant="ghost" onClick={handleNewThread}>
-              New
+              {t('chat:new')}
             </Button>
-            <Button size="sm" variant="ghost" onClick={onClose}>
+            <Button
+              size="sm"
+              variant="ghost"
+              onClick={onClose}
+              aria-label={t('chat:close')}
+            >
               ✕
             </Button>
           </div>
@@ -117,10 +124,12 @@ export function AiChat({
 
         <div ref={scrollRef} className="flex-1 overflow-y-auto p-4">
           {!threadId ? (
-            <p className="text-muted-foreground text-sm">Loading…</p>
+            <p className="text-muted-foreground text-sm">
+              {t('chat:loading')}
+            </p>
           ) : messages.results.length === 0 ? (
             <p className="text-muted-foreground text-sm">
-              Ask anything. Messages are streamed and saved.
+              {t('chat:emptyState')}
             </p>
           ) : (
             <ul className="space-y-4">
@@ -153,11 +162,11 @@ export function AiChat({
             <Input
               value={input}
               onChange={(e) => setInput(e.target.value)}
-              placeholder="Ask the assistant…"
+              placeholder={t('chat:inputPlaceholder')}
               disabled={!threadId || sending}
             />
             <Button type="submit" disabled={!input.trim() || sending}>
-              Send
+              {t('chat:send')}
             </Button>
           </div>
         </form>

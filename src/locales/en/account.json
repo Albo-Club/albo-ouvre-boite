@@ -1,0 +1,111 @@
+{
+  "menu": {
+    "accountMenu": "Account menu",
+    "profile": "Your profile",
+    "switchOrg": "Switch organization",
+    "superAdmin": "Super-admin",
+    "signOutEverywhere": "Sign out everywhere",
+    "signOut": "Sign out",
+    "signOutEverywhereTitle": "Sign out everywhere?",
+    "signOutEverywhereDescription": "This signs out every device including this one. You'll need to sign back in."
+  },
+  "time": {
+    "justNow": "just now",
+    "minAgo": "{{count}} min ago",
+    "hourAgo": "{{count}}h ago",
+    "dayAgo": "{{count}}d ago"
+  },
+  "activeSessions": {
+    "title": "Active sessions",
+    "description": "Devices currently signed in to your account. Revoke any that you don't recognize."
+  },
+  "sessions": {
+    "none": "No active sessions.",
+    "signOutOthers": "Sign out of other devices",
+    "current": "Current",
+    "ipUnknown": "IP unknown",
+    "revoke": "Revoke",
+    "revoked": "Session revoked.",
+    "revokedOthers": "Signed out of other devices.",
+    "confirmTitle": "Sign out of other devices?",
+    "confirmDescription": "You'll stay signed in here. Every other browser and device will need to sign back in.",
+    "confirmAction": "Sign out other devices",
+    "unknownDevice": "Unknown device",
+    "genericBrowser": "Browser",
+    "unknownOs": "Unknown OS",
+    "deviceLabel": "{{browser}} on {{os}}"
+  },
+  "linked": {
+    "connected": "Connected",
+    "connectMore": "Connect more methods",
+    "comingSoon": "Coming soon",
+    "connect": "Connect",
+    "disconnect": "Disconnect",
+    "emailPassword": "Email & password",
+    "magicLink": "Magic link"
+  },
+  "page": {
+    "title": "Your profile",
+    "subtitle": "Manage your account.",
+    "back": "← Back",
+    "tabs": {
+      "profile": "Profile",
+      "security": "Security",
+      "sessions": "Sessions"
+    }
+  },
+  "profile": {
+    "title": "Profile",
+    "description": "Name and avatar shown to teammates.",
+    "avatar": "Avatar",
+    "avatarHint": "PNG, JPEG, WEBP or GIF, up to 20 MB.",
+    "email": "Email",
+    "name": "Name",
+    "save": "Save changes",
+    "updated": "Profile updated",
+    "invalidName": "Invalid name",
+    "couldNotSave": "Could not save"
+  },
+  "email": {
+    "title": "Email",
+    "description": "We'll send a confirmation link to your current address.",
+    "newEmail": "New email",
+    "hint": "Your current email stays active until you click the confirmation link.",
+    "send": "Send confirmation email",
+    "alreadyYours": "That is already your email",
+    "confirmationSent": "Confirmation sent to {{email}}. Click the link to apply the change — it expires in 1 hour."
+  },
+  "magic": {
+    "title": "Magic link",
+    "description": "Get a one-tap sign-in link in your inbox.",
+    "send": "Email me a magic link",
+    "sent": "Magic link sent to {{email}}"
+  },
+  "connected": {
+    "title": "Connected accounts",
+    "description": "Methods that can sign you in. Add a social provider for a faster sign-in option."
+  },
+  "password": {
+    "title": "Password",
+    "description": "Other sessions will be signed out after a change.",
+    "current": "Current password",
+    "new": "New password",
+    "hint": "Avoid passwords you've used elsewhere. The meter below shows real-time strength.",
+    "change": "Change password",
+    "changed": "Password changed. Other sessions have been signed out."
+  },
+  "signout": {
+    "title": "Sign out",
+    "description": "End your current session.",
+    "action": "Sign out"
+  },
+  "danger": {
+    "title": "Delete account",
+    "description": "Permanently remove your profile and all organization memberships. This cannot be undone.",
+    "action": "Delete account…",
+    "dialogTitle": "Delete your account?",
+    "dialogDescription": "We'll send a confirmation link to <strong>{{email}}</strong>. Click it to permanently delete your account. If you change your mind, ignore the email and nothing happens.",
+    "confirm": "Send confirmation",
+    "confirmationSent": "Confirmation sent to {{email}}. Click the link within 1 hour to permanently delete."
+  }
+}

@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Check, Palette } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 
 import {
   DropdownMenu,
@@ -12,10 +13,10 @@ import {
 import { SidebarMenuButton } from '~/components/ui/sidebar'
 
 const THEMES = [
-  { id: 'neutral', label: 'Neutral', swatch: 'oklch(0.205 0 0)' },
-  { id: 'blue', label: 'Blue', swatch: 'oklch(0.55 0.2 250)' },
-  { id: 'emerald', label: 'Emerald', swatch: 'oklch(0.55 0.16 160)' },
-  { id: 'violet', label: 'Violet', swatch: 'oklch(0.55 0.21 290)' },
+  { id: 'neutral', swatch: 'oklch(0.205 0 0)' },
+  { id: 'blue', swatch: 'oklch(0.55 0.2 250)' },
+  { id: 'emerald', swatch: 'oklch(0.55 0.16 160)' },
+  { id: 'violet', swatch: 'oklch(0.55 0.21 290)' },
 ] as const
 
 type ThemeId = (typeof THEMES)[number]['id']
@@ -31,11 +32,12 @@ function applyTheme(theme: ThemeId) {
 }
 
 export function ThemePicker() {
+  const { t } = useTranslation('nav')
   const [theme, setTheme] = useState<ThemeId>('neutral')
 
   useEffect(() => {
     const saved = localStorage.getItem(STORAGE_KEY) as ThemeId | null
-    if (saved && THEMES.some((t) => t.id === saved)) {
+    if (saved && THEMES.some((opt) => opt.id === saved)) {
       setTheme(saved)
       applyTheme(saved)
     }
@@ -47,14 +49,14 @@ export function ThemePicker() {
     localStorage.setItem(STORAGE_KEY, next)
   }
 
-  const current = THEMES.find((t) => t.id === theme) ?? THEMES[0]
+  const current = THEMES.find((opt) => opt.id === theme) ?? THEMES[0]
 
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <SidebarMenuButton tooltip="Color theme">
+        <SidebarMenuButton tooltip={t('theme.colorTheme')}>
           <Palette />
-          <span>Theme</span>
+          <span>{t('theme.label')}</span>
           <span
             className="ml-auto inline-block size-3 rounded-full border"
             style={{ background: current.swatch }}
@@ -63,21 +65,21 @@ export function ThemePicker() {
       </DropdownMenuTrigger>
       <DropdownMenuContent side="right" align="end" className="min-w-44">
         <DropdownMenuLabel className="text-muted-foreground text-xs">
-          Color theme
+          {t('theme.colorTheme')}
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
-        {THEMES.map((t) => (
+        {THEMES.map((opt) => (
           <DropdownMenuItem
-            key={t.id}
-            onSelect={() => change(t.id)}
+            key={opt.id}
+            onSelect={() => change(opt.id)}
             className="gap-2"
           >
             <span
               className="inline-block size-4 rounded-full border"
-              style={{ background: t.swatch }}
+              style={{ background: opt.swatch }}
             />
-            <span>{t.label}</span>
-            {t.id === theme && <Check className="ml-auto size-4" />}
+            <span>{t(`theme.${opt.id}`)}</span>
+            {opt.id === theme && <Check className="ml-auto size-4" />}
           </DropdownMenuItem>
         ))}
       </DropdownMenuContent>

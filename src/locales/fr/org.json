@@ -1,0 +1,119 @@
+{
+  "tasks": {
+    "metaTitle": "Tâches — albo",
+    "title": "Tâches",
+    "subtitle": "Déplacez les cartes entre les colonnes avec les flèches.",
+    "demoTitle": "Données de démo",
+    "demoDescription": "Tableau kanban en état local avec des tâches fictives. Branchez-le sur une table Convex `tasks` pour la persistance.",
+    "empty": "Aucune tâche",
+    "columns": {
+      "todo": "À faire",
+      "in_progress": "En cours",
+      "done": "Terminé"
+    },
+    "priority": {
+      "low": "Basse",
+      "medium": "Moyenne",
+      "high": "Haute"
+    },
+    "due": {
+      "today": "Aujourd'hui",
+      "tomorrow": "Demain",
+      "yesterday": "Hier",
+      "inDays": "dans {{count}} j",
+      "daysAgo": "il y a {{count}} j"
+    },
+    "moveLeft": "Déplacer à gauche",
+    "moveRight": "Déplacer à droite"
+  },
+  "calendar": {
+    "metaTitle": "Calendrier — albo",
+    "title": "Calendrier",
+    "subtitle": "Choisissez une date pour voir ses événements.",
+    "demoTitle": "Données de démo",
+    "demoDescription": "Ces événements sont fictifs — connectez Google Agenda, Outlook ou votre propre table d'événements.",
+    "noDate": "Aucune date",
+    "eventCount_one": "{{count}} événement",
+    "eventCount_other": "{{count}} événements",
+    "nothingScheduled": "Rien de prévu ce jour-là.",
+    "duration": "{{count}} min",
+    "types": {
+      "meeting": "Réunion",
+      "review": "Revue",
+      "focus": "Plage de concentration",
+      "demo": "Démo"
+    }
+  },
+  "map": {
+    "metaTitle": "Bureaux — albo",
+    "title": "Bureaux",
+    "subtitle_one": "{{count}} bureau dans votre portefeuille. Cliquez sur un pin pour voir le détail.",
+    "subtitle_other": "{{count}} bureaux dans votre portefeuille. Cliquez sur un pin pour voir le détail.",
+    "demoTitle": "Données de démo",
+    "demoDescription": "Ces bureaux sont fictifs — branchez votre propre source (Convex, Airtable, ERP) pour afficher vos vrais espaces.",
+    "portfolio": "Portefeuille",
+    "byStatus": "Répartition par statut",
+    "list": "Liste",
+    "officeCount_one": "{{count}} bureau",
+    "officeCount_other": "{{count}} bureaux",
+    "loadingMap": "Chargement de la carte…",
+    "desk_one": "{{count}} poste",
+    "desk_other": "{{count}} postes",
+    "perMonth": "{{price}} / mois",
+    "perDeskPerMonth": "{{price}} / poste / mois",
+    "status": {
+      "available": "Disponible",
+      "occupied": "Loué",
+      "maintenance": "Maintenance"
+    }
+  },
+  "billing": {
+    "metaTitle": "Facturation — albo",
+    "title": "Facturation",
+    "subtitle": "Gérez votre forfait, vos factures et vos moyens de paiement.",
+    "demoTitle": "Données de démo",
+    "demoDescription": "Cette page affiche des données de facturation fictives — branchez-la sur Stripe, LemonSqueezy ou le fournisseur de votre choix.",
+    "tabs": {
+      "overview": "Aperçu",
+      "invoices": "Factures",
+      "methods": "Moyens de paiement"
+    },
+    "currentPlan": "Forfait actuel",
+    "billedMonthly": "Facturé mensuellement",
+    "perInterval": "/{{interval}}",
+    "interval": {
+      "month": "mois",
+      "year": "an"
+    },
+    "seatsUsed": "{{used}} / {{total}} sièges utilisés",
+    "changePlan": "Changer de forfait",
+    "nextInvoice": "Prochaine facture",
+    "autoCharged": "Prélevée automatiquement sur votre carte par défaut",
+    "scheduledFor": "Prévue le {{date}}",
+    "viewDetails": "Voir le détail",
+    "usage": "Utilisation",
+    "thisCycle": "Ce cycle de facturation",
+    "invoicesOnFile_one": "{{count}} facture enregistrée",
+    "invoicesOnFile_other": "{{count}} factures enregistrées",
+    "table": {
+      "number": "Numéro",
+      "date": "Date",
+      "description": "Description",
+      "amount": "Montant",
+      "status": "Statut"
+    },
+    "invoiceStatus": {
+      "paid": "Payée",
+      "pending": "En attente",
+      "failed": "Échouée"
+    },
+    "downloadInvoice": "Télécharger la facture",
+    "cardsLinked": "Cartes liées à cette organisation",
+    "addCard": "Ajouter une carte",
+    "default": "Par défaut",
+    "expires": "Expire le {{month}}/{{year}}",
+    "addCardTitle": "Ajouter un moyen de paiement",
+    "addCardDescription": "Connectez Stripe Elements ou LemonSqueezy ici. Cette boîte de dialogue est un espace réservé de démo.",
+    "saveCard": "Enregistrer la carte"
+  }
+}

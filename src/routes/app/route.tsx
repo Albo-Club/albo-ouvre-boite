@@ -1,6 +1,7 @@
 import { useEffect } from 'react'
-import { createFileRoute, Outlet, useNavigate } from '@tanstack/react-router'
+import { Outlet, createFileRoute, useNavigate } from '@tanstack/react-router'
 import { useConvexMutation, useConvexQuery } from '@convex-dev/react-query'
+import { useTranslation } from 'react-i18next'
 import { api } from '../../../convex/_generated/api'
 import { useAuthState } from '~/lib/auth-state'
 
@@ -10,6 +11,7 @@ export const Route = createFileRoute('/app')({
 
 function AppLayout() {
   const navigate = useNavigate()
+  const { t } = useTranslation('nav')
   const { isLoading, isAuthenticated, isSignedOut } = useAuthState()
   const me = useConvexQuery(
     api.users.me,
@@ -35,7 +37,7 @@ function AppLayout() {
   if (isLoading || !isAuthenticated || !me || me.kind !== 'ready') {
     return (
       <main className="flex min-h-svh items-center justify-center">
-        <p className="text-muted-foreground text-sm">Loading…</p>
+        <p className="text-muted-foreground text-sm">{t('loading')}</p>
       </main>
     )
   }

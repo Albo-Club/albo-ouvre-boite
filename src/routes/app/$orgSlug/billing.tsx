@@ -1,7 +1,11 @@
 import { useState } from 'react'
 import { createFileRoute } from '@tanstack/react-router'
+import { useTranslation } from 'react-i18next'
 import { Check, CreditCard, Download, Plus, Sparkles } from 'lucide-react'
 
+import type {InvoiceStatus} from '~/lib/mocks/billing';
+import { getI18n } from '~/lib/i18n'
+import { getLocale } from '~/lib/locale'
 import { Alert, AlertDescription, AlertTitle } from '~/components/ui/alert'
 import { Badge } from '~/components/ui/badge'
 import { Button } from '~/components/ui/button'
@@ -31,20 +35,26 @@ import {
 } from '~/components/ui/table'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '~/components/ui/tabs'
 import {
+  
   currentPlan,
   invoices,
   paymentMethods,
-  usage,
-  type InvoiceStatus,
+  usage
 } from '~/lib/mocks/billing'
 
 export const Route = createFileRoute('/app/$orgSlug/billing')({
   component: BillingPage,
-  head: () => ({ meta: [{ title: 'Billing — albo' }] }),
+  head: () => ({
+    meta: [
+      {
+        title: getI18n(getLocale()).getFixedT(null, 'org')('billing.metaTitle'),
+      },
+    ],
+  }),
 })
 
 function formatDate(iso: string) {
-  return new Date(iso).toLocaleDateString(undefined, {
+  return new Date(iso).toLocaleDateString(getLocale(), {
     month: 'short',
     day: 'numeric',
     year: 'numeric',
@@ -58,39 +68,45 @@ const STATUS_VARIANT: Record<InvoiceStatus, 'default' | 'secondary' | 'destructi
 }
 
 function BillingPage() {
+  const { t } = useTranslation(['org', 'common'])
   const [addCardOpen, setAddCardOpen] = useState(false)
 
   return (
     <main className="flex-1 space-y-6 p-6">
       <div>
-        <h1 className="text-2xl font-semibold tracking-tight">Billing</h1>
+        <h1 className="text-2xl font-semibold tracking-tight">
+          {t('org:billing.title')}
+        </h1>
         <p className="text-muted-foreground text-sm">
-          Manage your plan, invoices, and payment methods.
+          {t('org:billing.subtitle')}
         </p>
       </div>
 
       <Alert>
         <Sparkles className="size-4" />
-        <AlertTitle>Demo data</AlertTitle>
-        <AlertDescription>
-          This page renders mock billing data — wire it to Stripe, LemonSqueezy,
-          or your provider of choice.
-        </AlertDescription>
+        <AlertTitle>{t('org:billing.demoTitle')}</AlertTitle>
+        <AlertDescription>{t('org:billing.demoDescription')}</AlertDescription>
       </Alert>
 
       <Tabs defaultValue="overview" className="space-y-4">
         <TabsList>
-          <TabsTrigger value="overview">Overview</TabsTrigger>
-          <TabsTrigger value="invoices">Invoices</TabsTrigger>
-          <TabsTrigger value="methods">Payment methods</TabsTrigger>
+          <TabsTrigger value="overview">
+            {t('org:billing.tabs.overview')}
+          </TabsTrigger>
+          <TabsTrigger value="invoices">
+            {t('org:billing.tabs.invoices')}
+          </TabsTrigger>
+          <TabsTrigger value="methods">
+            {t('org:billing.tabs.methods')}
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="overview" className="space-y-4">
           <div className="grid gap-4 lg:grid-cols-3">
             <Card>
               <CardHeader>
-                <CardTitle>Current plan</CardTitle>
-                <CardDescription>Billed monthly</CardDescription>
+                <CardTitle>{t('org:billing.currentPlan')}</CardTitle>
+                <CardDescription>{t('org:billing.billedMonthly')}</CardDescription>
               </CardHeader>
               <CardContent className="space-y-3">
                 <div className="flex items-baseline gap-1">
@@ -98,26 +114,31 @@ function BillingPage() {
                     ${currentPlan.price}
                   </span>
                   <span className="text-muted-foreground text-sm">
-                    /{currentPlan.interval}
+                    {t('org:billing.perInterval', {
+                      interval: t(`org:billing.interval.${currentPlan.interval}`),
+                    })}
                   </span>
                 </div>
                 <div>
                   <Badge variant="default">{currentPlan.name}</Badge>
                 </div>
                 <div className="text-muted-foreground text-sm">
-                  {currentPlan.seatsUsed} / {currentPlan.seats} seats used
+                  {t('org:billing.seatsUsed', {
+                    used: currentPlan.seatsUsed,
+                    total: currentPlan.seats,
+                  })}
                 </div>
                 <Button variant="outline" size="sm" className="w-full">
-                  Change plan
+                  {t('org:billing.changePlan')}
                 </Button>
               </CardContent>
             </Card>
 
             <Card>
               <CardHeader>
-                <CardTitle>Next invoice</CardTitle>
+                <CardTitle>{t('org:billing.nextInvoice')}</CardTitle>
                 <CardDescription>
-                  Auto-charged to your default card
+                  {t('org:billing.autoCharged')}
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-3">
@@ -125,18 +146,20 @@ function BillingPage() {
                   ${currentPlan.nextInvoiceAmount}
                 </div>
                 <div className="text-muted-foreground text-sm">
-                  Scheduled for {formatDate(currentPlan.nextInvoiceDate)}
+                  {t('org:billing.scheduledFor', {
+                    date: formatDate(currentPlan.nextInvoiceDate),
+                  })}
                 </div>
                 <Button variant="outline" size="sm" className="w-full">
-                  View details
+                  {t('org:billing.viewDetails')}
                 </Button>
               </CardContent>
             </Card>
 
             <Card>
               <CardHeader>
-                <CardTitle>Usage</CardTitle>
-                <CardDescription>This billing cycle</CardDescription>
+                <CardTitle>{t('org:billing.usage')}</CardTitle>
+                <CardDescription>{t('org:billing.thisCycle')}</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 {usage.map((u) => {
@@ -165,9 +188,9 @@ function BillingPage() {
         <TabsContent value="invoices">
           <Card>
             <CardHeader>
-              <CardTitle>Invoices</CardTitle>
+              <CardTitle>{t('org:billing.tabs.invoices')}</CardTitle>
               <CardDescription>
-                {invoices.length} invoices on file
+                {t('org:billing.invoicesOnFile', { count: invoices.length })}
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -175,11 +198,13 @@ function BillingPage() {
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>Number</TableHead>
-                      <TableHead>Date</TableHead>
-                      <TableHead>Description</TableHead>
-                      <TableHead className="text-right">Amount</TableHead>
-                      <TableHead>Status</TableHead>
+                      <TableHead>{t('org:billing.table.number')}</TableHead>
+                      <TableHead>{t('org:billing.table.date')}</TableHead>
+                      <TableHead>{t('org:billing.table.description')}</TableHead>
+                      <TableHead className="text-right">
+                        {t('org:billing.table.amount')}
+                      </TableHead>
+                      <TableHead>{t('org:billing.table.status')}</TableHead>
                       <TableHead className="w-[60px]" />
                     </TableRow>
                   </TableHeader>
@@ -197,11 +222,8 @@ function BillingPage() {
                           ${inv.amount}.00
                         </TableCell>
                         <TableCell>
-                          <Badge
-                            variant={STATUS_VARIANT[inv.status]}
-                            className="capitalize"
-                          >
-                            {inv.status}
+                          <Badge variant={STATUS_VARIANT[inv.status]}>
+                            {t(`org:billing.invoiceStatus.${inv.status}`)}
                           </Badge>
                         </TableCell>
                         <TableCell>
@@ -209,7 +231,7 @@ function BillingPage() {
                             variant="ghost"
                             size="icon"
                             className="size-8"
-                            aria-label="Download invoice"
+                            aria-label={t('org:billing.downloadInvoice')}
                           >
                             <Download className="size-4" />
                           </Button>
@@ -227,14 +249,14 @@ function BillingPage() {
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0">
               <div>
-                <CardTitle>Payment methods</CardTitle>
+                <CardTitle>{t('org:billing.tabs.methods')}</CardTitle>
                 <CardDescription>
-                  Cards linked to this organization
+                  {t('org:billing.cardsLinked')}
                 </CardDescription>
               </div>
               <Button size="sm" onClick={() => setAddCardOpen(true)}>
                 <Plus className="mr-1.5 size-4" />
-                Add card
+                {t('org:billing.addCard')}
               </Button>
             </CardHeader>
             <CardContent className="space-y-3">
@@ -257,17 +279,19 @@ function BillingPage() {
                       {pm.isDefault && (
                         <Badge variant="secondary">
                           <Check className="mr-1 size-3" />
-                          Default
+                          {t('org:billing.default')}
                         </Badge>
                       )}
                     </div>
                     <div className="text-muted-foreground text-xs">
-                      Expires {String(pm.expMonth).padStart(2, '0')}/
-                      {pm.expYear}
+                      {t('org:billing.expires', {
+                        month: String(pm.expMonth).padStart(2, '0'),
+                        year: pm.expYear,
+                      })}
                     </div>
                   </div>
                   <Button variant="ghost" size="sm">
-                    Edit
+                    {t('common:actions.edit')}
                   </Button>
                 </div>
               ))}
@@ -282,17 +306,18 @@ function BillingPage() {
       >
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Add payment method</DialogTitle>
+            <DialogTitle>{t('org:billing.addCardTitle')}</DialogTitle>
             <DialogDescription>
-              Connect Stripe Elements or LemonSqueezy here. This dialog is a
-              demo placeholder.
+              {t('org:billing.addCardDescription')}
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
             <Button variant="outline" onClick={() => setAddCardOpen(false)}>
-              Cancel
+              {t('common:actions.cancel')}
             </Button>
-            <Button onClick={() => setAddCardOpen(false)}>Save card</Button>
+            <Button onClick={() => setAddCardOpen(false)}>
+              {t('org:billing.saveCard')}
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

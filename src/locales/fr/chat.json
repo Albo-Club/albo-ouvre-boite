@@ -1,0 +1,14 @@
+{
+  "title": "Assistant IA",
+  "subtitle": "Propulsé par Claude. Limité à cette organisation.",
+  "new": "Nouveau",
+  "close": "Fermer",
+  "loading": "Chargement…",
+  "emptyState": "Posez n'importe quelle question. Les messages sont diffusés en continu et enregistrés.",
+  "inputPlaceholder": "Posez votre question à l'assistant…",
+  "send": "Envoyer",
+  "errors": {
+    "rate_limited": "Ralentissez — trop de messages",
+    "default": "Impossible d'envoyer le message"
+  }
+}

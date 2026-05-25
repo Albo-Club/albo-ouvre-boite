@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react'
 import { KeyRound, Mail } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
+import type { TFunction } from 'i18next'
 
 import { authClient } from '~/lib/auth-client'
 import { classifyAuthError, formatAuthError } from '~/lib/auth-errors'
@@ -28,12 +30,15 @@ const FUTURE_PROVIDERS: Array<ProviderDef> = [
   { id: 'apple', label: 'Apple' },
 ]
 
-function describeProvider(id: string): { label: string; Icon: typeof Mail } {
+function describeProvider(
+  id: string,
+  t: TFunction<['account', 'errors']>,
+): { label: string; Icon: typeof Mail } {
   switch (id) {
     case 'credential':
-      return { label: 'Email & password', Icon: KeyRound }
+      return { label: t('account:linked.emailPassword'), Icon: KeyRound }
     case 'email':
-      return { label: 'Magic link', Icon: Mail }
+      return { label: t('account:linked.magicLink'), Icon: Mail }
     default:
       return {
         label: id.charAt(0).toUpperCase() + id.slice(1),
@@ -50,6 +55,7 @@ function describeProvider(id: string): { label: string; Icon: typeof Mail } {
  * placeholders.
  */
 export function LinkedAccounts() {
+  const { t } = useTranslation(['account', 'errors'])
   const [accounts, setAccounts] = useState<Array<BaAccount> | null>(null)
 
   useEffect(() => {
@@ -58,11 +64,15 @@ export function LinkedAccounts() {
       const { data, error } = await authClient.listAccounts()
       if (!alive) return
       if (error) {
-        toast.error(formatAuthError(classifyAuthError(error)))
+        toast.error(
+          formatAuthError(classifyAuthError(error), 'signin', (k) =>
+            t(`errors:${k}`),
+          ),
+        )
         setAccounts([])
         return
       }
-      setAccounts((data ?? []) as Array<BaAccount>)
+      setAccounts((data ?? []))
     })()
     return () => {
       alive = false
@@ -85,14 +95,14 @@ export function LinkedAccounts() {
       {accounts.length > 0 && (
         <ul className="divide-border divide-y rounded-md border">
           {accounts.map((a) => {
-            const { label, Icon } = describeProvider(a.providerId)
+            const { label, Icon } = describeProvider(a.providerId, t)
             return (
               <li key={a.id} className="flex items-center gap-4 p-4">
                 <Icon className="text-muted-foreground size-5 shrink-0" />
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-sm font-medium">{label}</p>
                   <p className="text-muted-foreground truncate text-xs">
-                    Connected
+                    {t('account:linked.connected')}
                   </p>
                 </div>
               </li>
@@ -102,7 +112,7 @@ export function LinkedAccounts() {
       )}
       <div>
         <p className="text-muted-foreground mb-2 text-xs font-medium uppercase tracking-wide">
-          Connect more methods
+          {t('account:linked.connectMore')}
         </p>
         <ul className="divide-border divide-y rounded-md border">
           {FUTURE_PROVIDERS.map((p) => {
@@ -113,11 +123,15 @@ export function LinkedAccounts() {
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-sm font-medium">{p.label}</p>
                   <p className="text-muted-foreground truncate text-xs">
-                    {alreadyLinked ? 'Connected' : 'Coming soon'}
+                    {alreadyLinked
+                      ? t('account:linked.connected')
+                      : t('account:linked.comingSoon')}
                   </p>
                 </div>
                 <Button variant="outline" size="sm" disabled>
-                  {alreadyLinked ? 'Disconnect' : 'Connect'}
+                  {alreadyLinked
+                    ? t('account:linked.disconnect')
+                    : t('account:linked.connect')}
                 </Button>
               </li>
             )

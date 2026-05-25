@@ -1,0 +1,78 @@
+{
+  "layout": {
+    "title": "Paramètres",
+    "subtitle": "Gérez votre organisation.",
+    "back": "Retour",
+    "tabs": {
+      "general": "Général",
+      "members": "Membres",
+      "invitations": "Invitations"
+    }
+  },
+  "general": {
+    "loading": "Chargement…",
+    "title": "Général",
+    "description": "Nom et logo de votre organisation.",
+    "name": "Nom",
+    "slug": "Identifiant",
+    "slugHint": "L'identifiant est permanent — il apparaît dans les URL.",
+    "logo": "Logo",
+    "logoHint": "PNG, JPEG, WEBP ou GIF, jusqu'à 20 Mo.",
+    "save": "Enregistrer les modifications",
+    "saving": "Enregistrement…",
+    "updated": "Organisation mise à jour",
+    "errors": {
+      "insufficient_role": "Réservé aux admins ou propriétaires",
+      "invalid_name": "Nom invalide",
+      "default": "Échec de l'enregistrement"
+    }
+  },
+  "members": {
+    "title": "Membres",
+    "description": "Personnes ayant accès à {{org}}.",
+    "fallbackOrg": "cette organisation",
+    "loading": "Chargement…",
+    "empty": "Aucun membre pour l'instant.",
+    "you": "(vous)",
+    "makeRole": "Définir comme {{role}}",
+    "removeFromOrg": "Retirer de l'organisation",
+    "roleUpdated": "Rôle mis à jour",
+    "memberRemoved": "Membre retiré",
+    "removeTitle": "Retirer ce membre ?",
+    "removeDescription": "<strong>{{label}}</strong> perdra l'accès immédiatement. Vous pourrez le réinviter plus tard.",
+    "errors": {
+      "insufficient_role": "Réservé aux admins ou propriétaires",
+      "owner_only": "Seul un propriétaire peut effectuer cette action",
+      "last_owner": "Vous ne pouvez pas retirer ni rétrograder le dernier propriétaire",
+      "not_found": "Membre introuvable",
+      "default": "Échec de l'action"
+    }
+  },
+  "invitations": {
+    "noAccessTitle": "Invitations",
+    "noAccessDescription": "Seuls les admins et propriétaires peuvent inviter des personnes.",
+    "inviteTitle": "Inviter un membre",
+    "inviteDescription": "Il recevra un e-mail avec un lien pour accepter.",
+    "email": "E-mail",
+    "role": "Rôle",
+    "send": "Envoyer l'invitation",
+    "sending": "Envoi…",
+    "sent": "Invitation envoyée à {{email}}",
+    "pendingTitle": "Invitations en attente",
+    "pendingDescription": "Les invitations expirent après 7 jours.",
+    "loading": "Chargement…",
+    "empty": "Aucune invitation en attente.",
+    "expiresOn": "{{role}} · expire le {{date}}",
+    "revoke": "Révoquer",
+    "revoked": "Invitation révoquée",
+    "revokeFailed": "Échec de la révocation",
+    "errors": {
+      "already_invited": "Une invitation est déjà en attente pour cet e-mail",
+      "invalid_email": "E-mail invalide",
+      "insufficient_role": "Vous devez être admin ou propriétaire pour inviter",
+      "not_a_member": "Vous n'êtes pas membre de cette organisation",
+      "rate_limited": "Trop d'invitations — ralentissez et réessayez plus tard",
+      "default": "Échec de l'envoi de l'invitation"
+    }
+  }
+}

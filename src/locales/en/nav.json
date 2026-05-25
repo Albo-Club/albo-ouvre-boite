@@ -1,0 +1,109 @@
+{
+  "appShell": {
+    "ai": "AI",
+    "breadcrumb": {
+      "items": "Items",
+      "calendar": "Calendar",
+      "tasks": "Tasks",
+      "billing": "Billing",
+      "settings": "Settings",
+      "members": "Members",
+      "invitations": "Invitations",
+      "general": "General"
+    }
+  },
+  "groups": {
+    "platform": "Platform",
+    "billing": "Billing",
+    "workspace": "Workspace"
+  },
+  "items": {
+    "dashboard": "Dashboard",
+    "items": "Items",
+    "locations": "Locations",
+    "calendar": "Calendar",
+    "tasks": "Tasks",
+    "payments": "Payments",
+    "invoices": "Invoices",
+    "members": "Members",
+    "invitations": "Invitations",
+    "settings": "Settings"
+  },
+  "navUser": {
+    "switchOrg": "Switch organization"
+  },
+  "orgSwitcher": {
+    "label": "Organizations",
+    "allOrganizations": "All organizations"
+  },
+  "theme": {
+    "label": "Theme",
+    "colorTheme": "Color theme",
+    "neutral": "Neutral",
+    "blue": "Blue",
+    "emerald": "Emerald",
+    "violet": "Violet"
+  },
+  "loading": "Loading…",
+  "redirecting": "Redirecting…",
+  "onboarding": {
+    "metaTitle": "Create your organization — albo",
+    "title": "Create your first organization",
+    "description": "Your workspace is scoped to an organization. You can create more later.",
+    "name": "Name",
+    "namePlaceholder": "Acme Inc.",
+    "slug": "Slug",
+    "slugPlaceholder": "acme",
+    "slugHintPrefix": "Used in URLs:",
+    "slugFallback": "your-slug",
+    "submit": "Create organization",
+    "created": "Organization created",
+    "errors": {
+      "slugTaken": "That slug is already taken",
+      "slugReserved": "That slug is reserved — pick another",
+      "invalidSlug": "Invalid slug shape",
+      "invalidName": "Invalid name",
+      "couldNotCreate": "Could not create organization"
+    },
+    "availability": {
+      "checking": "Checking availability…",
+      "available": "Slug is available",
+      "invalid": "Invalid slug shape",
+      "reserved": "This slug is reserved",
+      "taken": "This slug is already taken"
+    }
+  },
+  "admin": {
+    "metaTitle": "Super-admin — albo",
+    "title": "Super-admin",
+    "subtitle": "Deployment-wide view of users and organizations.",
+    "back": "← Back",
+    "granted": "Granted super-admin",
+    "revoked": "Revoked super-admin",
+    "lastSuperAdmin": "You are the last super-admin",
+    "actionFailed": "Action failed",
+    "stats": {
+      "users": "Users",
+      "organizations": "Organizations",
+      "memberships": "Memberships",
+      "pendingInvites": "Pending invites"
+    },
+    "orgs": {
+      "title": "Organizations",
+      "description": "All orgs across the deployment.",
+      "empty": "No organizations.",
+      "members_one": "{{count}} member",
+      "members_other": "{{count}} members"
+    },
+    "users": {
+      "title": "Users",
+      "description": "Toggle super-admin to grant deployment-wide access.",
+      "empty": "No users.",
+      "you": "(you)",
+      "orgs_one": "{{count}} org",
+      "orgs_other": "{{count}} orgs",
+      "isSuperAdmin": "Super-admin",
+      "makeSuperAdmin": "Make super-admin"
+    }
+  }
+}

@@ -1,0 +1,78 @@
+{
+  "layout": {
+    "title": "Settings",
+    "subtitle": "Manage your organization.",
+    "back": "Back",
+    "tabs": {
+      "general": "General",
+      "members": "Members",
+      "invitations": "Invitations"
+    }
+  },
+  "general": {
+    "loading": "Loading…",
+    "title": "General",
+    "description": "Name and logo of your organization.",
+    "name": "Name",
+    "slug": "Slug",
+    "slugHint": "The slug is permanent — it appears in URLs.",
+    "logo": "Logo",
+    "logoHint": "PNG, JPEG, WEBP or GIF, up to 20 MB.",
+    "save": "Save changes",
+    "saving": "Saving…",
+    "updated": "Organization updated",
+    "errors": {
+      "insufficient_role": "Admins or owners only",
+      "invalid_name": "Invalid name",
+      "default": "Could not save"
+    }
+  },
+  "members": {
+    "title": "Members",
+    "description": "People with access to {{org}}.",
+    "fallbackOrg": "this organization",
+    "loading": "Loading…",
+    "empty": "No members yet.",
+    "you": "(you)",
+    "makeRole": "Make {{role}}",
+    "removeFromOrg": "Remove from org",
+    "roleUpdated": "Role updated",
+    "memberRemoved": "Member removed",
+    "removeTitle": "Remove member?",
+    "removeDescription": "<strong>{{label}}</strong> will lose access immediately. They can be re-invited later.",
+    "errors": {
+      "insufficient_role": "Admins or owners only",
+      "owner_only": "Only an owner can perform this action",
+      "last_owner": "You cannot remove or demote the last owner",
+      "not_found": "Member not found",
+      "default": "Action failed"
+    }
+  },
+  "invitations": {
+    "noAccessTitle": "Invitations",
+    "noAccessDescription": "Only admins and owners can invite people.",
+    "inviteTitle": "Invite a member",
+    "inviteDescription": "They'll receive an email with a link to accept.",
+    "email": "Email",
+    "role": "Role",
+    "send": "Send invitation",
+    "sending": "Sending…",
+    "sent": "Invitation sent to {{email}}",
+    "pendingTitle": "Pending invitations",
+    "pendingDescription": "Invitations expire after 7 days.",
+    "loading": "Loading…",
+    "empty": "No pending invitations.",
+    "expiresOn": "{{role}} · expires {{date}}",
+    "revoke": "Revoke",
+    "revoked": "Invitation revoked",
+    "revokeFailed": "Could not revoke",
+    "errors": {
+      "already_invited": "There is already a pending invitation for this email",
+      "invalid_email": "Invalid email",
+      "insufficient_role": "You need to be admin or owner to invite",
+      "not_a_member": "You are not a member of this organization",
+      "rate_limited": "Too many invitations — slow down and try again later",
+      "default": "Could not send invitation"
+    }
+  }
+}

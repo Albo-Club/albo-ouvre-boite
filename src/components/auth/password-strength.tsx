@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { zxcvbnAsync, zxcvbnOptions } from '@zxcvbn-ts/core'
 import type { ZxcvbnResult } from '@zxcvbn-ts/core'
 
@@ -20,7 +21,6 @@ async function configureZxcvbn() {
   })
 }
 
-const SCORE_LABEL = ['Very weak', 'Weak', 'Fair', 'Good', 'Excellent'] as const
 const SCORE_TONE = [
   'bg-destructive',
   'bg-destructive',
@@ -54,6 +54,7 @@ export function PasswordStrength({
   className,
 }: PasswordStrengthProps) {
   const [result, setResult] = useState<ZxcvbnResult | null>(null)
+  const { t } = useTranslation('auth')
 
   useEffect(() => {
     if (!value) {
@@ -84,8 +85,8 @@ export function PasswordStrength({
   // characters", and the user sees two contradictory signals.
   const displayScore = tooShort ? 0 : score
   const label = tooShort
-    ? `Too short — ${minLength - value.length} more character${minLength - value.length === 1 ? '' : 's'} to go`
-    : (SCORE_LABEL[score] ?? 'Checking…')
+    ? t('strength.tooShort', { count: minLength - value.length })
+    : (t(`strength.score.${score}`, { defaultValue: t('strength.checking') }))
   const tone = SCORE_TONE[displayScore]
 
   return (
@@ -110,7 +111,7 @@ export function PasswordStrength({
           <span className="text-destructive font-medium">{label}</span>
         ) : (
           <>
-            Strength:{' '}
+            {t('strength.prefix')}{' '}
             <span className="text-foreground font-medium">{label}</span>
             {result?.feedback.warning ? ` — ${result.feedback.warning}` : ''}
           </>

@@ -1,6 +1,7 @@
-import { useEffect, useState } from 'react'
-import { createFileRoute, Link, useNavigate } from '@tanstack/react-router'
+import { useEffect, useMemo, useState } from 'react'
+import { Link, createFileRoute, useNavigate } from '@tanstack/react-router'
 import { useForm } from '@tanstack/react-form'
+import { Trans, useTranslation } from 'react-i18next'
 import { z } from 'zod'
 import { toast } from 'sonner'
 import { ConvexError } from 'convex/values'
@@ -8,6 +9,8 @@ import { useConvexMutation, useConvexQuery } from '@convex-dev/react-query'
 
 import { api } from '../../../convex/_generated/api'
 import { authClient } from '~/lib/auth-client'
+import { getI18n } from '~/lib/i18n'
+import { getLocale } from '~/lib/locale'
 import { classifyAuthError, formatAuthError } from '~/lib/auth-errors'
 import { isPasswordPwned } from '~/lib/hibp'
 import { Button } from '~/components/ui/button'
@@ -48,30 +51,47 @@ import {
 import { ActiveSessions } from '~/components/auth/active-sessions'
 import { LinkedAccounts } from '~/components/auth/linked-accounts'
 
-const profileSchema = z.object({
-  name: z.string().min(1, 'Name is required').max(80, 'Too long'),
-})
-
-const emailSchema = z.object({
-  newEmail: z.email('Invalid email'),
-})
-
-const passwordSchema = z
-  .object({
-    currentPassword: z.string().min(1, 'Required'),
-    newPassword: z.string().min(12, 'At least 12 characters'),
-  })
-  .refine((v) => v.currentPassword !== v.newPassword, {
-    message: 'New password must be different',
-    path: ['newPassword'],
-  })
-
 export const Route = createFileRoute('/app/me')({
   component: ProfilePage,
-  head: () => ({ meta: [{ title: 'Your profile — albo' }] }),
+  head: () => ({
+    meta: [
+      {
+        title: `${getI18n(getLocale()).getFixedT(null, 'account')('page.title')} — albo`,
+      },
+    ],
+  }),
 })
 
 function ProfilePage() {
+  const { t } = useTranslation(['account', 'validation', 'errors', 'common'])
+  const te = (k: string) => t(`errors:${k}`)
+  const profileSchema = useMemo(
+    () =>
+      z.object({
+        name: z
+          .string()
+          .min(1, t('validation:name.required'))
+          .max(80, t('validation:name.tooLong')),
+      }),
+    [t],
+  )
+  const emailSchema = useMemo(
+    () => z.object({ newEmail: z.email(t('validation:email.invalid')) }),
+    [t],
+  )
+  const passwordSchema = useMemo(
+    () =>
+      z
+        .object({
+          currentPassword: z.string().min(1, t('validation:required')),
+          newPassword: z.string().min(12, t('validation:password.min12')),
+        })
+        .refine((v) => v.currentPassword !== v.newPassword, {
+          message: t('validation:password.different'),
+          path: ['newPassword'],
+        }),
+    [t],
+  )
   const navigate = useNavigate()
   const me = useConvexQuery(api.users.me)
   const updateProfile = useConvexMutation(api.users.updateProfile)
@@ -97,10 +117,14 @@ function ProfilePage() {
       try {
         await updateProfile({ name: value.name })
         await authClient.updateUser({ name: value.name })
-        toast.success('Profile updated')
+        toast.success(t('account:profile.updated'))
       } catch (err) {
         const code = err instanceof ConvexError ? (err.data as string) : ''
-        toast.error(code === 'invalid_name' ? 'Invalid name' : 'Could not save')
+        toast.error(
+          code === 'invalid_name'
+            ? t('account:profile.invalidName')
+            : t('account:profile.couldNotSave'),
+        )
       } finally {
         setSavingProfile(false)
       }
@@ -113,7 +137,7 @@ function ProfilePage() {
     onSubmit: async ({ value, formApi }) => {
       if (me?.kind !== 'ready') return
       if (value.newEmail.toLowerCase() === me.user.email.toLowerCase()) {
-        toast.error('That is already your email')
+        toast.error(t('account:email.alreadyYours'))
         return
       }
       setSavingEmail(true)
@@ -123,11 +147,11 @@ function ProfilePage() {
       })
       setSavingEmail(false)
       if (error) {
-        toast.error(formatAuthError(classifyAuthError(error), 'change'))
+        toast.error(formatAuthError(classifyAuthError(error), 'change', te))
         return
       }
       toast.success(
-        `Confirmation sent to ${me.user.email}. Click the link to apply the change — it expires in 1 hour.`,
+        t('account:email.confirmationSent', { email: me.user.email }),
       )
       formApi.reset()
     },
@@ -145,7 +169,7 @@ function ProfilePage() {
       })
       setChangingPassword(false)
       if (error) {
-        toast.error(formatAuthError(classifyAuthError(error), 'change'))
+        toast.error(formatAuthError(classifyAuthError(error), 'change', te))
         return
       }
       // Fire-and-forget: post-event notification email. Never await — a
@@ -153,7 +177,7 @@ function ProfilePage() {
       notifyPasswordChanged({}).catch((err) => {
         console.warn('[notifyPasswordChanged]', err)
       })
-      toast.success('Password changed. Other sessions have been signed out.')
+      toast.success(t('account:password.changed'))
       formApi.reset()
     },
   })
@@ -196,10 +220,10 @@ function ProfilePage() {
     })
     setSendingMagic(false)
     if (error) {
-      toast.error(formatAuthError(classifyAuthError(error), 'signin'))
+      toast.error(formatAuthError(classifyAuthError(error), 'signin', te))
       return
     }
-    toast.success(`Magic link sent to ${me.user.email}`)
+    toast.success(t('account:magic.sent', { email: me.user.email }))
   }
 
   async function handleDelete() {
@@ -207,11 +231,13 @@ function ProfilePage() {
     const { error } = await authClient.deleteUser({ callbackURL: '/login' })
     setDeleting(false)
     if (error) {
-      toast.error(formatAuthError(classifyAuthError(error), 'change'))
+      toast.error(formatAuthError(classifyAuthError(error), 'change', te))
       return
     }
     toast.success(
-      `Confirmation sent to ${me?.kind === 'ready' ? me.user.email : 'your email'}. Click the link within 1 hour to permanently delete.`,
+      t('account:danger.confirmationSent', {
+        email: me?.kind === 'ready' ? me.user.email : 'your email',
+      }),
     )
     setConfirmDelete(false)
   }
@@ -223,37 +249,43 @@ function ProfilePage() {
       <header className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-semibold tracking-tight">
-            Your profile
+            {t('account:page.title')}
           </h1>
           <p className="text-muted-foreground text-sm">
-            Manage your account.
+            {t('account:page.subtitle')}
           </p>
         </div>
         {backTo ? (
           <Button asChild variant="outline">
             <Link to="/app/$orgSlug" params={{ orgSlug: backTo }}>
-              ← Back
+              {t('account:page.back')}
             </Link>
           </Button>
         ) : (
           <Button asChild variant="outline">
-            <Link to="/app">← Back</Link>
+            <Link to="/app">{t('account:page.back')}</Link>
           </Button>
         )}
       </header>
 
       <Tabs defaultValue="profile" className="space-y-6">
         <TabsList>
-          <TabsTrigger value="profile">Profile</TabsTrigger>
-          <TabsTrigger value="security">Security</TabsTrigger>
-          <TabsTrigger value="sessions">Sessions</TabsTrigger>
+          <TabsTrigger value="profile">
+            {t('account:page.tabs.profile')}
+          </TabsTrigger>
+          <TabsTrigger value="security">
+            {t('account:page.tabs.security')}
+          </TabsTrigger>
+          <TabsTrigger value="sessions">
+            {t('account:page.tabs.sessions')}
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="profile" className="space-y-6">
       <Card>
         <CardHeader>
-          <CardTitle>Profile</CardTitle>
-          <CardDescription>Name and avatar shown to teammates.</CardDescription>
+          <CardTitle>{t('account:profile.title')}</CardTitle>
+          <CardDescription>{t('account:profile.description')}</CardDescription>
         </CardHeader>
         <form
           className="flex flex-col gap-6"
@@ -266,7 +298,7 @@ function ProfilePage() {
           <CardContent>
             <FieldGroup>
               <Field>
-                <FieldLabel>Avatar</FieldLabel>
+                <FieldLabel>{t('account:profile.avatar')}</FieldLabel>
                 <ImageUpload
                   currentUrl={me.user.avatarUrl}
                   shape="circle"
@@ -278,12 +310,14 @@ function ProfilePage() {
                   }}
                 />
                 <FieldDescription>
-                  PNG, JPEG, WEBP or GIF, up to 20 MB.
+                  {t('account:profile.avatarHint')}
                 </FieldDescription>
               </Field>
 
               <Field>
-                <FieldLabel htmlFor="email">Email</FieldLabel>
+                <FieldLabel htmlFor="email">
+                  {t('account:profile.email')}
+                </FieldLabel>
                 <Input id="email" value={me.user.email} disabled />
               </Field>
 
@@ -293,7 +327,9 @@ function ProfilePage() {
                     field.state.meta.isTouched && !field.state.meta.isValid
                   return (
                     <Field data-invalid={invalid || undefined}>
-                      <FieldLabel htmlFor={field.name}>Name</FieldLabel>
+                      <FieldLabel htmlFor={field.name}>
+                        {t('account:profile.name')}
+                      </FieldLabel>
                       <Input
                         id={field.name}
                         name={field.name}
@@ -312,7 +348,7 @@ function ProfilePage() {
 
               <Button type="submit" disabled={savingProfile}>
                 {savingProfile && <Spinner />}
-                Save changes
+                {t('account:profile.save')}
               </Button>
             </FieldGroup>
           </CardContent>
@@ -321,10 +357,8 @@ function ProfilePage() {
 
       <Card>
         <CardHeader>
-          <CardTitle>Email</CardTitle>
-          <CardDescription>
-            We&apos;ll send a confirmation link to your current address.
-          </CardDescription>
+          <CardTitle>{t('account:email.title')}</CardTitle>
+          <CardDescription>{t('account:email.description')}</CardDescription>
         </CardHeader>
         <form
           className="flex flex-col gap-6"
@@ -342,7 +376,9 @@ function ProfilePage() {
                     field.state.meta.isTouched && !field.state.meta.isValid
                   return (
                     <Field data-invalid={invalid || undefined}>
-                      <FieldLabel htmlFor={field.name}>New email</FieldLabel>
+                      <FieldLabel htmlFor={field.name}>
+                        {t('account:email.newEmail')}
+                      </FieldLabel>
                       <Input
                         id={field.name}
                         name={field.name}
@@ -354,8 +390,7 @@ function ProfilePage() {
                         aria-invalid={invalid || undefined}
                       />
                       <FieldDescription>
-                        Your current email stays active until you click the
-                        confirmation link.
+                        {t('account:email.hint')}
                       </FieldDescription>
                       {invalid && (
                         <FieldError errors={field.state.meta.errors} />
@@ -366,7 +401,7 @@ function ProfilePage() {
               </emailForm.Field>
               <Button type="submit" disabled={savingEmail}>
                 {savingEmail && <Spinner />}
-                Send confirmation email
+                {t('account:email.send')}
               </Button>
             </FieldGroup>
           </CardContent>
@@ -378,10 +413,8 @@ function ProfilePage() {
         <TabsContent value="security" className="space-y-6">
       <Card>
         <CardHeader>
-          <CardTitle>Magic link</CardTitle>
-          <CardDescription>
-            Get a one-tap sign-in link in your inbox.
-          </CardDescription>
+          <CardTitle>{t('account:magic.title')}</CardTitle>
+          <CardDescription>{t('account:magic.description')}</CardDescription>
         </CardHeader>
         <CardContent>
           <Button
@@ -390,18 +423,15 @@ function ProfilePage() {
             disabled={sendingMagic}
           >
             {sendingMagic && <Spinner />}
-            Email me a magic link
+            {t('account:magic.send')}
           </Button>
         </CardContent>
       </Card>
 
       <Card>
         <CardHeader>
-          <CardTitle>Connected accounts</CardTitle>
-          <CardDescription>
-            Methods that can sign you in. Add a social provider for a faster
-            sign-in option.
-          </CardDescription>
+          <CardTitle>{t('account:connected.title')}</CardTitle>
+          <CardDescription>{t('account:connected.description')}</CardDescription>
         </CardHeader>
         <CardContent>
           <LinkedAccounts />
@@ -410,10 +440,8 @@ function ProfilePage() {
 
       <Card>
         <CardHeader>
-          <CardTitle>Password</CardTitle>
-          <CardDescription>
-            Other sessions will be signed out after a change.
-          </CardDescription>
+          <CardTitle>{t('account:password.title')}</CardTitle>
+          <CardDescription>{t('account:password.description')}</CardDescription>
         </CardHeader>
         <form
           className="flex flex-col gap-6"
@@ -432,7 +460,7 @@ function ProfilePage() {
                   return (
                     <Field data-invalid={invalid || undefined}>
                       <FieldLabel htmlFor={field.name}>
-                        Current password
+                        {t('account:password.current')}
                       </FieldLabel>
                       <PasswordInput
                         id={field.name}
@@ -457,10 +485,7 @@ function ProfilePage() {
                     if (!value || value.length < 12) return undefined
                     const { pwned } = await isPasswordPwned(value)
                     return pwned
-                      ? {
-                          message:
-                            'This password has appeared in known data breaches. Pick another.',
-                        }
+                      ? { message: t('validation:password.pwned') }
                       : undefined
                   },
                 }}
@@ -470,7 +495,9 @@ function ProfilePage() {
                     field.state.meta.isTouched && !field.state.meta.isValid
                   return (
                     <Field data-invalid={invalid || undefined}>
-                      <FieldLabel htmlFor={field.name}>New password</FieldLabel>
+                      <FieldLabel htmlFor={field.name}>
+                        {t('account:password.new')}
+                      </FieldLabel>
                       <PasswordInput
                         id={field.name}
                         name={field.name}
@@ -481,8 +508,7 @@ function ProfilePage() {
                         aria-invalid={invalid || undefined}
                       />
                       <FieldDescription>
-                        Avoid passwords you&apos;ve used elsewhere. The meter
-                        below shows real-time strength.
+                        {t('account:password.hint')}
                       </FieldDescription>
                       <PasswordStrength
                         value={field.state.value}
@@ -497,7 +523,7 @@ function ProfilePage() {
               </passwordForm.Field>
               <Button type="submit" disabled={changingPassword}>
                 {changingPassword && <Spinner />}
-                Change password
+                {t('account:password.change')}
               </Button>
             </FieldGroup>
           </CardContent>
@@ -506,8 +532,8 @@ function ProfilePage() {
 
       <Card>
         <CardHeader>
-          <CardTitle>Sign out</CardTitle>
-          <CardDescription>End your current session.</CardDescription>
+          <CardTitle>{t('account:signout.title')}</CardTitle>
+          <CardDescription>{t('account:signout.description')}</CardDescription>
         </CardHeader>
         <CardContent>
           <Button
@@ -516,18 +542,17 @@ function ProfilePage() {
             disabled={signingOut}
           >
             {signingOut && <Spinner />}
-            Sign out
+            {t('account:signout.action')}
           </Button>
         </CardContent>
       </Card>
 
       <Card className="border-destructive/30">
         <CardHeader>
-          <CardTitle className="text-destructive">Delete account</CardTitle>
-          <CardDescription>
-            Permanently remove your profile and all organization memberships.
-            This cannot be undone.
-          </CardDescription>
+          <CardTitle className="text-destructive">
+            {t('account:danger.title')}
+          </CardTitle>
+          <CardDescription>{t('account:danger.description')}</CardDescription>
         </CardHeader>
         <CardContent>
           <Button
@@ -535,7 +560,7 @@ function ProfilePage() {
             onClick={() => setConfirmDelete(true)}
             disabled={deleting}
           >
-            Delete account…
+            {t('account:danger.action')}
           </Button>
         </CardContent>
       </Card>
@@ -545,10 +570,9 @@ function ProfilePage() {
         <TabsContent value="sessions" className="space-y-6">
           <Card>
             <CardHeader>
-              <CardTitle>Active sessions</CardTitle>
+              <CardTitle>{t('account:activeSessions.title')}</CardTitle>
               <CardDescription>
-                Devices currently signed in to your account. Revoke any that
-                you don&apos;t recognize.
+                {t('account:activeSessions.description')}
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -564,17 +588,18 @@ function ProfilePage() {
       >
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Delete your account?</DialogTitle>
+            <DialogTitle>{t('account:danger.dialogTitle')}</DialogTitle>
             <DialogDescription>
-              We&apos;ll send a confirmation link to{' '}
-              <strong>{me.user.email}</strong>. Click it to permanently delete
-              your account. If you change your mind, ignore the email and
-              nothing happens.
+              <Trans
+                t={t}
+                i18nKey="account:danger.dialogDescription"
+                values={{ email: me.user.email }}
+              />
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
             <Button variant="outline" onClick={() => setConfirmDelete(false)}>
-              Cancel
+              {t('common:actions.cancel')}
             </Button>
             <Button
               variant="destructive"
@@ -582,7 +607,7 @@ function ProfilePage() {
               disabled={deleting}
             >
               {deleting && <Spinner />}
-              Send confirmation
+              {t('account:danger.confirm')}
             </Button>
           </DialogFooter>
         </DialogContent>

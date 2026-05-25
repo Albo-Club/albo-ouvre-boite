@@ -1,6 +1,7 @@
 import { useRef, useState } from 'react'
 import { useConvexMutation } from '@convex-dev/react-query'
 import { ConvexError } from 'convex/values'
+import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
 
 import { api } from '../../convex/_generated/api'
@@ -10,12 +11,7 @@ import { cn } from '~/lib/utils'
 
 const MAX_BYTES = 20 * 1024 * 1024
 const ACCEPT = 'image/png,image/jpeg,image/webp,image/gif'
-
-const errorMessages: Record<string, string> = {
-  too_large: 'Image is larger than 20 MB',
-  invalid_type: 'Use a PNG, JPEG, WEBP or GIF image',
-  insufficient_role: 'Admins or owners only',
-}
+const KNOWN_ERRORS = ['too_large', 'invalid_type', 'insufficient_role']
 
 function errorCode(err: unknown): string | null {
   if (!(err instanceof ConvexError)) return null
@@ -33,7 +29,7 @@ export function ImageUpload({
   onPicked,
   onRemove,
   disabled,
-  label = 'Upload image',
+  label,
 }: {
   currentUrl: string | null
   shape?: 'square' | 'circle'
@@ -42,18 +38,20 @@ export function ImageUpload({
   disabled?: boolean
   label?: string
 }) {
+  const { t } = useTranslation('common')
   const generateUploadUrl = useConvexMutation(api.files.generateUploadUrl)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [uploading, setUploading] = useState(false)
   const [dragOver, setDragOver] = useState(false)
+  const resolvedLabel = label ?? t('imageUpload.label')
 
   async function handleFile(file: File) {
     if (file.size > MAX_BYTES) {
-      toast.error('Image is larger than 20 MB')
+      toast.error(t('imageUpload.errors.too_large'))
       return
     }
     if (!ACCEPT.split(',').includes(file.type)) {
-      toast.error('Use a PNG, JPEG, WEBP or GIF image')
+      toast.error(t('imageUpload.errors.invalid_type'))
       return
     }
     setUploading(true)
@@ -65,15 +63,19 @@ export function ImageUpload({
         body: file,
       })
       if (!res.ok) {
-        toast.error('Upload failed')
+        toast.error(t('imageUpload.uploadFailed'))
         return
       }
       const { storageId } = (await res.json()) as { storageId: Id<'_storage'> }
       await onPicked(storageId)
-      toast.success('Image updated')
+      toast.success(t('imageUpload.updated'))
     } catch (err) {
       const code = errorCode(err) ?? ''
-      toast.error(errorMessages[code] ?? 'Upload failed')
+      toast.error(
+        KNOWN_ERRORS.includes(code)
+          ? t(`imageUpload.errors.${code}`)
+          : t('imageUpload.uploadFailed'),
+      )
     } finally {
       setUploading(false)
     }
@@ -106,10 +108,10 @@ export function ImageUpload({
           dragOver && 'border-primary bg-primary/10',
           (disabled || uploading) && 'cursor-not-allowed opacity-60',
         )}
-        aria-label={label}
+        aria-label={resolvedLabel}
       >
         {uploading ? (
-          'Uploading…'
+          t('imageUpload.uploading')
         ) : currentUrl ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img
@@ -118,7 +120,7 @@ export function ImageUpload({
             className="h-full w-full object-cover"
           />
         ) : (
-          'Drop or click'
+          t('imageUpload.dropOrClick')
         )}
       </button>
 
@@ -130,7 +132,7 @@ export function ImageUpload({
           onClick={openPicker}
           disabled={disabled || uploading}
         >
-          {currentUrl ? 'Replace' : 'Upload'}
+          {currentUrl ? t('imageUpload.replace') : t('imageUpload.upload')}
         </Button>
         {currentUrl && onRemove && (
           <Button
@@ -141,16 +143,16 @@ export function ImageUpload({
               setUploading(true)
               try {
                 await onRemove()
-                toast.success('Image removed')
+                toast.success(t('imageUpload.removed'))
               } catch {
-                toast.error('Could not remove')
+                toast.error(t('imageUpload.couldNotRemove'))
               } finally {
                 setUploading(false)
               }
             }}
             disabled={disabled || uploading}
           >
-            Remove
+            {t('actions.remove')}
           </Button>
         )}
       </div>

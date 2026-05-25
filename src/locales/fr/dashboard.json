@@ -1,0 +1,33 @@
+{
+  "metaTitle": "Tableau de bord — albo",
+  "subtitle": "Aperçu de votre espace de travail",
+  "kpi": {
+    "totalItems": "Total des éléments",
+    "activeMembers": "Membres actifs",
+    "pendingInvitations": "Invitations en attente",
+    "mrr": "MRR",
+    "vsLastMonth": "vs mois dernier",
+    "pendingInvites_one": "{{count}} invitation en attente",
+    "pendingInvites_other": "{{count}} invitations en attente",
+    "adminOnly": "réservé aux admins",
+    "demoVsLastMonth": "démo · vs mois dernier"
+  },
+  "activity": {
+    "title": "Activité",
+    "description": "Éléments + événements sur les {{count}} derniers jours",
+    "items": "Éléments",
+    "events": "Événements"
+  },
+  "roles": {
+    "title": "Membres par rôle",
+    "total": "{{count}} au total",
+    "none": "Aucun membre pour l'instant",
+    "membersLegend": "Membres"
+  },
+  "recent": {
+    "title": "Éléments récents",
+    "description": "Les 5 éléments les plus récents de cette organisation",
+    "viewAll": "Tout voir",
+    "empty": "Aucun élément pour l'instant. <link>Créez-en un</link>."
+  }
+}

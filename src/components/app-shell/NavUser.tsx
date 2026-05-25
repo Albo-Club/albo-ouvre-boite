@@ -1,11 +1,12 @@
 import { Link, useNavigate } from '@tanstack/react-router'
 import {
+  Building2,
   ChevronsUpDown,
   LogOut,
   Shield,
   UserCircle,
-  Building2,
 } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 
 import { authClient } from '~/lib/auth-client'
 import { Avatar, AvatarFallback, AvatarImage } from '~/components/ui/avatar'
@@ -36,6 +37,7 @@ export function NavUser({
   superAdmin: boolean
 }) {
   const navigate = useNavigate()
+  const { t } = useTranslation(['nav', 'account', 'common'])
   const { isMobile } = useSidebar()
   const displayName = name ?? email
   const source = name?.trim() || email
@@ -87,27 +89,27 @@ export function NavUser({
             <DropdownMenuItem asChild>
               <Link to="/app/me">
                 <UserCircle className="mr-2 size-4" />
-                Your profile
+                {t('account:menu.profile')}
               </Link>
             </DropdownMenuItem>
             <DropdownMenuItem asChild>
               <Link to="/app">
                 <Building2 className="mr-2 size-4" />
-                Switch organization
+                {t('account:menu.switchOrg')}
               </Link>
             </DropdownMenuItem>
             {superAdmin && (
               <DropdownMenuItem asChild>
                 <Link to="/app/admin">
                   <Shield className="mr-2 size-4" />
-                  Super-admin
+                  {t('account:menu.superAdmin')}
                 </Link>
               </DropdownMenuItem>
             )}
             <DropdownMenuSeparator />
             <DropdownMenuItem onSelect={handleSignOut}>
               <LogOut className="mr-2 size-4" />
-              Sign out
+              {t('account:menu.signOut')}
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

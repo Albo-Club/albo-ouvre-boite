@@ -68,42 +68,22 @@ export function classifyAuthError(
 
 export type AuthErrorContext = 'signin' | 'signup' | 'reset' | 'verify' | 'change'
 
+type Translate = (key: string) => string
+
 /**
- * Format a classified error into user-facing copy. Some codes render
- * differently depending on the surrounding flow (e.g. duplicate-email on
- * signup must look identical to success to defeat enumeration).
+ * Format a classified error into user-facing copy via the `errors` i18n
+ * namespace. Pass a `t` bound to that namespace (e.g.
+ * `useTranslation('errors')`). Some codes render differently depending on the
+ * surrounding flow (e.g. duplicate-email on signup must look identical to
+ * success to defeat enumeration).
  */
 export function formatAuthError(
   code: AuthErrorCode,
-  ctx: AuthErrorContext = 'signin',
+  ctx: AuthErrorContext,
+  t: Translate,
 ): string {
-  switch (code) {
-    case 'INVALID_CREDENTIALS':
-      return 'Email or password is incorrect.'
-    case 'EMAIL_NOT_VERIFIED':
-      return 'Verify your email to continue. Check your inbox for the link.'
-    case 'EMAIL_ALREADY_REGISTERED':
-      return ctx === 'signup'
-        ? "If this email isn't already taken, we'll send you a verification link."
-        : 'This email is already in use.'
-    case 'EMAIL_INVALID':
-      return 'Please enter a valid email address.'
-    case 'PASSWORD_TOO_SHORT':
-      return 'Password is too short.'
-    case 'PASSWORD_TOO_LONG':
-      return 'Password is too long.'
-    case 'TOKEN_INVALID':
-      return 'This link is invalid. Please request a new one.'
-    case 'TOKEN_EXPIRED':
-      return 'This link has expired. Please request a new one.'
-    case 'SESSION_EXPIRED':
-      return 'Your session expired. Please sign in again.'
-    case 'RATE_LIMITED':
-      return 'Too many attempts — please wait a moment and try again.'
-    case 'NETWORK':
-      return 'Network error. Check your connection and retry.'
-    case 'UNKNOWN':
-    default:
-      return 'Something went wrong. Please try again.'
+  if (code === 'EMAIL_ALREADY_REGISTERED' && ctx === 'signup') {
+    return t('auth.EMAIL_ALREADY_REGISTERED_signup')
   }
+  return t(`auth.${code}`)
 }

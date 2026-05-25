@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Link, useNavigate } from '@tanstack/react-router'
 import { useConvexQuery } from '@convex-dev/react-query'
 import { Building2, LogOut, Shield, UserCircle, Users } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
 
 import { api } from '../../../convex/_generated/api'
@@ -33,6 +34,7 @@ import {
  * shadcn primitives, no Better Auth UI dependency.
  */
 export function UserButton() {
+  const { t } = useTranslation(['account', 'common', 'errors'])
   const me = useConvexQuery(api.users.me, {})
   const navigate = useNavigate()
   const [confirmSignOutAll, setConfirmSignOutAll] = useState(false)
@@ -58,7 +60,11 @@ export function UserButton() {
     if (error) {
       setSigningOutAll(false)
       setConfirmSignOutAll(false)
-      toast.error(formatAuthError(classifyAuthError(error), 'signin'))
+      toast.error(
+        formatAuthError(classifyAuthError(error), 'signin', (k) =>
+          t(`errors:${k}`),
+        ),
+      )
       return
     }
     await authClient.signOut()
@@ -73,7 +79,7 @@ export function UserButton() {
             variant="ghost"
             size="icon"
             className="size-8 rounded-full"
-            aria-label="Account menu"
+            aria-label={t('account:menu.accountMenu')}
           >
             <Avatar className="size-8">
               {user.avatarUrl ? (
@@ -96,41 +102,40 @@ export function UserButton() {
           <DropdownMenuItem asChild>
             <Link to="/app/me">
               <UserCircle className="mr-2 size-4" />
-              Your profile
+              {t('account:menu.profile')}
             </Link>
           </DropdownMenuItem>
           <DropdownMenuItem asChild>
             <Link to="/app">
               <Building2 className="mr-2 size-4" />
-              Switch organization
+              {t('account:menu.switchOrg')}
             </Link>
           </DropdownMenuItem>
           {user.superAdmin && (
             <DropdownMenuItem asChild>
               <Link to="/app/admin">
                 <Shield className="mr-2 size-4" />
-                Super-admin
+                {t('account:menu.superAdmin')}
               </Link>
             </DropdownMenuItem>
           )}
           <DropdownMenuSeparator />
           <DropdownMenuItem onSelect={() => setConfirmSignOutAll(true)}>
             <Users className="mr-2 size-4" />
-            Sign out everywhere
+            {t('account:menu.signOutEverywhere')}
           </DropdownMenuItem>
           <DropdownMenuItem onSelect={handleSignOut}>
             <LogOut className="mr-2 size-4" />
-            Sign out
+            {t('account:menu.signOut')}
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
       <Dialog open={confirmSignOutAll} onOpenChange={setConfirmSignOutAll}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Sign out everywhere?</DialogTitle>
+            <DialogTitle>{t('account:menu.signOutEverywhereTitle')}</DialogTitle>
             <DialogDescription>
-              This signs out every device including this one. You&apos;ll need
-              to sign back in.
+              {t('account:menu.signOutEverywhereDescription')}
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
@@ -139,7 +144,7 @@ export function UserButton() {
               onClick={() => setConfirmSignOutAll(false)}
               disabled={signingOutAll}
             >
-              Cancel
+              {t('common:actions.cancel')}
             </Button>
             <Button
               variant="destructive"
@@ -147,7 +152,7 @@ export function UserButton() {
               disabled={signingOutAll}
             >
               {signingOutAll && <Spinner />}
-              Sign out everywhere
+              {t('account:menu.signOutEverywhere')}
             </Button>
           </DialogFooter>
         </DialogContent>

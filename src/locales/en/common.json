@@ -1,0 +1,50 @@
+{
+  "appName": "albo",
+  "appTitle": "albo — MVP starter",
+  "loadingEllipsis": "Loading…",
+  "notFound": "Page not found",
+  "actions": {
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit",
+    "create": "Create",
+    "close": "Close",
+    "confirm": "Confirm",
+    "back": "Back",
+    "retry": "Retry",
+    "search": "Search",
+    "remove": "Remove"
+  },
+  "language": {
+    "label": "Language",
+    "en": "English",
+    "fr": "Français"
+  },
+  "roles": {
+    "owner": "Owner",
+    "admin": "Admin",
+    "member": "Member"
+  },
+  "demo": "Demo",
+  "comingSoon": "Coming soon",
+  "theme": {
+    "toggle": "Toggle theme"
+  },
+  "imageUpload": {
+    "label": "Upload image",
+    "uploading": "Uploading…",
+    "dropOrClick": "Drop or click",
+    "replace": "Replace",
+    "upload": "Upload",
+    "updated": "Image updated",
+    "removed": "Image removed",
+    "couldNotRemove": "Could not remove",
+    "uploadFailed": "Upload failed",
+    "errors": {
+      "too_large": "Image is larger than 20 MB",
+      "invalid_type": "Use a PNG, JPEG, WEBP or GIF image",
+      "insufficient_role": "Admins or owners only"
+    }
+  }
+}

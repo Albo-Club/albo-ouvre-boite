@@ -1,9 +1,10 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { useForm } from '@tanstack/react-form'
 import { z } from 'zod'
 import { toast } from 'sonner'
 import { ConvexError } from 'convex/values'
 import { useConvexMutation } from '@convex-dev/react-query'
+import { useTranslation } from 'react-i18next'
 
 import { api } from '../../../convex/_generated/api'
 import type { Id } from '../../../convex/_generated/dataModel'
@@ -22,19 +23,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from '~/components/ui/dialog'
-
-const itemSchema = z.object({
-  title: z.string().min(1, 'Title is required').max(120, 'Too long'),
-  description: z.string().max(2000, 'Too long'),
-})
-
-const errorMessages: Record<string, string> = {
-  invalid_title: 'Title is required',
-  description_too_long: 'Description is too long',
-  not_a_member: 'You are not a member',
-  insufficient_role: 'Admins or owners only',
-  not_found: 'Item not found',
-}
 
 export type EditableItem = {
   _id: Id<'items'>
@@ -55,6 +43,25 @@ export function ItemFormDialog({
   orgId: Id<'organizations'> | undefined
   onClose: () => void
 }) {
+  const { t } = useTranslation(['items', 'validation', 'common'])
+  const itemSchema = useMemo(
+    () =>
+      z.object({
+        title: z
+          .string()
+          .min(1, t('validation:title.required'))
+          .max(120, t('validation:title.tooLong')),
+        description: z.string().max(2000, t('validation:description.tooLong')),
+      }),
+    [t],
+  )
+  const errorMessages: Record<string, string> = {
+    invalid_title: t('items:errors.invalid_title'),
+    description_too_long: t('items:errors.description_too_long'),
+    not_a_member: t('items:errors.not_a_member'),
+    insufficient_role: t('items:errors.insufficient_role'),
+    not_found: t('items:errors.not_found'),
+  }
   const createItem = useConvexMutation(api.items.create)
   const updateItem = useConvexMutation(api.items.update)
   const [saving, setSaving] = useState(false)
@@ -75,7 +82,7 @@ export function ItemFormDialog({
             title: value.title,
             description: value.description || undefined,
           })
-          toast.success('Item created')
+          toast.success(t('items:form.created'))
           formApi.reset()
         } else {
           if (!item) return
@@ -84,12 +91,12 @@ export function ItemFormDialog({
             title: value.title,
             description: value.description || undefined,
           })
-          toast.success('Item updated')
+          toast.success(t('items:form.updated'))
         }
         onClose()
       } catch (err) {
         const code = err instanceof ConvexError ? (err.data as string) : ''
-        toast.error(errorMessages[code] ?? 'Could not save')
+        toast.error(errorMessages[code] ?? t('items:form.couldNotSave'))
       } finally {
         setSaving(false)
       }
@@ -106,7 +113,9 @@ export function ItemFormDialog({
       <DialogContent>
         <DialogHeader>
           <DialogTitle>
-            {mode === 'create' ? 'New item' : 'Edit item'}
+            {mode === 'create'
+              ? t('items:form.createTitle')
+              : t('items:form.editTitle')}
           </DialogTitle>
         </DialogHeader>
         <form
@@ -124,7 +133,9 @@ export function ItemFormDialog({
                   field.state.meta.isTouched && !field.state.meta.isValid
                 return (
                   <Field data-invalid={invalid || undefined}>
-                    <FieldLabel htmlFor={field.name}>Title</FieldLabel>
+                    <FieldLabel htmlFor={field.name}>
+                      {t('items:form.title')}
+                    </FieldLabel>
                     <Input
                       id={field.name}
                       value={field.state.value}
@@ -144,7 +155,7 @@ export function ItemFormDialog({
                 return (
                   <Field data-invalid={invalid || undefined}>
                     <FieldLabel htmlFor={field.name}>
-                      Description (optional)
+                      {t('items:form.descriptionOptional')}
                     </FieldLabel>
                     <textarea
                       id={field.name}
@@ -162,14 +173,14 @@ export function ItemFormDialog({
           </FieldGroup>
           <DialogFooter>
             <Button type="button" variant="outline" onClick={onClose}>
-              Cancel
+              {t('common:actions.cancel')}
             </Button>
             <Button type="submit" disabled={saving}>
               {saving
-                ? 'Saving…'
+                ? t('common:loadingEllipsis')
                 : mode === 'create'
-                  ? 'Create'
-                  : 'Save'}
+                  ? t('common:actions.create')
+                  : t('common:actions.save')}
             </Button>
           </DialogFooter>
         </form>

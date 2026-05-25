@@ -3,10 +3,8 @@ import { magicLink } from 'better-auth/plugins/magic-link'
 import { createClient } from '@convex-dev/better-auth'
 import { convex } from '@convex-dev/better-auth/plugins'
 import { requireRunMutationCtx } from '@convex-dev/better-auth/utils'
-import type { GenericCtx } from '@convex-dev/better-auth'
 import authConfig from './auth.config'
 import { components, internal } from './_generated/api'
-import type { DataModel } from './_generated/dataModel'
 import { RESEND_FROM, resend } from './email'
 import {
   changeEmailVerificationEmail,
@@ -16,6 +14,8 @@ import {
   verificationEmail,
 } from './emailTemplates'
 import { consumeLimit } from './rateLimiters'
+import type { DataModel } from './_generated/dataModel'
+import type { GenericCtx } from '@convex-dev/better-auth'
 
 const siteUrl = process.env.SITE_URL!
 
@@ -108,7 +108,11 @@ export const createAuth = (ctx: GenericCtx<DataModel>) =>
           'passwordResetSend',
           data.user.email.toLowerCase().trim(),
         )
-        const { subject, html, text } = resetPasswordEmail({ url: data.url })
+        const locale = await mutCtx.runQuery(internal.users.localeForEmail, { email: data.user.email })
+        const { subject, html, text } = resetPasswordEmail({
+          locale,
+          url: data.url,
+        })
         await resend.sendEmail(mutCtx, {
           from: RESEND_FROM,
           to: data.user.email,
@@ -134,7 +138,11 @@ export const createAuth = (ctx: GenericCtx<DataModel>) =>
           'verificationSend',
           data.user.email.toLowerCase().trim(),
         )
-        const { subject, html, text } = verificationEmail({ url: data.url })
+        const locale = await mutCtx.runQuery(internal.users.localeForEmail, { email: data.user.email })
+        const { subject, html, text } = verificationEmail({
+          locale,
+          url: data.url,
+        })
         await resend.sendEmail(mutCtx, {
           from: RESEND_FROM,
           to: data.user.email,
@@ -164,7 +172,9 @@ export const createAuth = (ctx: GenericCtx<DataModel>) =>
           url: string
         }) => {
           const mutCtx = requireRunMutationCtx(ctx)
+          const locale = await mutCtx.runQuery(internal.users.localeForEmail, { email: data.user.email })
           const { subject, html, text } = changeEmailVerificationEmail({
+            locale,
             url: data.url,
             newEmail: data.newEmail,
           })
@@ -184,7 +194,9 @@ export const createAuth = (ctx: GenericCtx<DataModel>) =>
           url: string
         }) => {
           const mutCtx = requireRunMutationCtx(ctx)
+          const locale = await mutCtx.runQuery(internal.users.localeForEmail, { email: data.user.email })
           const { subject, html, text } = deleteAccountVerificationEmail({
+            locale,
             url: data.url,
             name: data.user.name ?? null,
           })
@@ -218,7 +230,8 @@ export const createAuth = (ctx: GenericCtx<DataModel>) =>
             'magicLinkSend',
             email.toLowerCase().trim(),
           )
-          const { subject, html, text } = magicLinkEmail({ url })
+          const locale = await mutCtx.runQuery(internal.users.localeForEmail, { email })
+          const { subject, html, text } = magicLinkEmail({ locale, url })
           await resend.sendEmail(mutCtx, {
             from: RESEND_FROM,
             to: email,

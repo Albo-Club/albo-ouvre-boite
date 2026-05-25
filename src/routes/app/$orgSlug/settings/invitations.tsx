@@ -1,6 +1,7 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { createFileRoute } from '@tanstack/react-router'
 import { useForm } from '@tanstack/react-form'
+import { useTranslation } from 'react-i18next'
 import { z } from 'zod'
 import { toast } from 'sonner'
 import { ConvexError } from 'convex/values'
@@ -23,18 +24,13 @@ import {
   CardTitle,
 } from '~/components/ui/card'
 
-const inviteSchema = z.object({
-  email: z.email('Invalid email'),
-  role: z.enum(['member', 'admin']),
-})
-
-const errorMessages: Record<string, string> = {
-  already_invited: 'There is already a pending invitation for this email',
-  invalid_email: 'Invalid email',
-  insufficient_role: 'You need to be admin or owner to invite',
-  not_a_member: 'You are not a member of this organization',
-  rate_limited: 'Too many invitations — slow down and try again later',
-}
+const KNOWN_INVITE_ERRORS = [
+  'already_invited',
+  'invalid_email',
+  'insufficient_role',
+  'not_a_member',
+  'rate_limited',
+]
 
 function errorCode(err: unknown): string | null {
   if (!(err instanceof ConvexError)) return null
@@ -51,6 +47,15 @@ export const Route = createFileRoute('/app/$orgSlug/settings/invitations')({
 })
 
 function InvitationsSettings() {
+  const { t } = useTranslation(['settings', 'validation', 'common'])
+  const inviteSchema = useMemo(
+    () =>
+      z.object({
+        email: z.email(t('validation:email.invalid')),
+        role: z.enum(['member', 'admin']),
+      }),
+    [t],
+  )
   const { orgSlug } = Route.useParams()
   const me = useConvexQuery(api.users.me)
   const org = useConvexQuery(api.organizations.bySlug, { slug: orgSlug })
@@ -75,11 +80,17 @@ function InvitationsSettings() {
       setSending(true)
       try {
         await createInvite({ orgId: org._id, ...value })
-        toast.success(`Invitation sent to ${value.email}`)
+        toast.success(t('settings:invitations.sent', { email: value.email }))
         formApi.reset()
       } catch (err) {
         const code = errorCode(err) ?? ''
-        toast.error(errorMessages[code] ?? 'Could not send invitation')
+        toast.error(
+          t(
+            KNOWN_INVITE_ERRORS.includes(code)
+              ? `settings:invitations.errors.${code}`
+              : 'settings:invitations.errors.default',
+          ),
+        )
       } finally {
         setSending(false)
       }
@@ -90,9 +101,9 @@ function InvitationsSettings() {
     return (
       <Card>
         <CardHeader>
-          <CardTitle>Invitations</CardTitle>
+          <CardTitle>{t('settings:invitations.noAccessTitle')}</CardTitle>
           <CardDescription>
-            Only admins and owners can invite people.
+            {t('settings:invitations.noAccessDescription')}
           </CardDescription>
         </CardHeader>
       </Card>
@@ -103,9 +114,9 @@ function InvitationsSettings() {
     <div className="space-y-6">
       <Card>
         <CardHeader>
-          <CardTitle>Invite a member</CardTitle>
+          <CardTitle>{t('settings:invitations.inviteTitle')}</CardTitle>
           <CardDescription>
-            They&apos;ll receive an email with a link to accept.
+            {t('settings:invitations.inviteDescription')}
           </CardDescription>
         </CardHeader>
         <form
@@ -124,7 +135,9 @@ function InvitationsSettings() {
                     field.state.meta.isTouched && !field.state.meta.isValid
                   return (
                     <Field data-invalid={invalid || undefined}>
-                      <FieldLabel htmlFor={field.name}>Email</FieldLabel>
+                      <FieldLabel htmlFor={field.name}>
+                        {t('settings:invitations.email')}
+                      </FieldLabel>
                       <Input
                         id={field.name}
                         name={field.name}
@@ -144,7 +157,9 @@ function InvitationsSettings() {
               <form.Field name="role">
                 {(field) => (
                   <Field>
-                    <FieldLabel htmlFor={field.name}>Role</FieldLabel>
+                    <FieldLabel htmlFor={field.name}>
+                      {t('settings:invitations.role')}
+                    </FieldLabel>
                     <select
                       id={field.name}
                       name={field.name}
@@ -157,14 +172,18 @@ function InvitationsSettings() {
                       }
                       className="border-input bg-background h-9 w-full rounded-md border px-3 text-sm"
                     >
-                      <option value="member">Member</option>
-                      <option value="admin">Admin</option>
+                      <option value="member">
+                        {t('common:roles.member')}
+                      </option>
+                      <option value="admin">{t('common:roles.admin')}</option>
                     </select>
                   </Field>
                 )}
               </form.Field>
               <Button type="submit" disabled={sending}>
-                {sending ? 'Sending…' : 'Send invitation'}
+                {sending
+                  ? t('settings:invitations.sending')
+                  : t('settings:invitations.send')}
               </Button>
             </FieldGroup>
           </CardContent>
@@ -173,17 +192,19 @@ function InvitationsSettings() {
 
       <Card>
         <CardHeader>
-          <CardTitle>Pending invitations</CardTitle>
+          <CardTitle>{t('settings:invitations.pendingTitle')}</CardTitle>
           <CardDescription>
-            Invitations expire after 7 days.
+            {t('settings:invitations.pendingDescription')}
           </CardDescription>
         </CardHeader>
         <CardContent>
           {!pending ? (
-            <p className="text-muted-foreground text-sm">Loading…</p>
+            <p className="text-muted-foreground text-sm">
+              {t('settings:invitations.loading')}
+            </p>
           ) : pending.length === 0 ? (
             <p className="text-muted-foreground text-sm">
-              No pending invitations.
+              {t('settings:invitations.empty')}
             </p>
           ) : (
             <ul className="divide-border divide-y text-sm">
@@ -195,8 +216,10 @@ function InvitationsSettings() {
                   <div className="min-w-0">
                     <p className="truncate font-medium">{inv.email}</p>
                     <p className="text-muted-foreground text-xs">
-                      {inv.role} · expires{' '}
-                      {new Date(inv.expiresAt).toLocaleDateString()}
+                      {t('settings:invitations.expiresOn', {
+                        role: t(`common:roles.${inv.role}`),
+                        date: new Date(inv.expiresAt).toLocaleDateString(),
+                      })}
                     </p>
                   </div>
                   <Button
@@ -205,13 +228,13 @@ function InvitationsSettings() {
                     onClick={async () => {
                       try {
                         await revokeInvite({ invitationId: inv._id })
-                        toast.success('Invitation revoked')
+                        toast.success(t('settings:invitations.revoked'))
                       } catch {
-                        toast.error('Could not revoke')
+                        toast.error(t('settings:invitations.revokeFailed'))
                       }
                     }}
                   >
-                    Revoke
+                    {t('settings:invitations.revoke')}
                   </Button>
                 </li>
               ))}
