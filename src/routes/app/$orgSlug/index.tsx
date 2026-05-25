@@ -1,6 +1,6 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { useConvexQuery } from '@convex-dev/react-query'
-import { Package, Users, Mail, DollarSign } from 'lucide-react'
+import { DollarSign, Mail, Package, Users } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 
 import { api } from '../../../../convex/_generated/api'

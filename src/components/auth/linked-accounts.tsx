@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react'
 import { KeyRound, Mail } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
-import type { TFunction } from 'i18next'
 import { toast } from 'sonner'
+import type { TFunction } from 'i18next'
 
 import { authClient } from '~/lib/auth-client'
 import { classifyAuthError, formatAuthError } from '~/lib/auth-errors'
@@ -72,7 +72,7 @@ export function LinkedAccounts() {
         setAccounts([])
         return
       }
-      setAccounts((data ?? []) as Array<BaAccount>)
+      setAccounts((data ?? []))
     })()
     return () => {
       alive = false

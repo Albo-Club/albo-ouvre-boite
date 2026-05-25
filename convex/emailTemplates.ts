@@ -32,7 +32,7 @@ function layout({
   locale: EmailLocale
   preheader: string
   heading: string
-  paragraphs: string[]
+  paragraphs: Array<string>
   cta?: { label: string; url: string }
   footer: string
 }) {
@@ -85,7 +85,7 @@ function layout({
 </html>`
 }
 
-function plainText(parts: string[]): string {
+function plainText(parts: Array<string>): string {
   return parts.filter(Boolean).join('\n\n')
 }
 

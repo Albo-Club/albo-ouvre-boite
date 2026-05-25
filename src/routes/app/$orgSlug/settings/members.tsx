@@ -56,7 +56,7 @@ function MembersSettings() {
 
   const myRole =
     me?.kind === 'ready'
-      ? (me.orgs.find((o) => o.slug === orgSlug)?.role as Role | undefined)
+      ? (me.orgs.find((o) => o.slug === orgSlug)?.role)
       : undefined
   const myUserId = me?.kind === 'ready' ? me.user._id : undefined
   const canManage = myRole === 'admin' || myRole === 'owner'
@@ -123,7 +123,7 @@ function MembersSettings() {
           <ul className="divide-border divide-y text-sm">
             {members.map((m) => {
               const isSelf = m.userId === myUserId
-              const targetRole = m.role as Role
+              const targetRole = m.role
               const canEditThis =
                 canManage &&
                 !isSelf &&
@@ -173,7 +173,7 @@ function MembersSettings() {
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
-                          {(['owner', 'admin', 'member'] as Role[])
+                          {(['owner', 'admin', 'member'] as Array<Role>)
                             .filter((r) => r !== targetRole)
                             .filter((r) => r !== 'owner' || myRole === 'owner')
                             .map((r) => (

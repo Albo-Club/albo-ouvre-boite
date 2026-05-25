@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react'
 import { Laptop, Smartphone, Tablet } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
-import type { TFunction } from 'i18next'
 import { toast } from 'sonner'
+import type { TFunction } from 'i18next'
 
 import { authClient } from '~/lib/auth-client'
 import { classifyAuthError, formatAuthError } from '~/lib/auth-errors'
@@ -47,7 +47,7 @@ export function ActiveSessions() {
       toast.error(formatAuthError(classifyAuthError(error), 'signin', te))
       return
     }
-    setSessions((data ?? []) as Array<BaSession>)
+    setSessions((data ?? []))
   }
 
   useEffect(() => {

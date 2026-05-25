@@ -5,13 +5,13 @@ import {
   createRootRouteWithContext,
 } from '@tanstack/react-router'
 import * as React from 'react'
-import { I18nextProvider } from 'react-i18next'
+import { I18nextProvider, useTranslation } from 'react-i18next'
 import type { QueryClient } from '@tanstack/react-query'
+import type { Locale } from '~/lib/locale'
 import appCss from '~/styles/app.css?url'
 import { Toaster } from '~/components/ui/sonner'
 import { ThemeProvider } from '~/components/app-shell/ThemeProvider'
 import { getLocale } from '~/lib/locale'
-import type { Locale } from '~/lib/locale'
 import { getI18n } from '~/lib/i18n'
 
 export const Route = createRootRouteWithContext<{
@@ -57,9 +57,14 @@ export const Route = createRootRouteWithContext<{
     ],
     }
   },
-  notFoundComponent: () => <div>Route not found</div>,
+  notFoundComponent: () => <NotFound />,
   component: RootComponent,
 })
+
+function NotFound() {
+  const { t } = useTranslation('common')
+  return <div>{t('notFound')}</div>
+}
 
 function RootComponent() {
   return (

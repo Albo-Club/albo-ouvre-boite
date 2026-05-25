@@ -4,7 +4,8 @@ import { useConvexAuth } from 'convex/react'
 import { useConvexMutation } from '@convex-dev/react-query'
 
 import { api } from '../../../convex/_generated/api'
-import { LOCALES, writeLocaleCookie, type Locale } from '~/lib/locale'
+import type {Locale} from '~/lib/locale';
+import { LOCALES,  writeLocaleCookie } from '~/lib/locale'
 import { Button } from '~/components/ui/button'
 import { SidebarMenuButton } from '~/components/ui/sidebar'
 import {

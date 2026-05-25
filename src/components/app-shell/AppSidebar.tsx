@@ -1,6 +1,11 @@
 import { Link, useLocation } from '@tanstack/react-router'
 import { useTranslation } from 'react-i18next'
 
+import { OrgSwitcher } from './OrgSwitcher'
+import { NavUser } from './NavUser'
+import { ThemePicker } from './ThemePicker'
+import { getNavGroups } from './nav'
+import { LanguageSwitcher } from '~/components/i18n/LanguageSwitcher'
 import {
   Sidebar,
   SidebarContent,
@@ -15,11 +20,6 @@ import {
   SidebarMenuItem,
   SidebarRail,
 } from '~/components/ui/sidebar'
-import { LanguageSwitcher } from '~/components/i18n/LanguageSwitcher'
-import { OrgSwitcher } from './OrgSwitcher'
-import { NavUser } from './NavUser'
-import { ThemePicker } from './ThemePicker'
-import { getNavGroups } from './nav'
 
 type NavLeaf = ReturnType<typeof getNavGroups>[number]['items'][number]
 

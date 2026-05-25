@@ -2,6 +2,7 @@
   "appName": "albo",
   "appTitle": "albo — starter MVP",
   "loadingEllipsis": "Chargement…",
+  "notFound": "Page introuvable",
   "actions": {
     "save": "Enregistrer",
     "cancel": "Annuler",

@@ -2,6 +2,7 @@
   "appName": "albo",
   "appTitle": "albo — MVP starter",
   "loadingEllipsis": "Loading…",
+  "notFound": "Page not found",
   "actions": {
     "save": "Save",
     "cancel": "Cancel",

@@ -1,8 +1,9 @@
-import i18next, { type i18n as I18nInstance } from 'i18next'
+import i18next from 'i18next'
 import { initReactI18next } from 'react-i18next'
 
-import type { Locale } from './locale'
 import { DEFAULT_LOCALE } from './locale'
+import type {i18n as I18nInstance} from 'i18next';
+import type { Locale } from './locale'
 
 import enCommon from '~/locales/en/common.json'
 import enAuth from '~/locales/en/auth.json'

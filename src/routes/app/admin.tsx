@@ -1,7 +1,7 @@
 import { useEffect } from 'react'
 import {
-  createFileRoute,
   Link,
+  createFileRoute,
   useNavigate,
 } from '@tanstack/react-router'
 import { useTranslation } from 'react-i18next'

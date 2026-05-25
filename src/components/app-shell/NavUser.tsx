@@ -1,10 +1,10 @@
 import { Link, useNavigate } from '@tanstack/react-router'
 import {
+  Building2,
   ChevronsUpDown,
   LogOut,
   Shield,
   UserCircle,
-  Building2,
 } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 

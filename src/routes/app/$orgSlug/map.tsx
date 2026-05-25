@@ -3,6 +3,7 @@ import { createFileRoute } from '@tanstack/react-router'
 import { useTranslation } from 'react-i18next'
 import { Sparkles } from 'lucide-react'
 
+import type {LocationStatus} from '~/lib/mocks/locations';
 import { getI18n } from '~/lib/i18n'
 import { getLocale } from '~/lib/locale'
 import { Alert, AlertDescription, AlertTitle } from '~/components/ui/alert'
@@ -15,10 +16,10 @@ import {
   CardTitle,
 } from '~/components/ui/card'
 import {
+  
   STATUS_COLOR,
   formatPrice,
-  locations,
-  type LocationStatus,
+  locations
 } from '~/lib/mocks/locations'
 
 export const Route = createFileRoute('/app/$orgSlug/map')({
@@ -82,7 +83,7 @@ function MapPage() {
               <CardDescription>{t('org:map.byStatus')}</CardDescription>
             </CardHeader>
             <CardContent className="space-y-2">
-              {(Object.keys(counts) as LocationStatus[]).map((s) => (
+              {(Object.keys(counts) as Array<LocationStatus>).map((s) => (
                 <div
                   key={s}
                   className="flex items-center justify-between text-sm"
@@ -141,6 +142,7 @@ function MapPage() {
  * paint. Pattern: useEffect → setMounted → dynamic import → render.
  */
 function LocationsMap() {
+  const { t } = useTranslation(['org'])
   type LeafletModules = {
     MapContainer: typeof import('react-leaflet').MapContainer
     TileLayer: typeof import('react-leaflet').TileLayer
@@ -176,7 +178,9 @@ function LocationsMap() {
   if (!mods) {
     return (
       <div className="bg-muted/30 flex h-[520px] items-center justify-center">
-        <p className="text-muted-foreground text-sm">Chargement de la carte…</p>
+        <p className="text-muted-foreground text-sm">
+          {t('org:map.loadingMap')}
+        </p>
       </div>
     )
   }
@@ -219,7 +223,7 @@ function LocationsMap() {
                 {loc.address}
               </div>
               <div style={{ fontSize: 13, marginBottom: 4 }}>
-                {loc.capacity} {loc.capacity > 1 ? 'postes' : 'poste'} ·{' '}
+                {t('org:map.desk', { count: loc.capacity })} ·{' '}
                 {formatPrice(loc)}
               </div>
               <div
@@ -233,7 +237,7 @@ function LocationsMap() {
                   fontWeight: 500,
                 }}
               >
-                {STATUS_LABEL[loc.status]}
+                {t(`org:map.status.${loc.status}`)}
               </div>
             </div>
           </Popup>

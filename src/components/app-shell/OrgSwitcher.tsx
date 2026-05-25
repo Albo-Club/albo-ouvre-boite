@@ -1,6 +1,6 @@
 import { useNavigate } from '@tanstack/react-router'
 import { useConvexMutation } from '@convex-dev/react-query'
-import { ChevronsUpDown, Plus, Check } from 'lucide-react'
+import { Check, ChevronsUpDown, Plus } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 
 import { api } from '../../../convex/_generated/api'

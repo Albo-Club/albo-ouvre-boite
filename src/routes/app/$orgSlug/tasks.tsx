@@ -9,6 +9,7 @@ import {
   User,
 } from 'lucide-react'
 
+import type {Task, TaskStatus} from '~/lib/mocks/tasks';
 import { getI18n } from '~/lib/i18n'
 import { getLocale } from '~/lib/locale'
 import { Alert, AlertDescription, AlertTitle } from '~/components/ui/alert'
@@ -23,9 +24,9 @@ import {
 import {
   COLUMNS,
   PRIORITY_VARIANT,
-  initialTasks,
-  type Task,
-  type TaskStatus,
+  
+  
+  initialTasks
 } from '~/lib/mocks/tasks'
 
 export const Route = createFileRoute('/app/$orgSlug/tasks')({
@@ -37,7 +38,7 @@ export const Route = createFileRoute('/app/$orgSlug/tasks')({
   }),
 })
 
-const STATUS_ORDER: TaskStatus[] = ['todo', 'in_progress', 'done']
+const STATUS_ORDER: Array<TaskStatus> = ['todo', 'in_progress', 'done']
 
 function nextStatus(s: TaskStatus, dir: 1 | -1): TaskStatus | null {
   const idx = STATUS_ORDER.indexOf(s)
@@ -48,7 +49,7 @@ function nextStatus(s: TaskStatus, dir: 1 | -1): TaskStatus | null {
 
 function TasksPage() {
   const { t } = useTranslation(['org'])
-  const [tasks, setTasks] = useState<Task[]>(initialTasks)
+  const [tasks, setTasks] = useState<Array<Task>>(initialTasks)
 
   function dueLabel(offset: number) {
     if (offset === 0) return t('org:tasks.due.today')

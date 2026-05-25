@@ -1,6 +1,7 @@
 import { Area, AreaChart, CartesianGrid, XAxis, YAxis } from 'recharts'
 import { useTranslation } from 'react-i18next'
 
+import type {ChartConfig} from '~/components/ui/chart';
 import {
   Card,
   CardContent,
@@ -9,12 +10,12 @@ import {
   CardTitle,
 } from '~/components/ui/card'
 import {
+  
   ChartContainer,
   ChartLegend,
   ChartLegendContent,
   ChartTooltip,
-  ChartTooltipContent,
-  type ChartConfig,
+  ChartTooltipContent
 } from '~/components/ui/chart'
 import { generateActivity } from '~/lib/mocks/activity'
 

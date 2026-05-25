@@ -1,5 +1,5 @@
-import type { ColumnDef } from '@tanstack/react-table'
 import { MoreHorizontal } from 'lucide-react'
+import type { ColumnDef } from '@tanstack/react-table'
 import type { TFunction } from 'i18next'
 
 import type { Id } from '../../../convex/_generated/dataModel'
@@ -38,7 +38,7 @@ export function buildColumns({
   onEdit: (item: ItemRow) => void
   onDelete: (item: ItemRow) => void
   t: TFunction<['items', 'common']>
-}): ColumnDef<ItemRow>[] {
+}): Array<ColumnDef<ItemRow>> {
   return [
     {
       id: 'select',

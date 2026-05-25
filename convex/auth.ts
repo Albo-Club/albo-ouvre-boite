@@ -3,10 +3,8 @@ import { magicLink } from 'better-auth/plugins/magic-link'
 import { createClient } from '@convex-dev/better-auth'
 import { convex } from '@convex-dev/better-auth/plugins'
 import { requireRunMutationCtx } from '@convex-dev/better-auth/utils'
-import type { GenericCtx } from '@convex-dev/better-auth'
 import authConfig from './auth.config'
 import { components, internal } from './_generated/api'
-import type { DataModel } from './_generated/dataModel'
 import { RESEND_FROM, resend } from './email'
 import {
   changeEmailVerificationEmail,
@@ -16,6 +14,8 @@ import {
   verificationEmail,
 } from './emailTemplates'
 import { consumeLimit } from './rateLimiters'
+import type { DataModel } from './_generated/dataModel'
+import type { GenericCtx } from '@convex-dev/better-auth'
 
 const siteUrl = process.env.SITE_URL!
 

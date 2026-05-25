@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next'
 import { Clock, Sparkles, Users } from 'lucide-react'
 import { isSameDay } from 'date-fns'
 
+import type {CalendarEvent} from '~/lib/mocks/calendar';
 import { getI18n } from '~/lib/i18n'
 import { getLocale } from '~/lib/locale'
 import { Alert, AlertDescription, AlertTitle } from '~/components/ui/alert'
@@ -16,7 +17,7 @@ import {
   CardHeader,
   CardTitle,
 } from '~/components/ui/card'
-import { events, type CalendarEvent } from '~/lib/mocks/calendar'
+import {  events } from '~/lib/mocks/calendar'
 
 export const Route = createFileRoute('/app/$orgSlug/calendar')({
   component: CalendarPage,

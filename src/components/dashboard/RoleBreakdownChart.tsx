@@ -1,6 +1,7 @@
 import { Cell, Pie, PieChart } from 'recharts'
 import { useTranslation } from 'react-i18next'
 
+import type {ChartConfig} from '~/components/ui/chart';
 import {
   Card,
   CardContent,
@@ -9,10 +10,10 @@ import {
   CardTitle,
 } from '~/components/ui/card'
 import {
+  
   ChartContainer,
   ChartTooltip,
-  ChartTooltipContent,
-  type ChartConfig,
+  ChartTooltipContent
 } from '~/components/ui/chart'
 
 type Member = { role: string }

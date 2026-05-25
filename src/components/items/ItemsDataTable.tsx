@@ -1,14 +1,14 @@
 import { useMemo, useState } from 'react'
 import {
+  
+  
+  
   flexRender,
   getCoreRowModel,
   getFilteredRowModel,
   getPaginationRowModel,
   getSortedRowModel,
-  useReactTable,
-  type ColumnFiltersState,
-  type SortingState,
-  type VisibilityState,
+  useReactTable
 } from '@tanstack/react-table'
 import { Plus, Search, Trash2, X } from 'lucide-react'
 import { toast } from 'sonner'
@@ -17,6 +17,11 @@ import { useConvexMutation } from '@convex-dev/react-query'
 import { Trans, useTranslation } from 'react-i18next'
 
 import { api } from '../../../convex/_generated/api'
+import {  buildColumns } from './columns'
+import {  ItemFormDialog } from './ItemFormDialog'
+import type {ItemRow} from './columns';
+import type {EditableItem} from './ItemFormDialog';
+import type {ColumnFiltersState, SortingState, VisibilityState} from '@tanstack/react-table';
 import type { Id } from '../../../convex/_generated/dataModel'
 import { Button } from '~/components/ui/button'
 import { Input } from '~/components/ui/input'
@@ -37,15 +42,13 @@ import {
   DialogTitle,
 } from '~/components/ui/dialog'
 import { DataTablePagination } from '~/components/data-table/DataTablePagination'
-import { buildColumns, type ItemRow } from './columns'
-import { ItemFormDialog, type EditableItem } from './ItemFormDialog'
 
 export function ItemsDataTable({
   items,
   orgId,
   canBulkDelete,
 }: {
-  items: ItemRow[]
+  items: Array<ItemRow>
   orgId: Id<'organizations'> | undefined
   canBulkDelete: boolean
 }) {

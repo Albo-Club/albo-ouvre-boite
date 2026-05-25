@@ -2,6 +2,7 @@ import { Fragment } from 'react'
 import { Link, useLocation } from '@tanstack/react-router'
 import { Sparkles } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
+import { ThemeToggle } from './ThemeToggle'
 import type { TFunction } from 'i18next'
 
 import {
@@ -16,7 +17,6 @@ import { Button } from '~/components/ui/button'
 import { Separator } from '~/components/ui/separator'
 import { SidebarTrigger } from '~/components/ui/sidebar'
 import { UserButton } from '~/components/auth/user-button'
-import { ThemeToggle } from './ThemeToggle'
 
 type Crumb = { label: string; href?: string }
 
@@ -48,7 +48,7 @@ function buildCrumbs(
     acc += `/${segments[i]}`
     const segment = segments[i]
     const label = (CRUMB_SEGMENTS as ReadonlyArray<string>).includes(segment)
-      ? t(`nav:appShell.breadcrumb.${segment}` as never)
+      ? t(`nav:appShell.breadcrumb.${segment}`)
       : segment.charAt(0).toUpperCase() + segment.slice(1)
     crumbs.push({
       label,

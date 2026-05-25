@@ -36,7 +36,7 @@ export const me = query({
     const orgs = (
       await Promise.all(
         memberships.map(async (m) => {
-          const org = await ctx.db.get(m.orgId)
+          const org = await ctx.db.get("organizations", m.orgId)
           if (!org) return null
           return {
             _id: org._id,
@@ -79,7 +79,7 @@ export const updateProfile = mutation({
     const user = await requireAppUser(ctx)
     const trimmed = name.trim()
     if (!trimmed) throw new ConvexError('invalid_name')
-    await ctx.db.patch(user._id, { name: trimmed })
+    await ctx.db.patch("users", user._id, { name: trimmed })
     return null
   },
 })
@@ -88,7 +88,7 @@ export const setPreferredLanguage = mutation({
   args: { language: v.union(v.literal('en'), v.literal('fr')) },
   handler: async (ctx, { language }) => {
     const user = await requireAppUser(ctx)
-    await ctx.db.patch(user._id, { preferredLanguage: language })
+    await ctx.db.patch("users", user._id, { preferredLanguage: language })
     return null
   },
 })
@@ -135,7 +135,7 @@ export const cascadeDelete = internalMutation({
       .withIndex('by_user', (q) => q.eq('userId', appUser._id))
       .collect()
     for (const m of memberships) {
-      await ctx.db.delete(m._id)
+      await ctx.db.delete("organizationMembers", m._id)
     }
 
     if (appUser.avatarStorageId) {
@@ -146,7 +146,7 @@ export const cascadeDelete = internalMutation({
       }
     }
 
-    await ctx.db.delete(appUser._id)
+    await ctx.db.delete("users", appUser._id)
     return null
   },
 })

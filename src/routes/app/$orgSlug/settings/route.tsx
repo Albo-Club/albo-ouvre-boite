@@ -1,7 +1,7 @@
 import {
-  createFileRoute,
   Link,
   Outlet,
+  createFileRoute,
   useLocation,
 } from '@tanstack/react-router'
 import { useTranslation } from 'react-i18next'

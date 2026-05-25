@@ -1,16 +1,16 @@
-import type { LucideIcon } from 'lucide-react'
 import {
-  LayoutDashboard,
-  Package,
-  MapPin,
   Calendar,
-  ListTodo,
   CreditCard,
-  Receipt,
-  Users,
+  LayoutDashboard,
+  ListTodo,
   Mail,
+  MapPin,
+  Package,
+  Receipt,
   Settings,
+  Users,
 } from 'lucide-react'
+import type { LucideIcon } from 'lucide-react'
 
 export type NavLeaf = {
   /** i18n key under the `nav` namespace, e.g. `items.dashboard`. */
@@ -25,11 +25,11 @@ export type NavLeaf = {
 export type NavGroup = {
   /** i18n key under the `nav` namespace, e.g. `groups.platform`. */
   labelKey: string
-  items: NavLeaf[]
+  items: Array<NavLeaf>
   secondary?: boolean
 }
 
-export function getNavGroups(): NavGroup[] {
+export function getNavGroups(): Array<NavGroup> {
   return [
     {
       labelKey: 'groups.platform',

@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { createFileRoute, Link } from '@tanstack/react-router'
+import { Link, createFileRoute } from '@tanstack/react-router'
 import { useForm } from '@tanstack/react-form'
 import { Trans, useTranslation } from 'react-i18next'
 import { z } from 'zod'
