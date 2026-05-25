@@ -1,10 +1,13 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { createFileRoute, Link, useNavigate } from '@tanstack/react-router'
 import { useForm } from '@tanstack/react-form'
+import { Trans, useTranslation } from 'react-i18next'
 import { z } from 'zod'
 import { toast } from 'sonner'
 
 import { authClient } from '~/lib/auth-client'
+import { getI18n } from '~/lib/i18n'
+import { getLocale } from '~/lib/locale'
 import { classifyAuthError, formatAuthError } from '~/lib/auth-errors'
 import { useRedirectWhenAuthenticated } from '~/lib/auth-state'
 import { Alert, AlertDescription } from '~/components/ui/alert'
@@ -27,13 +30,6 @@ import {
   CardTitle,
 } from '~/components/ui/card'
 
-const schema = z.object({
-  email: z.email('Invalid email'),
-  password: z.string().min(1, 'Password is required'),
-})
-
-const emailSchema = z.email('Enter a valid email first')
-
 const searchSchema = z.object({
   redirect: z.string().optional(),
 })
@@ -41,11 +37,24 @@ const searchSchema = z.object({
 export const Route = createFileRoute('/login')({
   component: LoginPage,
   validateSearch: searchSchema,
-  head: () => ({ meta: [{ title: 'Sign in — albo' }] }),
+  head: () => ({
+    meta: [{ title: getI18n(getLocale()).getFixedT(null, 'auth')('signIn.metaTitle') }],
+  }),
 })
 
 function LoginPage() {
   useRedirectWhenAuthenticated()
+  const { t } = useTranslation(['auth', 'validation', 'errors'])
+  const te = (k: string) => t(`errors:${k}`)
+  const schema = useMemo(
+    () =>
+      z.object({
+        email: z.email(t('validation:email.invalid')),
+        password: z.string().min(1, t('validation:password.required')),
+      }),
+    [t],
+  )
+  const emailSchema = useMemo(() => z.email(t('validation:email.enterValid')), [t])
   const { redirect } = Route.useSearch()
   const navigate = useNavigate()
   const [loading, setLoading] = useState(false)
@@ -68,7 +77,7 @@ function LoginPage() {
           setUnverifiedEmail(value.email)
           return
         }
-        setSubmitError(formatAuthError(code, 'signin'))
+        setSubmitError(formatAuthError(code, 'signin', te))
         return
       }
       setUnverifiedEmail(null)
@@ -86,10 +95,10 @@ function LoginPage() {
     })
     setResendLoading(false)
     if (error) {
-      toast.error(formatAuthError(classifyAuthError(error), 'verify'))
+      toast.error(formatAuthError(classifyAuthError(error), 'verify', te))
       return
     }
-    toast.success('Verification email sent — check your inbox.')
+    toast.success(t('auth:signIn.verificationResent'))
   }
 
   const onMagicLink = async () => {
@@ -98,7 +107,7 @@ function LoginPage() {
     if (!parsed.success) {
       form.setFieldMeta('email', (prev) => ({
         ...prev,
-        errors: [{ message: 'Enter a valid email first' }],
+        errors: [{ message: t('validation:email.enterValid') }],
       }))
       return
     }
@@ -115,11 +124,11 @@ function LoginPage() {
       // NETWORK / RATE_LIMITED: surface so the user knows the link wasn't sent.
       // Other codes stay anti-enum and fall through to the neutral success toast.
       if (code === 'NETWORK' || code === 'RATE_LIMITED') {
-        setSubmitError(formatAuthError(code, 'signin'))
+        setSubmitError(formatAuthError(code, 'signin', te))
         return
       }
     }
-    toast.success('If an account exists for that email, a link is on its way.')
+    toast.success(t('auth:signIn.magicSent'))
   }
 
   const isInviteFlow = redirect?.startsWith('/accept-invite/') ?? false
@@ -128,11 +137,11 @@ function LoginPage() {
     <main className="flex min-h-svh items-center justify-center p-4">
       <Card className="w-full max-w-sm">
         <CardHeader>
-          <CardTitle>Sign in</CardTitle>
+          <CardTitle>{t('auth:signIn.title')}</CardTitle>
           <CardDescription>
             {isInviteFlow
-              ? 'Sign in to continue accepting your invitation. New here? Create an account below.'
-              : 'Email + password, or magic link.'}
+              ? t('auth:signIn.descriptionInvite')
+              : t('auth:signIn.description')}
           </CardDescription>
         </CardHeader>
         <form
@@ -152,7 +161,11 @@ function LoginPage() {
             {unverifiedEmail && (
               <div className="border-border bg-muted/50 text-foreground mb-4 rounded-md border p-3 text-sm">
                 <p className="mb-2">
-                  Email <strong>{unverifiedEmail}</strong> isn't verified yet.
+                  <Trans
+                    t={t}
+                    i18nKey="auth:signIn.unverified"
+                    values={{ email: unverifiedEmail }}
+                  />
                 </p>
                 <Button
                   type="button"
@@ -162,7 +175,7 @@ function LoginPage() {
                   disabled={resendLoading}
                 >
                   {resendLoading && <Spinner />}
-                  Resend verification email
+                  {t('auth:signIn.resendVerification')}
                 </Button>
               </div>
             )}
@@ -173,7 +186,9 @@ function LoginPage() {
                     field.state.meta.isTouched && !field.state.meta.isValid
                   return (
                     <Field data-invalid={invalid || undefined}>
-                      <FieldLabel htmlFor={field.name}>Email</FieldLabel>
+                      <FieldLabel htmlFor={field.name}>
+                        {t('auth:fields.email')}
+                      </FieldLabel>
                       <Input
                         id={field.name}
                         name={field.name}
@@ -197,7 +212,9 @@ function LoginPage() {
                     field.state.meta.isTouched && !field.state.meta.isValid
                   return (
                     <Field data-invalid={invalid || undefined}>
-                      <FieldLabel htmlFor={field.name}>Password</FieldLabel>
+                      <FieldLabel htmlFor={field.name}>
+                        {t('auth:fields.password')}
+                      </FieldLabel>
                       <PasswordInput
                         id={field.name}
                         name={field.name}
@@ -219,7 +236,7 @@ function LoginPage() {
           <CardFooter className="flex-col gap-3">
             <Button type="submit" className="w-full" disabled={loading}>
               {loading && <Spinner />}
-              Sign in
+              {t('auth:signIn.submit')}
             </Button>
             <Button
               type="button"
@@ -229,23 +246,28 @@ function LoginPage() {
               disabled={magicLoading}
             >
               {magicLoading && <Spinner />}
-              Email me a magic link
+              {t('auth:signIn.magicLink')}
             </Button>
             <Link
               to="/forgot-password"
               className="text-muted-foreground text-sm underline"
             >
-              Forgot your password?
+              {t('auth:signIn.forgot')}
             </Link>
             <p className="text-muted-foreground text-sm">
-              No account?{' '}
-              <Link
-                to="/register"
-                search={redirect ? { redirect } : undefined}
-                className="underline"
-              >
-                Sign up
-              </Link>
+              <Trans
+                t={t}
+                i18nKey="auth:signIn.noAccount"
+                components={{
+                  signup: (
+                    <Link
+                      to="/register"
+                      search={redirect ? { redirect } : undefined}
+                      className="underline"
+                    />
+                  ),
+                }}
+              />
             </p>
           </CardFooter>
         </form>

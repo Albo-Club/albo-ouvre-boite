@@ -21,6 +21,7 @@ export default defineSchema({
     avatarStorageId: v.optional(v.id('_storage')),
     superAdmin: v.boolean(),
     lastOrgSlug: v.optional(v.string()),
+    preferredLanguage: v.optional(v.union(v.literal('en'), v.literal('fr'))),
     createdAt: v.number(),
   })
     .index('by_betterAuthId', ['betterAuthId'])

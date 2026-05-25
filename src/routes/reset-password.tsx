@@ -1,11 +1,14 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { createFileRoute, Link, useNavigate } from '@tanstack/react-router'
 import { useForm } from '@tanstack/react-form'
+import { useTranslation } from 'react-i18next'
 import { Check } from 'lucide-react'
 import { z } from 'zod'
 import { toast } from 'sonner'
 
 import { authClient } from '~/lib/auth-client'
+import { getI18n } from '~/lib/i18n'
+import { getLocale } from '~/lib/locale'
 import { classifyAuthError, formatAuthError } from '~/lib/auth-errors'
 import { isPasswordPwned } from '~/lib/hibp'
 import { Button } from '~/components/ui/button'
@@ -28,16 +31,6 @@ import {
   CardTitle,
 } from '~/components/ui/card'
 
-const schema = z
-  .object({
-    newPassword: z.string().min(12, 'At least 12 characters'),
-    confirmPassword: z.string().min(1, 'Confirm your password'),
-  })
-  .refine((v) => v.newPassword === v.confirmPassword, {
-    message: 'Passwords do not match',
-    path: ['confirmPassword'],
-  })
-
 // Better Auth redirects here with ?token=... when the user clicks the email
 // link. If `error` is present (e.g. INVALID_TOKEN) we surface it. Any other
 // search param is ignored.
@@ -49,10 +42,27 @@ const searchSchema = z.object({
 export const Route = createFileRoute('/reset-password')({
   component: ResetPasswordPage,
   validateSearch: searchSchema,
-  head: () => ({ meta: [{ title: 'Reset password — albo' }] }),
+  head: () => ({
+    meta: [{ title: getI18n(getLocale()).getFixedT(null, 'auth')('reset.metaTitle') }],
+  }),
 })
 
 function ResetPasswordPage() {
+  const { t } = useTranslation(['auth', 'validation', 'errors'])
+  const te = (k: string) => t(`errors:${k}`)
+  const schema = useMemo(
+    () =>
+      z
+        .object({
+          newPassword: z.string().min(12, t('validation:password.min12')),
+          confirmPassword: z.string().min(1, t('validation:password.confirm')),
+        })
+        .refine((v) => v.newPassword === v.confirmPassword, {
+          message: t('validation:password.mismatch'),
+          path: ['confirmPassword'],
+        }),
+    [t],
+  )
   const { token, error } = Route.useSearch()
   const navigate = useNavigate()
   const [loading, setLoading] = useState(false)
@@ -69,10 +79,10 @@ function ResetPasswordPage() {
       })
       setLoading(false)
       if (resetError) {
-        toast.error(formatAuthError(classifyAuthError(resetError), 'reset'))
+        toast.error(formatAuthError(classifyAuthError(resetError), 'reset', te))
         return
       }
-      toast.success('Password updated. Sign in with your new password.')
+      toast.success(t('auth:reset.success'))
       navigate({ to: '/login' })
     },
   })
@@ -82,21 +92,20 @@ function ResetPasswordPage() {
       <main className="flex min-h-svh items-center justify-center p-4">
         <Card className="w-full max-w-sm">
           <CardHeader>
-            <CardTitle>Invalid or expired link</CardTitle>
+            <CardTitle>{t('auth:reset.invalidTitle')}</CardTitle>
             <CardDescription>
-              Reset links expire after one hour and can only be used once.
-              Request a new one to continue.
+              {t('auth:reset.invalidDescription')}
             </CardDescription>
           </CardHeader>
           <CardFooter className="flex-col gap-3">
             <Button asChild className="w-full">
-              <Link to="/forgot-password">Send a new reset link</Link>
+              <Link to="/forgot-password">{t('auth:reset.requestNew')}</Link>
             </Button>
             <Link
               to="/login"
               className="text-muted-foreground text-sm underline"
             >
-              Back to sign in
+              {t('auth:backToSignIn')}
             </Link>
           </CardFooter>
         </Card>
@@ -108,11 +117,8 @@ function ResetPasswordPage() {
     <main className="flex min-h-svh items-center justify-center p-4">
       <Card className="w-full max-w-sm">
         <CardHeader>
-          <CardTitle>Choose a new password</CardTitle>
-          <CardDescription>
-            Pick something you haven't used before. At least 12 characters, and not one
-            that has appeared in a known data breach.
-          </CardDescription>
+          <CardTitle>{t('auth:reset.title')}</CardTitle>
+          <CardDescription>{t('auth:reset.description')}</CardDescription>
         </CardHeader>
         <form
           className="flex flex-col gap-6"
@@ -131,10 +137,7 @@ function ResetPasswordPage() {
                     if (!value || value.length < 12) return undefined
                     const { pwned } = await isPasswordPwned(value)
                     return pwned
-                      ? {
-                          message:
-                            'This password has appeared in known data breaches. Pick another.',
-                        }
+                      ? { message: t('validation:password.pwned') }
                       : undefined
                   },
                 }}
@@ -145,7 +148,9 @@ function ResetPasswordPage() {
                   const isValidating = field.state.meta.isValidating
                   return (
                     <Field data-invalid={invalid || undefined}>
-                      <FieldLabel htmlFor={field.name}>New password</FieldLabel>
+                      <FieldLabel htmlFor={field.name}>
+                        {t('auth:fields.newPassword')}
+                      </FieldLabel>
                       <PasswordInput
                         id={field.name}
                         name={field.name}
@@ -162,14 +167,10 @@ function ResetPasswordPage() {
                             aria-live="polite"
                           >
                             <Spinner className="size-3" />
-                            Checking against known data breaches…
+                            {t('auth:password.checking')}
                           </span>
                         ) : (
-                          <>
-                            Avoid passwords you&apos;ve used elsewhere. We check
-                            against publicly leaked databases — only a short
-                            hash prefix is sent, never your full password.
-                          </>
+                          t('auth:password.hint')
                         )}
                       </FieldDescription>
                       <PasswordStrength value={field.state.value} />
@@ -203,7 +204,7 @@ function ResetPasswordPage() {
                       return (
                         <Field data-invalid={mismatch || undefined}>
                           <FieldLabel htmlFor={field.name}>
-                            Confirm password
+                            {t('auth:fields.confirmPassword')}
                           </FieldLabel>
                           <PasswordInput
                             id={field.name}
@@ -220,13 +221,12 @@ function ResetPasswordPage() {
                             {match && (
                               <p className="flex items-center gap-1.5 text-xs font-medium text-emerald-700 dark:text-emerald-400">
                                 <Check className="size-3.5" aria-hidden="true" />
-                                Passwords match
+                                {t('auth:reset.match')}
                               </p>
                             )}
                             {mismatch && (
                               <p className="text-destructive text-xs">
-                                Passwords do not match — they are case-sensitive,
-                                check capitalization.
+                                {t('auth:reset.mismatch')}
                               </p>
                             )}
                           </div>
@@ -241,7 +241,7 @@ function ResetPasswordPage() {
           <CardFooter className="flex-col gap-3">
             <Button type="submit" className="w-full" disabled={loading}>
               {loading && <Spinner />}
-              Update password
+              {t('auth:reset.submit')}
             </Button>
           </CardFooter>
         </form>

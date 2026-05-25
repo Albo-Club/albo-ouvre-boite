@@ -1,0 +1,111 @@
+{
+  "menu": {
+    "accountMenu": "Menu du compte",
+    "profile": "Votre profil",
+    "switchOrg": "Changer d'organisation",
+    "superAdmin": "Super-admin",
+    "signOutEverywhere": "Se déconnecter partout",
+    "signOut": "Se déconnecter",
+    "signOutEverywhereTitle": "Se déconnecter partout ?",
+    "signOutEverywhereDescription": "Cela vous déconnecte de tous les appareils, y compris celui-ci. Vous devrez vous reconnecter."
+  },
+  "time": {
+    "justNow": "à l'instant",
+    "minAgo": "il y a {{count}} min",
+    "hourAgo": "il y a {{count}} h",
+    "dayAgo": "il y a {{count}} j"
+  },
+  "activeSessions": {
+    "title": "Sessions actives",
+    "description": "Appareils actuellement connectés à votre compte. Révoquez ceux que vous ne reconnaissez pas."
+  },
+  "sessions": {
+    "none": "Aucune session active.",
+    "signOutOthers": "Déconnecter les autres appareils",
+    "current": "Actuel",
+    "ipUnknown": "IP inconnue",
+    "revoke": "Révoquer",
+    "revoked": "Session révoquée.",
+    "revokedOthers": "Déconnecté des autres appareils.",
+    "confirmTitle": "Déconnecter les autres appareils ?",
+    "confirmDescription": "Vous resterez connecté ici. Tous les autres navigateurs et appareils devront se reconnecter.",
+    "confirmAction": "Déconnecter les autres appareils",
+    "unknownDevice": "Appareil inconnu",
+    "genericBrowser": "Navigateur",
+    "unknownOs": "Système inconnu",
+    "deviceLabel": "{{browser}} sur {{os}}"
+  },
+  "linked": {
+    "connected": "Connecté",
+    "connectMore": "Connecter d'autres méthodes",
+    "comingSoon": "Bientôt disponible",
+    "connect": "Connecter",
+    "disconnect": "Déconnecter",
+    "emailPassword": "E-mail et mot de passe",
+    "magicLink": "Lien magique"
+  },
+  "page": {
+    "title": "Votre profil",
+    "subtitle": "Gérez votre compte.",
+    "back": "← Retour",
+    "tabs": {
+      "profile": "Profil",
+      "security": "Sécurité",
+      "sessions": "Sessions"
+    }
+  },
+  "profile": {
+    "title": "Profil",
+    "description": "Nom et avatar affichés à vos coéquipiers.",
+    "avatar": "Avatar",
+    "avatarHint": "PNG, JPEG, WEBP ou GIF, jusqu'à 20 Mo.",
+    "email": "E-mail",
+    "name": "Nom",
+    "save": "Enregistrer les modifications",
+    "updated": "Profil mis à jour",
+    "invalidName": "Nom invalide",
+    "couldNotSave": "Échec de l'enregistrement"
+  },
+  "email": {
+    "title": "E-mail",
+    "description": "Nous enverrons un lien de confirmation à votre adresse actuelle.",
+    "newEmail": "Nouvel e-mail",
+    "hint": "Votre e-mail actuel reste actif jusqu'à ce que vous cliquiez sur le lien de confirmation.",
+    "send": "Envoyer l'e-mail de confirmation",
+    "alreadyYours": "C'est déjà votre e-mail",
+    "confirmationSent": "Confirmation envoyée à {{email}}. Cliquez sur le lien pour appliquer le changement — il expire dans 1 heure."
+  },
+  "magic": {
+    "title": "Lien magique",
+    "description": "Recevez un lien de connexion en un clic dans votre boîte de réception.",
+    "send": "Envoyez-moi un lien magique",
+    "sent": "Lien magique envoyé à {{email}}"
+  },
+  "connected": {
+    "title": "Comptes connectés",
+    "description": "Méthodes pouvant vous connecter. Ajoutez un fournisseur social pour une connexion plus rapide."
+  },
+  "password": {
+    "title": "Mot de passe",
+    "description": "Les autres sessions seront déconnectées après un changement.",
+    "current": "Mot de passe actuel",
+    "new": "Nouveau mot de passe",
+    "hint": "Évitez les mots de passe utilisés ailleurs. La jauge ci-dessous indique la robustesse en temps réel.",
+    "change": "Changer le mot de passe",
+    "changed": "Mot de passe modifié. Les autres sessions ont été déconnectées."
+  },
+  "signout": {
+    "title": "Déconnexion",
+    "description": "Terminez votre session actuelle.",
+    "action": "Se déconnecter"
+  },
+  "danger": {
+    "title": "Supprimer le compte",
+    "description": "Supprimez définitivement votre profil et toutes vos adhésions aux organisations. Cette action est irréversible.",
+    "action": "Supprimer le compte…",
+    "dialogTitle": "Supprimer votre compte ?",
+    "dialogDescription": "Nous enverrons un lien de confirmation à <strong>{{email}}</strong>. Cliquez dessus pour supprimer définitivement votre compte. Si vous changez d'avis, ignorez l'e-mail et rien ne se passera.",
+    "confirm": "Envoyer la confirmation",
+    "confirmationSent": "Confirmation envoyée à {{email}}. Cliquez sur le lien dans l'heure pour supprimer définitivement."
+  }
+}

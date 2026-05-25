@@ -56,7 +56,16 @@ export const create = mutation({
     const siteUrl = process.env.SITE_URL!
     const acceptUrl = `${siteUrl}/accept-invite/${token}`
     const inviterName = inviter.name ?? inviter.email
+    // Prefer the recipient's stored language; fall back to the inviter's so
+    // the invite at least matches the sender's locale, then English.
+    const recipient = await ctx.db
+      .query('users')
+      .withIndex('by_email', (q) => q.eq('email', normalizedEmail))
+      .first()
+    const locale =
+      recipient?.preferredLanguage ?? inviter.preferredLanguage ?? 'en'
     const { subject, html, text } = invitationEmail({
+      locale,
       inviterName,
       orgName: org.name,
       acceptUrl,

@@ -22,6 +22,7 @@ export const notifyPasswordChanged = mutation({
     const user = await requireAppUser(ctx)
     const resetUrl = `${siteUrl}/forgot-password`
     const { subject, html, text } = passwordChangedEmail({
+      locale: user.preferredLanguage ?? 'en',
       email: user.email,
       resetUrl,
     })

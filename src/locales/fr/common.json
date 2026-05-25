@@ -1,0 +1,23 @@
+{
+  "appName": "albo",
+  "appTitle": "albo — starter MVP",
+  "loadingEllipsis": "Chargement…",
+  "actions": {
+    "save": "Enregistrer",
+    "cancel": "Annuler",
+    "delete": "Supprimer",
+    "edit": "Modifier",
+    "create": "Créer",
+    "close": "Fermer",
+    "confirm": "Confirmer",
+    "back": "Retour",
+    "retry": "Réessayer",
+    "search": "Rechercher",
+    "remove": "Retirer"
+  },
+  "language": {
+    "label": "Langue",
+    "en": "English",
+    "fr": "Français"
+  }
+}

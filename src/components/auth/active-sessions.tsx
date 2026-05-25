@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Laptop, Smartphone, Tablet } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
+import type { TFunction } from 'i18next'
 import { toast } from 'sonner'
 
 import { authClient } from '~/lib/auth-client'
@@ -29,6 +31,8 @@ type BaSession = {
  * action. Marks the session backing the current browser tab as "Current".
  */
 export function ActiveSessions() {
+  const { t } = useTranslation(['account', 'common', 'errors'])
+  const te = (k: string) => t(`errors:${k}`)
   const { data: current } = authClient.useSession()
   const currentSessionId = current?.session?.id
 
@@ -40,7 +44,7 @@ export function ActiveSessions() {
   async function refresh() {
     const { data, error } = await authClient.listSessions()
     if (error) {
-      toast.error(formatAuthError(classifyAuthError(error)))
+      toast.error(formatAuthError(classifyAuthError(error), 'signin', te))
       return
     }
     setSessions((data ?? []) as Array<BaSession>)
@@ -55,10 +59,10 @@ export function ActiveSessions() {
     const { error } = await authClient.revokeSession({ token: s.token })
     setRevokingId(null)
     if (error) {
-      toast.error(formatAuthError(classifyAuthError(error)))
+      toast.error(formatAuthError(classifyAuthError(error), 'signin', te))
       return
     }
-    toast.success('Session revoked.')
+    toast.success(t('account:sessions.revoked'))
     void refresh()
   }
 
@@ -68,10 +72,10 @@ export function ActiveSessions() {
     setRevokingAll(false)
     setConfirmRevokeAll(false)
     if (error) {
-      toast.error(formatAuthError(classifyAuthError(error)))
+      toast.error(formatAuthError(classifyAuthError(error), 'signin', te))
       return
     }
-    toast.success('Signed out of other devices.')
+    toast.success(t('account:sessions.revokedOthers'))
     void refresh()
   }
 
@@ -87,7 +91,9 @@ export function ActiveSessions() {
 
   if (sessions.length === 0) {
     return (
-      <p className="text-muted-foreground text-sm">No active sessions.</p>
+      <p className="text-muted-foreground text-sm">
+        {t('account:sessions.none')}
+      </p>
     )
   }
 
@@ -108,15 +114,15 @@ export function ActiveSessions() {
             size="sm"
             onClick={() => setConfirmRevokeAll(true)}
           >
-            Sign out of other devices
+            {t('account:sessions.signOutOthers')}
           </Button>
         </div>
       )}
       <ul className="divide-border divide-y rounded-md border">
         {sorted.map((s) => {
         const isCurrent = s.id === currentSessionId
-        const { label, Icon } = describeUserAgent(s.userAgent)
-        const when = formatRelative(new Date(s.createdAt))
+        const { label, Icon } = describeUserAgent(s.userAgent, t)
+        const when = formatRelative(new Date(s.createdAt), t)
         return (
           <li
             key={s.id}
@@ -128,12 +134,12 @@ export function ActiveSessions() {
                 <p className="truncate text-sm font-medium">{label}</p>
                 {isCurrent && (
                   <span className="bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 rounded-full px-2 py-0.5 text-xs font-medium">
-                    Current
+                    {t('account:sessions.current')}
                   </span>
                 )}
               </div>
               <p className="text-muted-foreground truncate text-xs">
-                {s.ipAddress ?? 'IP unknown'} · {when}
+                {s.ipAddress ?? t('account:sessions.ipUnknown')} · {when}
               </p>
             </div>
             {!isCurrent && (
@@ -144,7 +150,7 @@ export function ActiveSessions() {
                 disabled={revokingId === s.id}
               >
                 {revokingId === s.id && <Spinner />}
-                Revoke
+                {t('account:sessions.revoke')}
               </Button>
             )}
           </li>
@@ -154,10 +160,9 @@ export function ActiveSessions() {
       <Dialog open={confirmRevokeAll} onOpenChange={setConfirmRevokeAll}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Sign out of other devices?</DialogTitle>
+            <DialogTitle>{t('account:sessions.confirmTitle')}</DialogTitle>
             <DialogDescription>
-              You&apos;ll stay signed in here. Every other browser and device
-              will need to sign back in.
+              {t('account:sessions.confirmDescription')}
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
@@ -166,7 +171,7 @@ export function ActiveSessions() {
               onClick={() => setConfirmRevokeAll(false)}
               disabled={revokingAll}
             >
-              Cancel
+              {t('common:actions.cancel')}
             </Button>
             <Button
               variant="destructive"
@@ -174,7 +179,7 @@ export function ActiveSessions() {
               disabled={revokingAll}
             >
               {revokingAll && <Spinner />}
-              Sign out other devices
+              {t('account:sessions.confirmAction')}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -183,8 +188,11 @@ export function ActiveSessions() {
   )
 }
 
-function describeUserAgent(ua: string | null | undefined) {
-  if (!ua) return { label: 'Unknown device', Icon: Laptop }
+function describeUserAgent(
+  ua: string | null | undefined,
+  t: TFunction<['account', 'common', 'errors']>,
+) {
+  if (!ua) return { label: t('account:sessions.unknownDevice'), Icon: Laptop }
   const lower = ua.toLowerCase()
   const isMobile = /mobile|iphone|android/.test(lower)
   const isTablet = /ipad|tablet/.test(lower)
@@ -198,7 +206,7 @@ function describeUserAgent(ua: string | null | undefined) {
         ? 'Chrome'
         : /safari\//i.test(ua)
           ? 'Safari'
-          : 'Browser'
+          : t('account:sessions.genericBrowser')
 
   const os = /windows nt/i.test(ua)
     ? 'Windows'
@@ -210,20 +218,23 @@ function describeUserAgent(ua: string | null | undefined) {
           ? 'iOS'
           : /linux/i.test(ua)
             ? 'Linux'
-            : 'Unknown OS'
+            : t('account:sessions.unknownOs')
 
-  return { label: `${browser} on ${os}`, Icon }
+  return { label: t('account:sessions.deviceLabel', { browser, os }), Icon }
 }
 
-function formatRelative(date: Date): string {
+function formatRelative(
+  date: Date,
+  t: TFunction<['account', 'common', 'errors']>,
+): string {
   const diff = Date.now() - date.getTime()
   const seconds = Math.floor(diff / 1000)
-  if (seconds < 60) return 'just now'
+  if (seconds < 60) return t('account:time.justNow')
   const minutes = Math.floor(seconds / 60)
-  if (minutes < 60) return `${minutes} min ago`
+  if (minutes < 60) return t('account:time.minAgo', { count: minutes })
   const hours = Math.floor(minutes / 60)
-  if (hours < 24) return `${hours}h ago`
+  if (hours < 24) return t('account:time.hourAgo', { count: hours })
   const days = Math.floor(hours / 24)
-  if (days < 30) return `${days}d ago`
+  if (days < 30) return t('account:time.dayAgo', { count: days })
   return date.toLocaleDateString()
 }

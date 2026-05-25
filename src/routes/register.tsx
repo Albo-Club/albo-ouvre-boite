@@ -1,10 +1,13 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { createFileRoute, Link } from '@tanstack/react-router'
 import { useForm } from '@tanstack/react-form'
+import { Trans, useTranslation } from 'react-i18next'
 import { z } from 'zod'
 import { toast } from 'sonner'
 
 import { authClient } from '~/lib/auth-client'
+import { getI18n } from '~/lib/i18n'
+import { getLocale } from '~/lib/locale'
 import { classifyAuthError, formatAuthError } from '~/lib/auth-errors'
 import { useRedirectWhenAuthenticated } from '~/lib/auth-state'
 import { isPasswordPwned } from '~/lib/hibp'
@@ -30,12 +33,6 @@ import {
   CardTitle,
 } from '~/components/ui/card'
 
-const schema = z.object({
-  name: z.string().min(1, 'Name is required'),
-  email: z.email('Invalid email'),
-  password: z.string().min(12, 'At least 12 characters'),
-})
-
 const searchSchema = z.object({
   redirect: z.string().optional(),
 })
@@ -43,11 +40,24 @@ const searchSchema = z.object({
 export const Route = createFileRoute('/register')({
   component: RegisterPage,
   validateSearch: searchSchema,
-  head: () => ({ meta: [{ title: 'Create an account — albo' }] }),
+  head: () => ({
+    meta: [{ title: getI18n(getLocale()).getFixedT(null, 'auth')('signUp.metaTitle') }],
+  }),
 })
 
 function RegisterPage() {
   useRedirectWhenAuthenticated()
+  const { t } = useTranslation(['auth', 'validation', 'errors'])
+  const te = (k: string) => t(`errors:${k}`)
+  const schema = useMemo(
+    () =>
+      z.object({
+        name: z.string().min(1, t('validation:name.required')),
+        email: z.email(t('validation:email.invalid')),
+        password: z.string().min(12, t('validation:password.min12')),
+      }),
+    [t],
+  )
   const { redirect } = Route.useSearch()
   const [loading, setLoading] = useState(false)
   const [sentTo, setSentTo] = useState<string | null>(null)
@@ -69,7 +79,7 @@ function RegisterPage() {
           setSentTo(value.email)
           return
         }
-        toast.error(formatAuthError(code, 'signup'))
+        toast.error(formatAuthError(code, 'signup', te))
         return
       }
       setSentTo(value.email)
@@ -90,40 +100,46 @@ function RegisterPage() {
       const code = classifyAuthError(error)
       console.warn('[register-resend]', error.code ?? error.status, error.message)
       if (code === 'NETWORK' || code === 'RATE_LIMITED') {
-        toast.error(formatAuthError(code, 'verify'))
+        toast.error(formatAuthError(code, 'verify', te))
         return
       }
       // Other errors: stay anti-enum, show the same neutral confirmation.
     }
-    toast.success('If an account exists for that email, another link is on its way.')
+    toast.success(t('auth:resendNeutral'))
   }
 
   if (sentTo) {
     return (
       <VerificationSentCard
         description={
-          <>
-            We sent a verification link to <strong>{sentTo}</strong>. Click it
-            to confirm your email and sign in. The link expires in 1 hour.
-            {isInviteFlow
-              ? ' Your invitation will be ready right after.'
-              : ''}
-          </>
+          <Trans
+            t={t}
+            i18nKey={
+              isInviteFlow
+                ? 'auth:signUp.verifyDescriptionInvite'
+                : 'auth:signUp.verifyDescription'
+            }
+            values={{ email: sentTo }}
+          />
         }
         onResend={onResendVerification}
-        resendLabel="Resend verification email"
+        resendLabel={t('auth:signUp.resendVerification')}
         isResending={resendLoading}
         footer={
           <p className="text-muted-foreground text-sm">
-            Didn't get it? Check spam, or{' '}
-            <button
-              type="button"
-              className="underline"
-              onClick={() => setSentTo(null)}
-            >
-              try a different email
-            </button>
-            .
+            <Trans
+              t={t}
+              i18nKey="auth:signUp.tryDifferentEmail"
+              components={{
+                retry: (
+                  <button
+                    type="button"
+                    className="underline"
+                    onClick={() => setSentTo(null)}
+                  />
+                ),
+              }}
+            />
           </p>
         }
       />
@@ -134,11 +150,11 @@ function RegisterPage() {
     <main className="flex min-h-svh items-center justify-center p-4">
       <Card className="w-full max-w-sm">
         <CardHeader>
-          <CardTitle>Create an account</CardTitle>
+          <CardTitle>{t('auth:signUp.title')}</CardTitle>
           <CardDescription>
             {isInviteFlow
-              ? 'Create an account to accept your invitation.'
-              : 'Start with email and password. We’ll email you a link to verify.'}
+              ? t('auth:signUp.descriptionInvite')
+              : t('auth:signUp.description')}
           </CardDescription>
         </CardHeader>
         <form
@@ -157,7 +173,9 @@ function RegisterPage() {
                     field.state.meta.isTouched && !field.state.meta.isValid
                   return (
                     <Field data-invalid={invalid || undefined}>
-                      <FieldLabel htmlFor={field.name}>Name</FieldLabel>
+                      <FieldLabel htmlFor={field.name}>
+                        {t('auth:fields.name')}
+                      </FieldLabel>
                       <Input
                         id={field.name}
                         name={field.name}
@@ -180,7 +198,9 @@ function RegisterPage() {
                     field.state.meta.isTouched && !field.state.meta.isValid
                   return (
                     <Field data-invalid={invalid || undefined}>
-                      <FieldLabel htmlFor={field.name}>Email</FieldLabel>
+                      <FieldLabel htmlFor={field.name}>
+                        {t('auth:fields.email')}
+                      </FieldLabel>
                       <Input
                         id={field.name}
                         name={field.name}
@@ -205,10 +225,7 @@ function RegisterPage() {
                     if (!value || value.length < 12) return undefined
                     const { pwned } = await isPasswordPwned(value)
                     return pwned
-                      ? {
-                          message:
-                            'This password has appeared in known data breaches. Pick another.',
-                        }
+                      ? { message: t('validation:password.pwned') }
                       : undefined
                   },
                 }}
@@ -219,7 +236,9 @@ function RegisterPage() {
                   const isValidating = field.state.meta.isValidating
                   return (
                     <Field data-invalid={invalid || undefined}>
-                      <FieldLabel htmlFor={field.name}>Password</FieldLabel>
+                      <FieldLabel htmlFor={field.name}>
+                        {t('auth:fields.password')}
+                      </FieldLabel>
                       <PasswordInput
                         id={field.name}
                         name={field.name}
@@ -236,14 +255,10 @@ function RegisterPage() {
                             aria-live="polite"
                           >
                             <Spinner className="size-3" />
-                            Checking against known data breaches…
+                            {t('auth:password.checking')}
                           </span>
                         ) : (
-                          <>
-                            Avoid passwords you&apos;ve used elsewhere. We check
-                            against publicly leaked databases — only a short
-                            hash prefix is sent, never your full password.
-                          </>
+                          t('auth:password.hint')
                         )}
                       </FieldDescription>
                       <PasswordStrength
@@ -265,17 +280,22 @@ function RegisterPage() {
           <CardFooter className="flex-col gap-3">
             <Button type="submit" className="w-full" disabled={loading}>
               {loading && <Spinner />}
-              Sign up
+              {t('auth:signUp.submit')}
             </Button>
             <p className="text-muted-foreground text-sm">
-              Already have an account?{' '}
-              <Link
-                to="/login"
-                search={redirect ? { redirect } : undefined}
-                className="underline"
-              >
-                Sign in
-              </Link>
+              <Trans
+                t={t}
+                i18nKey="auth:signUp.haveAccount"
+                components={{
+                  signin: (
+                    <Link
+                      to="/login"
+                      search={redirect ? { redirect } : undefined}
+                      className="underline"
+                    />
+                  ),
+                }}
+              />
             </p>
           </CardFooter>
         </form>

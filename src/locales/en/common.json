@@ -1,0 +1,23 @@
+{
+  "appName": "albo",
+  "appTitle": "albo — MVP starter",
+  "loadingEllipsis": "Loading…",
+  "actions": {
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit",
+    "create": "Create",
+    "close": "Close",
+    "confirm": "Confirm",
+    "back": "Back",
+    "retry": "Retry",
+    "search": "Search",
+    "remove": "Remove"
+  },
+  "language": {
+    "label": "Language",
+    "en": "English",
+    "fr": "Français"
+  }
+}

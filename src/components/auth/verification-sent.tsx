@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Button } from '~/components/ui/button'
 import { Spinner } from '~/components/ui/spinner'
 import {
@@ -20,18 +21,21 @@ type Props = {
 }
 
 export function VerificationSentCard({
-  title = 'Check your inbox',
+  title,
   description,
   onResend,
-  resendLabel = 'Resend link',
+  resendLabel,
   isResending = false,
   footer,
 }: Props) {
+  const { t } = useTranslation('auth')
+  const resolvedTitle = title ?? t('verificationSent.title')
+  const resolvedResendLabel = resendLabel ?? t('verificationSent.resendDefault')
   return (
     <main className="flex min-h-svh items-center justify-center p-4">
       <Card className="w-full max-w-sm">
         <CardHeader>
-          <CardTitle>{title}</CardTitle>
+          <CardTitle>{resolvedTitle}</CardTitle>
           <CardDescription>{description}</CardDescription>
         </CardHeader>
         <CardFooter className="flex-col gap-3">
@@ -44,7 +48,7 @@ export function VerificationSentCard({
               disabled={isResending}
             >
               {isResending && <Spinner />}
-              {resendLabel}
+              {resolvedResendLabel}
             </Button>
           )}
           {footer}

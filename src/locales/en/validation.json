@@ -1,0 +1,19 @@
+{
+  "required": "This field is required",
+  "name": {
+    "required": "Name is required",
+    "tooLong": "Too long"
+  },
+  "email": {
+    "invalid": "Invalid email",
+    "enterValid": "Enter a valid email first"
+  },
+  "password": {
+    "required": "Password is required",
+    "min12": "At least 12 characters",
+    "confirm": "Confirm your password",
+    "mismatch": "Passwords do not match",
+    "different": "New password must be different",
+    "pwned": "This password has appeared in known data breaches. Pick another."
+  }
+}

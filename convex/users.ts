@@ -1,6 +1,11 @@
 import { ConvexError, v } from 'convex/values'
 
-import { internalMutation, mutation, query } from './_generated/server'
+import {
+  internalMutation,
+  internalQuery,
+  mutation,
+  query,
+} from './_generated/server'
 import { authComponent } from './auth'
 import { provisionAppUser, requireAppUser, safeAppUser } from './lib/auth'
 import { resolveAvatarUrl, resolveLogoUrl } from './lib/storage'
@@ -53,6 +58,7 @@ export const me = query({
         avatarUrl: await resolveAvatarUrl(ctx, user),
         superAdmin: user.superAdmin,
         lastOrgSlug: user.lastOrgSlug ?? null,
+        preferredLanguage: user.preferredLanguage ?? null,
       },
       orgs,
     }
@@ -75,6 +81,37 @@ export const updateProfile = mutation({
     if (!trimmed) throw new ConvexError('invalid_name')
     await ctx.db.patch(user._id, { name: trimmed })
     return null
+  },
+})
+
+export const setPreferredLanguage = mutation({
+  args: { language: v.union(v.literal('en'), v.literal('fr')) },
+  handler: async (ctx, { language }) => {
+    const user = await requireAppUser(ctx)
+    await ctx.db.patch(user._id, { preferredLanguage: language })
+    return null
+  },
+})
+
+/**
+ * Internal — resolve a recipient's email locale for transactional emails sent
+ * from Better Auth callbacks (which only expose a run-mutation ctx). Falls back
+ * to English when the recipient has no account or no stored preference.
+ */
+export const localeForEmail = internalQuery({
+  args: { email: v.string() },
+  handler: async (ctx, { email }): Promise<'en' | 'fr'> => {
+    const normalized = email.trim().toLowerCase()
+    const user =
+      (await ctx.db
+        .query('users')
+        .withIndex('by_email', (q) => q.eq('email', normalized))
+        .first()) ??
+      (await ctx.db
+        .query('users')
+        .withIndex('by_email', (q) => q.eq('email', email))
+        .first())
+    return user?.preferredLanguage ?? 'en'
   },
 })
 

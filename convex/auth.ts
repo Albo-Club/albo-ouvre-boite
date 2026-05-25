@@ -108,7 +108,11 @@ export const createAuth = (ctx: GenericCtx<DataModel>) =>
           'passwordResetSend',
           data.user.email.toLowerCase().trim(),
         )
-        const { subject, html, text } = resetPasswordEmail({ url: data.url })
+        const locale = await mutCtx.runQuery(internal.users.localeForEmail, { email: data.user.email })
+        const { subject, html, text } = resetPasswordEmail({
+          locale,
+          url: data.url,
+        })
         await resend.sendEmail(mutCtx, {
           from: RESEND_FROM,
           to: data.user.email,
@@ -134,7 +138,11 @@ export const createAuth = (ctx: GenericCtx<DataModel>) =>
           'verificationSend',
           data.user.email.toLowerCase().trim(),
         )
-        const { subject, html, text } = verificationEmail({ url: data.url })
+        const locale = await mutCtx.runQuery(internal.users.localeForEmail, { email: data.user.email })
+        const { subject, html, text } = verificationEmail({
+          locale,
+          url: data.url,
+        })
         await resend.sendEmail(mutCtx, {
           from: RESEND_FROM,
           to: data.user.email,
@@ -164,7 +172,9 @@ export const createAuth = (ctx: GenericCtx<DataModel>) =>
           url: string
         }) => {
           const mutCtx = requireRunMutationCtx(ctx)
+          const locale = await mutCtx.runQuery(internal.users.localeForEmail, { email: data.user.email })
           const { subject, html, text } = changeEmailVerificationEmail({
+            locale,
             url: data.url,
             newEmail: data.newEmail,
           })
@@ -184,7 +194,9 @@ export const createAuth = (ctx: GenericCtx<DataModel>) =>
           url: string
         }) => {
           const mutCtx = requireRunMutationCtx(ctx)
+          const locale = await mutCtx.runQuery(internal.users.localeForEmail, { email: data.user.email })
           const { subject, html, text } = deleteAccountVerificationEmail({
+            locale,
             url: data.url,
             name: data.user.name ?? null,
           })
@@ -218,7 +230,8 @@ export const createAuth = (ctx: GenericCtx<DataModel>) =>
             'magicLinkSend',
             email.toLowerCase().trim(),
           )
-          const { subject, html, text } = magicLinkEmail({ url })
+          const locale = await mutCtx.runQuery(internal.users.localeForEmail, { email })
+          const { subject, html, text } = magicLinkEmail({ locale, url })
           await resend.sendEmail(mutCtx, {
             from: RESEND_FROM,
             to: email,
