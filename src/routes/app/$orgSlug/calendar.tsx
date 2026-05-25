@@ -1,8 +1,11 @@
 import { useMemo, useState } from 'react'
 import { createFileRoute } from '@tanstack/react-router'
+import { useTranslation } from 'react-i18next'
 import { Clock, Sparkles, Users } from 'lucide-react'
 import { isSameDay } from 'date-fns'
 
+import { getI18n } from '~/lib/i18n'
+import { getLocale } from '~/lib/locale'
 import { Alert, AlertDescription, AlertTitle } from '~/components/ui/alert'
 import { Badge } from '~/components/ui/badge'
 import { Calendar } from '~/components/ui/calendar'
@@ -13,11 +16,19 @@ import {
   CardHeader,
   CardTitle,
 } from '~/components/ui/card'
-import { events, eventTypeLabel, type CalendarEvent } from '~/lib/mocks/calendar'
+import { events, type CalendarEvent } from '~/lib/mocks/calendar'
 
 export const Route = createFileRoute('/app/$orgSlug/calendar')({
   component: CalendarPage,
-  head: () => ({ meta: [{ title: 'Calendar — albo' }] }),
+  head: () => ({
+    meta: [
+      {
+        title: getI18n(getLocale()).getFixedT(null, 'org')(
+          'calendar.metaTitle',
+        ),
+      },
+    ],
+  }),
 })
 
 function dateFor(offset: number) {
@@ -39,6 +50,7 @@ const TYPE_COLOR: Record<CalendarEvent['type'], string> = {
 }
 
 function CalendarPage() {
+  const { t } = useTranslation(['org'])
   const [selected, setSelected] = useState<Date | undefined>(new Date())
 
   const eventDates = useMemo(
@@ -56,19 +68,18 @@ function CalendarPage() {
   return (
     <main className="flex-1 space-y-6 p-6">
       <div>
-        <h1 className="text-2xl font-semibold tracking-tight">Calendar</h1>
+        <h1 className="text-2xl font-semibold tracking-tight">
+          {t('org:calendar.title')}
+        </h1>
         <p className="text-muted-foreground text-sm">
-          Pick a date to view its events.
+          {t('org:calendar.subtitle')}
         </p>
       </div>
 
       <Alert>
         <Sparkles className="size-4" />
-        <AlertTitle>Demo data</AlertTitle>
-        <AlertDescription>
-          These events are mock data — connect Google Calendar, Outlook, or
-          your own events table.
-        </AlertDescription>
+        <AlertTitle>{t('org:calendar.demoTitle')}</AlertTitle>
+        <AlertDescription>{t('org:calendar.demoDescription')}</AlertDescription>
       </Alert>
 
       <div className="grid gap-4 lg:grid-cols-[auto_1fr]">
@@ -92,21 +103,21 @@ function CalendarPage() {
           <CardHeader>
             <CardTitle>
               {selected
-                ? selected.toLocaleDateString(undefined, {
+                ? selected.toLocaleDateString(getLocale(), {
                     weekday: 'long',
                     month: 'long',
                     day: 'numeric',
                   })
-                : 'No date'}
+                : t('org:calendar.noDate')}
             </CardTitle>
             <CardDescription>
-              {dayEvents.length} event{dayEvents.length === 1 ? '' : 's'}
+              {t('org:calendar.eventCount', { count: dayEvents.length })}
             </CardDescription>
           </CardHeader>
           <CardContent>
             {dayEvents.length === 0 ? (
               <p className="text-muted-foreground py-8 text-center text-sm">
-                Nothing scheduled for this day.
+                {t('org:calendar.nothingScheduled')}
               </p>
             ) : (
               <ul className="space-y-3">
@@ -121,13 +132,15 @@ function CalendarPage() {
                     <div className="flex-1">
                       <div className="flex items-center justify-between gap-2">
                         <h3 className="font-medium">{e.title}</h3>
-                        <Badge variant="outline">{eventTypeLabel(e.type)}</Badge>
+                        <Badge variant="outline">
+                          {t(`org:calendar.types.${e.type}`)}
+                        </Badge>
                       </div>
                       <div className="text-muted-foreground mt-1 flex flex-wrap items-center gap-3 text-xs">
                         <span className="flex items-center gap-1">
                           <Clock className="size-3" />
                           {formatTime(e.hour, e.minutes)} ·{' '}
-                          {e.durationMin} min
+                          {t('org:calendar.duration', { count: e.durationMin })}
                         </span>
                         <span className="flex items-center gap-1">
                           <Users className="size-3" />

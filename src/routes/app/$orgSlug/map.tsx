@@ -1,7 +1,10 @@
 import { useEffect, useMemo, useState } from 'react'
 import { createFileRoute } from '@tanstack/react-router'
+import { useTranslation } from 'react-i18next'
 import { Sparkles } from 'lucide-react'
 
+import { getI18n } from '~/lib/i18n'
+import { getLocale } from '~/lib/locale'
 import { Alert, AlertDescription, AlertTitle } from '~/components/ui/alert'
 import { Badge } from '~/components/ui/badge'
 import {
@@ -13,7 +16,6 @@ import {
 } from '~/components/ui/card'
 import {
   STATUS_COLOR,
-  STATUS_LABEL,
   formatPrice,
   locations,
   type LocationStatus,
@@ -21,7 +23,11 @@ import {
 
 export const Route = createFileRoute('/app/$orgSlug/map')({
   component: MapPage,
-  head: () => ({ meta: [{ title: 'Locations — albo' }] }),
+  head: () => ({
+    meta: [
+      { title: getI18n(getLocale()).getFixedT(null, 'org')('map.metaTitle') },
+    ],
+  }),
 })
 
 const STATUS_BADGE_VARIANT: Record<
@@ -34,6 +40,7 @@ const STATUS_BADGE_VARIANT: Record<
 }
 
 function MapPage() {
+  const { t } = useTranslation(['org'])
   const counts = useMemo(() => {
     const acc: Record<LocationStatus, number> = {
       available: 0,
@@ -47,20 +54,18 @@ function MapPage() {
   return (
     <main className="flex-1 space-y-6 p-6">
       <div>
-        <h1 className="text-2xl font-semibold tracking-tight">Locations</h1>
+        <h1 className="text-2xl font-semibold tracking-tight">
+          {t('org:map.title')}
+        </h1>
         <p className="text-muted-foreground text-sm">
-          {locations.length} bureaux dans votre portefeuille. Cliquez sur un
-          pin pour voir le détail.
+          {t('org:map.subtitle', { count: locations.length })}
         </p>
       </div>
 
       <Alert>
         <Sparkles className="size-4" />
-        <AlertTitle>Demo data</AlertTitle>
-        <AlertDescription>
-          Ces bureaux sont fictifs — branchez votre propre source (Convex,
-          Airtable, ERP) pour afficher vos vrais espaces.
-        </AlertDescription>
+        <AlertTitle>{t('org:map.demoTitle')}</AlertTitle>
+        <AlertDescription>{t('org:map.demoDescription')}</AlertDescription>
       </Alert>
 
       <div className="grid gap-4 lg:grid-cols-[1fr_320px]">
@@ -73,8 +78,8 @@ function MapPage() {
         <div className="space-y-4">
           <Card>
             <CardHeader>
-              <CardTitle>Portefeuille</CardTitle>
-              <CardDescription>Répartition par statut</CardDescription>
+              <CardTitle>{t('org:map.portfolio')}</CardTitle>
+              <CardDescription>{t('org:map.byStatus')}</CardDescription>
             </CardHeader>
             <CardContent className="space-y-2">
               {(Object.keys(counts) as LocationStatus[]).map((s) => (
@@ -87,7 +92,7 @@ function MapPage() {
                       className="inline-block size-2.5 rounded-full"
                       style={{ backgroundColor: STATUS_COLOR[s] }}
                     />
-                    {STATUS_LABEL[s]}
+                    {t(`org:map.status.${s}`)}
                   </span>
                   <Badge variant={STATUS_BADGE_VARIANT[s]}>{counts[s]}</Badge>
                 </div>
@@ -97,8 +102,10 @@ function MapPage() {
 
           <Card>
             <CardHeader>
-              <CardTitle>Liste</CardTitle>
-              <CardDescription>{locations.length} bureaux</CardDescription>
+              <CardTitle>{t('org:map.list')}</CardTitle>
+              <CardDescription>
+                {t('org:map.officeCount', { count: locations.length })}
+              </CardDescription>
             </CardHeader>
             <CardContent className="space-y-2">
               {locations.map((loc) => (
@@ -116,7 +123,7 @@ function MapPage() {
                     variant={STATUS_BADGE_VARIANT[loc.status]}
                     className="shrink-0"
                   >
-                    {STATUS_LABEL[loc.status]}
+                    {t(`org:map.status.${loc.status}`)}
                   </Badge>
                 </div>
               ))}
