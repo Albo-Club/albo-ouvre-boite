@@ -1,4 +1,5 @@
 import { Area, AreaChart, CartesianGrid, XAxis, YAxis } from 'recharts'
+import { useTranslation } from 'react-i18next'
 
 import {
   Card,
@@ -17,21 +18,22 @@ import {
 } from '~/components/ui/chart'
 import { generateActivity } from '~/lib/mocks/activity'
 
-const config: ChartConfig = {
-  items: { label: 'Items', color: 'var(--chart-1)' },
-  events: { label: 'Events', color: 'var(--chart-2)' },
-}
-
 export function ActivityChart() {
+  const { t } = useTranslation(['dashboard', 'common'])
   const data = generateActivity(30)
+
+  const config: ChartConfig = {
+    items: { label: t('dashboard:activity.items'), color: 'var(--chart-1)' },
+    events: { label: t('dashboard:activity.events'), color: 'var(--chart-2)' },
+  }
 
   return (
     <Card className="@container/card">
       <CardHeader>
-        <CardTitle>Activity</CardTitle>
+        <CardTitle>{t('dashboard:activity.title')}</CardTitle>
         <CardDescription>
-          Items + events over the last 30 days{' '}
-          <span className="text-muted-foreground">· demo</span>
+          {t('dashboard:activity.description', { count: 30 })}{' '}
+          <span className="text-muted-foreground">· {t('common:demo')}</span>
         </CardDescription>
       </CardHeader>
       <CardContent>

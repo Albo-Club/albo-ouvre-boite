@@ -4,6 +4,16 @@
     "required": "Le nom est requis",
     "tooLong": "Trop long"
   },
+  "title": {
+    "required": "Le titre est requis",
+    "tooLong": "Trop long"
+  },
+  "description": {
+    "tooLong": "Trop longue"
+  },
+  "slug": {
+    "pattern": "3 à 40 caractères : minuscules, chiffres et tirets"
+  },
   "email": {
     "invalid": "E-mail invalide",
     "enterValid": "Saisissez d'abord un e-mail valide"

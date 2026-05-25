@@ -1,6 +1,7 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { createFileRoute } from '@tanstack/react-router'
 import { useForm } from '@tanstack/react-form'
+import { useTranslation } from 'react-i18next'
 import { z } from 'zod'
 import { toast } from 'sonner'
 import { ConvexError } from 'convex/values'
@@ -25,15 +26,22 @@ import {
   CardTitle,
 } from '~/components/ui/card'
 
-const schema = z.object({
-  name: z.string().min(1, 'Name is required').max(80, 'Too long'),
-})
-
 export const Route = createFileRoute('/app/$orgSlug/settings/general')({
   component: GeneralSettings,
 })
 
 function GeneralSettings() {
+  const { t } = useTranslation(['settings', 'validation', 'common'])
+  const schema = useMemo(
+    () =>
+      z.object({
+        name: z
+          .string()
+          .min(1, t('validation:name.required'))
+          .max(80, t('validation:name.tooLong')),
+      }),
+    [t],
+  )
   const { orgSlug } = Route.useParams()
   const me = useConvexQuery(api.users.me)
   const org = useConvexQuery(api.organizations.bySlug, { slug: orgSlug })
@@ -56,15 +64,15 @@ function GeneralSettings() {
       setSaving(true)
       try {
         await update({ orgId: org._id, name: value.name })
-        toast.success('Organization updated')
+        toast.success(t('settings:general.updated'))
       } catch (err) {
         const code = err instanceof ConvexError ? (err.data as string) : ''
         toast.error(
           code === 'insufficient_role'
-            ? 'Admins or owners only'
+            ? t('settings:general.errors.insufficient_role')
             : code === 'invalid_name'
-              ? 'Invalid name'
-              : 'Could not save',
+              ? t('settings:general.errors.invalid_name')
+              : t('settings:general.errors.default'),
         )
       } finally {
         setSaving(false)
@@ -79,14 +87,18 @@ function GeneralSettings() {
   }, [org, form])
 
   if (!org) {
-    return <p className="text-muted-foreground text-sm">Loading…</p>
+    return (
+      <p className="text-muted-foreground text-sm">
+        {t('settings:general.loading')}
+      </p>
+    )
   }
 
   return (
     <Card>
       <CardHeader>
-        <CardTitle>General</CardTitle>
-        <CardDescription>Name and logo of your organization.</CardDescription>
+        <CardTitle>{t('settings:general.title')}</CardTitle>
+        <CardDescription>{t('settings:general.description')}</CardDescription>
       </CardHeader>
       <form
         className="flex flex-col gap-6"
@@ -104,7 +116,9 @@ function GeneralSettings() {
                   field.state.meta.isTouched && !field.state.meta.isValid
                 return (
                   <Field data-invalid={invalid || undefined}>
-                    <FieldLabel htmlFor={field.name}>Name</FieldLabel>
+                    <FieldLabel htmlFor={field.name}>
+                      {t('settings:general.name')}
+                    </FieldLabel>
                     <Input
                       id={field.name}
                       name={field.name}
@@ -121,15 +135,17 @@ function GeneralSettings() {
             </form.Field>
 
             <Field>
-              <FieldLabel htmlFor="slug">Slug</FieldLabel>
+              <FieldLabel htmlFor="slug">
+                {t('settings:general.slug')}
+              </FieldLabel>
               <Input id="slug" value={org.slug} disabled />
               <FieldDescription>
-                The slug is permanent — it appears in URLs.
+                {t('settings:general.slugHint')}
               </FieldDescription>
             </Field>
 
             <Field>
-              <FieldLabel>Logo</FieldLabel>
+              <FieldLabel>{t('settings:general.logo')}</FieldLabel>
               <ImageUpload
                 currentUrl={org.logoUrl ?? null}
                 onPicked={async (storageId) => {
@@ -141,13 +157,15 @@ function GeneralSettings() {
                 disabled={!canManage}
               />
               <FieldDescription>
-                PNG, JPEG, WEBP or GIF, up to 20 MB.
+                {t('settings:general.logoHint')}
               </FieldDescription>
             </Field>
 
             {canManage && (
               <Button type="submit" disabled={saving}>
-                {saving ? 'Saving…' : 'Save changes'}
+                {saving
+                  ? t('settings:general.saving')
+                  : t('settings:general.save')}
               </Button>
             )}
           </FieldGroup>

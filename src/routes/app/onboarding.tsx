@@ -1,6 +1,7 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { useForm } from '@tanstack/react-form'
+import { useTranslation } from 'react-i18next'
 import { z } from 'zod'
 import { toast } from 'sonner'
 import { ConvexError } from 'convex/values'
@@ -8,6 +9,8 @@ import { useConvexMutation, useConvexQuery } from '@convex-dev/react-query'
 import { Check, X } from 'lucide-react'
 
 import { api } from '../../../convex/_generated/api'
+import { getI18n } from '~/lib/i18n'
+import { getLocale } from '~/lib/locale'
 import { Button } from '~/components/ui/button'
 import { Input } from '~/components/ui/input'
 import { Spinner } from '~/components/ui/spinner'
@@ -29,20 +32,30 @@ import {
 
 const SLUG_RE = /^[a-z0-9-]{3,40}$/
 
-const schema = z.object({
-  name: z.string().min(1, 'Name is required').max(80),
-  slug: z
-    .string()
-    .regex(SLUG_RE, '3–40 chars, lowercase letters, digits, dashes'),
-})
-
 export const Route = createFileRoute('/app/onboarding')({
   component: OnboardingPage,
-  head: () => ({ meta: [{ title: 'Create your organization — albo' }] }),
+  head: () => ({
+    meta: [
+      {
+        title: getI18n(getLocale()).getFixedT(null, 'nav')(
+          'onboarding.metaTitle',
+        ),
+      },
+    ],
+  }),
 })
 
 function OnboardingPage() {
   const navigate = useNavigate()
+  const { t } = useTranslation(['nav', 'validation'])
+  const schema = useMemo(
+    () =>
+      z.object({
+        name: z.string().min(1, t('validation:name.required')).max(80),
+        slug: z.string().regex(SLUG_RE, t('validation:slug.pattern')),
+      }),
+    [t],
+  )
   const create = useConvexMutation(api.organizations.create)
   const [loading, setLoading] = useState(false)
 
@@ -53,17 +66,17 @@ function OnboardingPage() {
       setLoading(true)
       try {
         const { slug } = await create(value)
-        toast.success('Organization created')
+        toast.success(t('nav:onboarding.created'))
         navigate({ to: '/app/$orgSlug', params: { orgSlug: slug } })
       } catch (err) {
         const code = err instanceof ConvexError ? (err.data as string) : ''
         const messages: Record<string, string> = {
-          slug_taken: 'That slug is already taken',
-          slug_reserved: 'That slug is reserved — pick another',
-          invalid_slug: 'Invalid slug shape',
-          invalid_name: 'Invalid name',
+          slug_taken: t('nav:onboarding.errors.slugTaken'),
+          slug_reserved: t('nav:onboarding.errors.slugReserved'),
+          invalid_slug: t('nav:onboarding.errors.invalidSlug'),
+          invalid_name: t('nav:onboarding.errors.invalidName'),
         }
-        toast.error(messages[code] ?? 'Could not create organization')
+        toast.error(messages[code] ?? t('nav:onboarding.errors.couldNotCreate'))
       } finally {
         setLoading(false)
       }
@@ -74,11 +87,8 @@ function OnboardingPage() {
     <main className="flex min-h-svh items-center justify-center p-4">
       <Card className="w-full max-w-md">
         <CardHeader>
-          <CardTitle>Create your first organization</CardTitle>
-          <CardDescription>
-            Your workspace is scoped to an organization. You can create more
-            later.
-          </CardDescription>
+          <CardTitle>{t('nav:onboarding.title')}</CardTitle>
+          <CardDescription>{t('nav:onboarding.description')}</CardDescription>
         </CardHeader>
         <form
           className="flex flex-col gap-6"
@@ -96,11 +106,13 @@ function OnboardingPage() {
                     field.state.meta.isTouched && !field.state.meta.isValid
                   return (
                     <Field data-invalid={invalid || undefined}>
-                      <FieldLabel htmlFor={field.name}>Name</FieldLabel>
+                      <FieldLabel htmlFor={field.name}>
+                        {t('nav:onboarding.name')}
+                      </FieldLabel>
                       <Input
                         id={field.name}
                         name={field.name}
-                        placeholder="Acme Inc."
+                        placeholder={t('nav:onboarding.namePlaceholder')}
                         value={field.state.value}
                         onBlur={field.handleBlur}
                         onChange={(e) => field.handleChange(e.target.value)}
@@ -119,11 +131,13 @@ function OnboardingPage() {
                     field.state.meta.isTouched && !field.state.meta.isValid
                   return (
                     <Field data-invalid={invalid || undefined}>
-                      <FieldLabel htmlFor={field.name}>Slug</FieldLabel>
+                      <FieldLabel htmlFor={field.name}>
+                        {t('nav:onboarding.slug')}
+                      </FieldLabel>
                       <Input
                         id={field.name}
                         name={field.name}
-                        placeholder="acme"
+                        placeholder={t('nav:onboarding.slugPlaceholder')}
                         value={field.state.value}
                         onBlur={field.handleBlur}
                         onChange={(e) =>
@@ -132,7 +146,12 @@ function OnboardingPage() {
                         aria-invalid={invalid || undefined}
                       />
                       <FieldDescription>
-                        Used in URLs: <code>/app/{field.state.value || 'your-slug'}</code>
+                        {t('nav:onboarding.slugHintPrefix')}{' '}
+                        <code>
+                          /app/
+                          {field.state.value ||
+                            t('nav:onboarding.slugFallback')}
+                        </code>
                       </FieldDescription>
                       <SlugAvailability slug={field.state.value} />
                       {invalid && (
@@ -147,7 +166,7 @@ function OnboardingPage() {
           <CardFooter>
             <Button type="submit" className="w-full" disabled={loading}>
               {loading && <Spinner />}
-              Create organization
+              {t('nav:onboarding.submit')}
             </Button>
           </CardFooter>
         </form>
@@ -160,6 +179,7 @@ function SlugAvailability({ slug }: { slug: string }) {
   // Only query when the shape is valid — saves a roundtrip on every keystroke
   // while the user is mid-typing. Convex subscriptions are cheap but skipping
   // the obvious-invalid case keeps the UI calm.
+  const { t } = useTranslation('nav')
   const shapeValid = SLUG_RE.test(slug)
   const result = useConvexQuery(
     api.organizations.checkSlug,
@@ -174,7 +194,7 @@ function SlugAvailability({ slug }: { slug: string }) {
         aria-live="polite"
       >
         <Spinner className="size-3" />
-        Checking availability…
+        {t('onboarding.availability.checking')}
       </p>
     )
   }
@@ -185,14 +205,14 @@ function SlugAvailability({ slug }: { slug: string }) {
         aria-live="polite"
       >
         <Check className="size-3.5" aria-hidden="true" />
-        Slug is available
+        {t('onboarding.availability.available')}
       </p>
     )
   }
   const reasonText: Record<typeof result.reason, string> = {
-    invalid: 'Invalid slug shape',
-    reserved: 'This slug is reserved',
-    taken: 'This slug is already taken',
+    invalid: t('onboarding.availability.invalid'),
+    reserved: t('onboarding.availability.reserved'),
+    taken: t('onboarding.availability.taken'),
   }
   return (
     <p

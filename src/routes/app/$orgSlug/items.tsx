@@ -1,15 +1,21 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { useConvexQuery } from '@convex-dev/react-query'
+import { useTranslation } from 'react-i18next'
 
 import { api } from '../../../../convex/_generated/api'
+import { getI18n } from '~/lib/i18n'
+import { getLocale } from '~/lib/locale'
 import { ItemsDataTable } from '~/components/items/ItemsDataTable'
 
 export const Route = createFileRoute('/app/$orgSlug/items')({
   component: ItemsPage,
-  head: () => ({ meta: [{ title: 'Items — albo' }] }),
+  head: () => ({
+    meta: [{ title: getI18n(getLocale()).getFixedT(null, 'items')('metaTitle') }],
+  }),
 })
 
 function ItemsPage() {
+  const { t } = useTranslation(['items', 'common'])
   const { orgSlug } = Route.useParams()
   const me = useConvexQuery(api.users.me)
   const org = useConvexQuery(api.organizations.bySlug, { slug: orgSlug })
@@ -27,14 +33,18 @@ function ItemsPage() {
   return (
     <main className="flex-1 space-y-6 p-6">
       <div>
-        <h1 className="text-2xl font-semibold tracking-tight">Items</h1>
+        <h1 className="text-2xl font-semibold tracking-tight">
+          {t('items:page.title')}
+        </h1>
         <p className="text-muted-foreground text-sm">
-          Example resource scoped to this organization.
+          {t('items:page.subtitle')}
         </p>
       </div>
 
       {items === undefined ? (
-        <p className="text-muted-foreground text-sm">Loading…</p>
+        <p className="text-muted-foreground text-sm">
+          {t('common:loadingEllipsis')}
+        </p>
       ) : (
         <ItemsDataTable
           items={items}

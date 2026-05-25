@@ -1,1 +1,69 @@
-{}
+{
+  "metaTitle": "Éléments — albo",
+  "page": {
+    "title": "Éléments",
+    "subtitle": "Ressource d'exemple limitée à cette organisation."
+  },
+  "form": {
+    "createTitle": "Nouvel élément",
+    "editTitle": "Modifier l'élément",
+    "title": "Titre",
+    "descriptionOptional": "Description (facultatif)",
+    "created": "Élément créé",
+    "updated": "Élément mis à jour",
+    "couldNotSave": "Enregistrement impossible"
+  },
+  "errors": {
+    "invalid_title": "Le titre est requis",
+    "description_too_long": "La description est trop longue",
+    "not_a_member": "Vous n'êtes pas membre",
+    "insufficient_role": "Réservé aux admins ou propriétaires",
+    "not_found": "Élément introuvable",
+    "couldNotDelete": "Suppression impossible"
+  },
+  "table": {
+    "filterPlaceholder": "Filtrer les éléments…",
+    "clearFilter": "Effacer le filtre",
+    "deleteSelected": "Supprimer {{count}}",
+    "newItem": "Nouvel élément",
+    "noItems": "Aucun élément trouvé.",
+    "deleted": "Élément supprimé",
+    "bulkDeleted_one": "{{count}} élément supprimé",
+    "bulkDeleted_other": "{{count}} éléments supprimés",
+    "bulkDeleteFailed_one": "{{count}} élément n'a pas pu être supprimé",
+    "bulkDeleteFailed_other": "{{count}} éléments n'ont pas pu être supprimés",
+    "deleteDialog": {
+      "title": "Supprimer l'élément ?",
+      "description": "<strong>{{title}}</strong> sera définitivement supprimé."
+    },
+    "bulkDeleteDialog": {
+      "title_one": "Supprimer {{count}} élément ?",
+      "title_other": "Supprimer {{count}} éléments ?",
+      "description": "Les éléments sélectionnés seront définitivement supprimés. Cette action est irréversible."
+    }
+  },
+  "columns": {
+    "selectAll": "Tout sélectionner",
+    "selectRow": "Sélectionner la ligne",
+    "title": "Titre",
+    "description": "Description",
+    "createdBy": "Créé par",
+    "createdAt": "Créé le",
+    "empty": "—",
+    "openMenu": "Ouvrir le menu"
+  },
+  "columnHeader": {
+    "asc": "Croissant",
+    "desc": "Décroissant",
+    "hide": "Masquer"
+  },
+  "pagination": {
+    "rowsSelected": "{{selected}} ligne(s) sur {{total}} sélectionnée(s).",
+    "rowsPerPage": "Lignes par page",
+    "pageOf": "Page {{current}} sur {{total}}",
+    "firstPage": "Première page",
+    "previousPage": "Page précédente",
+    "nextPage": "Page suivante",
+    "lastPage": "Dernière page"
+  }
+}

@@ -1,4 +1,5 @@
 import { Cell, Pie, PieChart } from 'recharts'
+import { useTranslation } from 'react-i18next'
 
 import {
   Card,
@@ -14,13 +15,6 @@ import {
   type ChartConfig,
 } from '~/components/ui/chart'
 
-const config: ChartConfig = {
-  count: { label: 'Members' },
-  owner: { label: 'Owner', color: 'var(--chart-1)' },
-  admin: { label: 'Admin', color: 'var(--chart-2)' },
-  member: { label: 'Member', color: 'var(--chart-3)' },
-}
-
 type Member = { role: string }
 
 export function RoleBreakdownChart({
@@ -28,6 +22,13 @@ export function RoleBreakdownChart({
 }: {
   members: Array<Member> | undefined
 }) {
+  const { t } = useTranslation(['dashboard', 'common'])
+  const config: ChartConfig = {
+    count: { label: t('dashboard:roles.membersLegend') },
+    owner: { label: t('common:roles.owner'), color: 'var(--chart-1)' },
+    admin: { label: t('common:roles.admin'), color: 'var(--chart-2)' },
+    member: { label: t('common:roles.member'), color: 'var(--chart-3)' },
+  }
   const counts = (members ?? []).reduce<Record<string, number>>(
     (acc, m) => {
       acc[m.role] = (acc[m.role] ?? 0) + 1
@@ -45,13 +46,13 @@ export function RoleBreakdownChart({
   return (
     <Card className="flex flex-col">
       <CardHeader>
-        <CardTitle>Members by role</CardTitle>
-        <CardDescription>{total} total</CardDescription>
+        <CardTitle>{t('dashboard:roles.title')}</CardTitle>
+        <CardDescription>{t('dashboard:roles.total', { count: total })}</CardDescription>
       </CardHeader>
       <CardContent className="flex-1 pb-0">
         {data.length === 0 ? (
           <p className="text-muted-foreground py-12 text-center text-sm">
-            No members yet
+            {t('dashboard:roles.none')}
           </p>
         ) : (
           <ChartContainer

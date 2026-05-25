@@ -14,6 +14,7 @@ import { Plus, Search, Trash2, X } from 'lucide-react'
 import { toast } from 'sonner'
 import { ConvexError } from 'convex/values'
 import { useConvexMutation } from '@convex-dev/react-query'
+import { Trans, useTranslation } from 'react-i18next'
 
 import { api } from '../../../convex/_generated/api'
 import type { Id } from '../../../convex/_generated/dataModel'
@@ -48,6 +49,7 @@ export function ItemsDataTable({
   orgId: Id<'organizations'> | undefined
   canBulkDelete: boolean
 }) {
+  const { t } = useTranslation(['items', 'common'])
   const [sorting, setSorting] = useState<SortingState>([
     { id: 'createdAt', desc: true },
   ])
@@ -74,8 +76,9 @@ export function ItemsDataTable({
             description: item.description,
           }),
         onDelete: (item) => setConfirmDelete(item),
+        t,
       }),
-    [],
+    [t],
   )
 
   const table = useReactTable({
@@ -112,9 +115,9 @@ export function ItemsDataTable({
   })
 
   const errorMessages: Record<string, string> = {
-    not_a_member: 'You are not a member',
-    insufficient_role: 'Admins or owners only',
-    not_found: 'Item not found',
+    not_a_member: t('items:errors.not_a_member'),
+    insufficient_role: t('items:errors.insufficient_role'),
+    not_found: t('items:errors.not_found'),
   }
 
   async function deleteSingle() {
@@ -122,11 +125,11 @@ export function ItemsDataTable({
     setDeleting(true)
     try {
       await removeItem({ itemId: confirmDelete._id })
-      toast.success('Item deleted')
+      toast.success(t('items:table.deleted'))
       setConfirmDelete(null)
     } catch (err) {
       const code = err instanceof ConvexError ? (err.data as string) : ''
-      toast.error(errorMessages[code] ?? 'Could not delete')
+      toast.error(errorMessages[code] ?? t('items:errors.couldNotDelete'))
     } finally {
       setDeleting(false)
     }
@@ -144,9 +147,11 @@ export function ItemsDataTable({
       )
       const failed = results.filter((r) => r.status === 'rejected').length
       if (failed > 0) {
-        toast.error(`${failed} item(s) could not be deleted`)
+        toast.error(t('items:table.bulkDeleteFailed', { count: failed }))
       } else {
-        toast.success(`${selected.length} item(s) deleted`)
+        toast.success(
+          t('items:table.bulkDeleted', { count: selected.length }),
+        )
       }
       setRowSelection({})
       setConfirmBulkDelete(false)
@@ -163,7 +168,7 @@ export function ItemsDataTable({
         <div className="relative flex-1 sm:max-w-sm">
           <Search className="text-muted-foreground absolute top-1/2 left-2.5 size-4 -translate-y-1/2" />
           <Input
-            placeholder="Filter items…"
+            placeholder={t('items:table.filterPlaceholder')}
             value={globalFilter}
             onChange={(e) => setGlobalFilter(e.target.value)}
             className="pl-8"
@@ -173,7 +178,7 @@ export function ItemsDataTable({
               type="button"
               onClick={() => setGlobalFilter('')}
               className="text-muted-foreground hover:text-foreground absolute top-1/2 right-2.5 -translate-y-1/2"
-              aria-label="Clear filter"
+              aria-label={t('items:table.clearFilter')}
             >
               <X className="size-4" />
             </button>
@@ -186,13 +191,13 @@ export function ItemsDataTable({
             onClick={() => setConfirmBulkDelete(true)}
           >
             <Trash2 className="mr-1.5 size-4" />
-            Delete {selectedCount}
+            {t('items:table.deleteSelected', { count: selectedCount })}
           </Button>
         )}
         <div className="ml-auto" />
         <Button size="sm" onClick={() => setCreateOpen(true)} disabled={!orgId}>
           <Plus className="mr-1.5 size-4" />
-          New item
+          {t('items:table.newItem')}
         </Button>
       </div>
 
@@ -221,7 +226,7 @@ export function ItemsDataTable({
                   colSpan={columns.length}
                   className="text-muted-foreground h-24 text-center"
                 >
-                  No items found.
+                  {t('items:table.noItems')}
                 </TableCell>
               </TableRow>
             ) : (
@@ -268,22 +273,27 @@ export function ItemsDataTable({
       >
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Delete item?</DialogTitle>
+            <DialogTitle>{t('items:table.deleteDialog.title')}</DialogTitle>
             <DialogDescription>
-              <strong>{confirmDelete?.title}</strong> will be permanently
-              removed.
+              <Trans
+                t={t}
+                i18nKey="items:table.deleteDialog.description"
+                values={{ title: confirmDelete?.title ?? '' }}
+              />
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
             <Button variant="outline" onClick={() => setConfirmDelete(null)}>
-              Cancel
+              {t('common:actions.cancel')}
             </Button>
             <Button
               variant="destructive"
               onClick={deleteSingle}
               disabled={deleting}
             >
-              {deleting ? 'Deleting…' : 'Delete'}
+              {deleting
+                ? t('common:loadingEllipsis')
+                : t('common:actions.delete')}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -295,10 +305,11 @@ export function ItemsDataTable({
       >
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Delete {selectedCount} item(s)?</DialogTitle>
+            <DialogTitle>
+              {t('items:table.bulkDeleteDialog.title', { count: selectedCount })}
+            </DialogTitle>
             <DialogDescription>
-              This will permanently remove the selected items. This cannot be
-              undone.
+              {t('items:table.bulkDeleteDialog.description')}
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
@@ -306,14 +317,16 @@ export function ItemsDataTable({
               variant="outline"
               onClick={() => setConfirmBulkDelete(false)}
             >
-              Cancel
+              {t('common:actions.cancel')}
             </Button>
             <Button
               variant="destructive"
               onClick={deleteSelected}
               disabled={deleting}
             >
-              {deleting ? 'Deleting…' : `Delete ${selectedCount}`}
+              {deleting
+                ? t('common:loadingEllipsis')
+                : t('items:table.deleteSelected', { count: selectedCount })}
             </Button>
           </DialogFooter>
         </DialogContent>

@@ -1,1 +1,14 @@
-{}
+{
+  "title": "AI assistant",
+  "subtitle": "Powered by Claude. Scoped to this organization.",
+  "new": "New",
+  "close": "Close",
+  "loading": "Loading…",
+  "emptyState": "Ask anything. Messages are streamed and saved.",
+  "inputPlaceholder": "Ask the assistant…",
+  "send": "Send",
+  "errors": {
+    "rate_limited": "Slow down — too many messages",
+    "default": "Could not send message"
+  }
+}

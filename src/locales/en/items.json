@@ -1,1 +1,69 @@
-{}
+{
+  "metaTitle": "Items — albo",
+  "page": {
+    "title": "Items",
+    "subtitle": "Example resource scoped to this organization."
+  },
+  "form": {
+    "createTitle": "New item",
+    "editTitle": "Edit item",
+    "title": "Title",
+    "descriptionOptional": "Description (optional)",
+    "created": "Item created",
+    "updated": "Item updated",
+    "couldNotSave": "Could not save"
+  },
+  "errors": {
+    "invalid_title": "Title is required",
+    "description_too_long": "Description is too long",
+    "not_a_member": "You are not a member",
+    "insufficient_role": "Admins or owners only",
+    "not_found": "Item not found",
+    "couldNotDelete": "Could not delete"
+  },
+  "table": {
+    "filterPlaceholder": "Filter items…",
+    "clearFilter": "Clear filter",
+    "deleteSelected": "Delete {{count}}",
+    "newItem": "New item",
+    "noItems": "No items found.",
+    "deleted": "Item deleted",
+    "bulkDeleted_one": "{{count}} item deleted",
+    "bulkDeleted_other": "{{count}} items deleted",
+    "bulkDeleteFailed_one": "{{count}} item could not be deleted",
+    "bulkDeleteFailed_other": "{{count}} items could not be deleted",
+    "deleteDialog": {
+      "title": "Delete item?",
+      "description": "<strong>{{title}}</strong> will be permanently removed."
+    },
+    "bulkDeleteDialog": {
+      "title_one": "Delete {{count}} item?",
+      "title_other": "Delete {{count}} items?",
+      "description": "This will permanently remove the selected items. This cannot be undone."
+    }
+  },
+  "columns": {
+    "selectAll": "Select all",
+    "selectRow": "Select row",
+    "title": "Title",
+    "description": "Description",
+    "createdBy": "Created by",
+    "createdAt": "Created at",
+    "empty": "—",
+    "openMenu": "Open menu"
+  },
+  "columnHeader": {
+    "asc": "Asc",
+    "desc": "Desc",
+    "hide": "Hide"
+  },
+  "pagination": {
+    "rowsSelected": "{{selected}} of {{total}} row(s) selected.",
+    "rowsPerPage": "Rows per page",
+    "pageOf": "Page {{current}} of {{total}}",
+    "firstPage": "First page",
+    "previousPage": "Previous page",
+    "nextPage": "Next page",
+    "lastPage": "Last page"
+  }
+}

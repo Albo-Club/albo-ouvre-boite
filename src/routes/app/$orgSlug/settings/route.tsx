@@ -4,6 +4,7 @@ import {
   Outlet,
   useLocation,
 } from '@tanstack/react-router'
+import { useTranslation } from 'react-i18next'
 import { useConvexQuery } from '@convex-dev/react-query'
 
 import { api } from '../../../../../convex/_generated/api'
@@ -14,6 +15,7 @@ export const Route = createFileRoute('/app/$orgSlug/settings')({
 })
 
 function SettingsLayout() {
+  const { t } = useTranslation(['settings'])
   const { orgSlug } = Route.useParams()
   const location = useLocation()
   const me = useConvexQuery(api.users.me)
@@ -31,11 +33,11 @@ function SettingsLayout() {
     label: string
     adminOnly?: boolean
   }> = [
-    { to: '/app/$orgSlug/settings/general', label: 'General' },
-    { to: '/app/$orgSlug/settings/members', label: 'Members' },
+    { to: '/app/$orgSlug/settings/general', label: t('settings:layout.tabs.general') },
+    { to: '/app/$orgSlug/settings/members', label: t('settings:layout.tabs.members') },
     {
       to: '/app/$orgSlug/settings/invitations',
-      label: 'Invitations',
+      label: t('settings:layout.tabs.invitations'),
       adminOnly: true,
     },
   ]
@@ -44,9 +46,11 @@ function SettingsLayout() {
     <main className="flex-1 space-y-6 p-6">
       <header className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight">Settings</h1>
+          <h1 className="text-2xl font-semibold tracking-tight">
+            {t('settings:layout.title')}
+          </h1>
           <p className="text-muted-foreground text-sm">
-            Manage your organization.
+            {t('settings:layout.subtitle')}
           </p>
         </div>
         <Link
@@ -54,7 +58,7 @@ function SettingsLayout() {
           params={{ orgSlug }}
           className="text-muted-foreground hover:text-foreground text-sm underline"
         >
-          ← Back
+          ← {t('settings:layout.back')}
         </Link>
       </header>
 

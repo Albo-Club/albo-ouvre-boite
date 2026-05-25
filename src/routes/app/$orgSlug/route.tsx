@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { createFileRoute, Outlet, useNavigate } from '@tanstack/react-router'
 import { useConvexMutation, useConvexQuery } from '@convex-dev/react-query'
+import { useTranslation } from 'react-i18next'
 
 import { api } from '../../../../convex/_generated/api'
 import { SidebarInset, SidebarProvider } from '~/components/ui/sidebar'
@@ -15,6 +16,7 @@ export const Route = createFileRoute('/app/$orgSlug')({
 function OrgLayout() {
   const { orgSlug } = Route.useParams()
   const navigate = useNavigate()
+  const { t } = useTranslation('nav')
   const me = useConvexQuery(api.users.me)
   const org = useConvexQuery(api.organizations.bySlug, { slug: orgSlug })
   const setLastOrg = useConvexMutation(api.organizations.setLastOrg)
@@ -35,7 +37,7 @@ function OrgLayout() {
   if (!me || me.kind !== 'ready') {
     return (
       <main className="flex min-h-svh items-center justify-center">
-        <p className="text-muted-foreground text-sm">Loading…</p>
+        <p className="text-muted-foreground text-sm">{t('loading')}</p>
       </main>
     )
   }
@@ -43,7 +45,7 @@ function OrgLayout() {
   if (!member) {
     return (
       <main className="flex min-h-svh items-center justify-center">
-        <p className="text-muted-foreground text-sm">Redirecting…</p>
+        <p className="text-muted-foreground text-sm">{t('redirecting')}</p>
       </main>
     )
   }

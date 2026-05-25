@@ -13,15 +13,18 @@ import {
 } from 'lucide-react'
 
 export type NavLeaf = {
-  title: string
+  /** i18n key under the `nav` namespace, e.g. `items.dashboard`. */
+  titleKey: string
   to: string
   icon?: LucideIcon
   adminOnly?: boolean
-  badge?: string
+  /** When true, render a `common:demo` badge. */
+  demo?: boolean
 }
 
 export type NavGroup = {
-  label: string
+  /** i18n key under the `nav` namespace, e.g. `groups.platform`. */
+  labelKey: string
   items: NavLeaf[]
   secondary?: boolean
 }
@@ -29,73 +32,73 @@ export type NavGroup = {
 export function getNavGroups(): NavGroup[] {
   return [
     {
-      label: 'Platform',
+      labelKey: 'groups.platform',
       items: [
         {
-          title: 'Dashboard',
+          titleKey: 'items.dashboard',
           to: '/app/$orgSlug',
           icon: LayoutDashboard,
         },
         {
-          title: 'Items',
+          titleKey: 'items.items',
           to: '/app/$orgSlug/items',
           icon: Package,
         },
         {
-          title: 'Locations',
+          titleKey: 'items.locations',
           to: '/app/$orgSlug/map',
           icon: MapPin,
-          badge: 'Demo',
+          demo: true,
         },
         {
-          title: 'Calendar',
+          titleKey: 'items.calendar',
           to: '/app/$orgSlug/calendar',
           icon: Calendar,
-          badge: 'Demo',
+          demo: true,
         },
         {
-          title: 'Tasks',
+          titleKey: 'items.tasks',
           to: '/app/$orgSlug/tasks',
           icon: ListTodo,
-          badge: 'Demo',
+          demo: true,
         },
       ],
     },
     {
-      label: 'Billing',
+      labelKey: 'groups.billing',
       items: [
         {
-          title: 'Payments',
+          titleKey: 'items.payments',
           to: '/app/$orgSlug/billing',
           icon: CreditCard,
-          badge: 'Demo',
+          demo: true,
         },
         {
-          title: 'Invoices',
+          titleKey: 'items.invoices',
           to: '/app/$orgSlug/billing',
           icon: Receipt,
-          badge: 'Demo',
+          demo: true,
         },
       ],
     },
     {
-      label: 'Workspace',
+      labelKey: 'groups.workspace',
       secondary: true,
       items: [
         {
-          title: 'Members',
+          titleKey: 'items.members',
           to: '/app/$orgSlug/settings/members',
           icon: Users,
           adminOnly: true,
         },
         {
-          title: 'Invitations',
+          titleKey: 'items.invitations',
           to: '/app/$orgSlug/settings/invitations',
           icon: Mail,
           adminOnly: true,
         },
         {
-          title: 'Settings',
+          titleKey: 'items.settings',
           to: '/app/$orgSlug/settings',
           icon: Settings,
         },

@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { createFileRoute } from '@tanstack/react-router'
+import { useTranslation } from 'react-i18next'
 import {
   ArrowLeft,
   ArrowRight,
@@ -8,6 +9,8 @@ import {
   User,
 } from 'lucide-react'
 
+import { getI18n } from '~/lib/i18n'
+import { getLocale } from '~/lib/locale'
 import { Alert, AlertDescription, AlertTitle } from '~/components/ui/alert'
 import { Badge } from '~/components/ui/badge'
 import { Button } from '~/components/ui/button'
@@ -27,7 +30,11 @@ import {
 
 export const Route = createFileRoute('/app/$orgSlug/tasks')({
   component: TasksPage,
-  head: () => ({ meta: [{ title: 'Tasks — albo' }] }),
+  head: () => ({
+    meta: [
+      { title: getI18n(getLocale()).getFixedT(null, 'org')('tasks.metaTitle') },
+    ],
+  }),
 })
 
 const STATUS_ORDER: TaskStatus[] = ['todo', 'in_progress', 'done']
@@ -39,16 +46,17 @@ function nextStatus(s: TaskStatus, dir: 1 | -1): TaskStatus | null {
   return STATUS_ORDER[target]
 }
 
-function dueLabel(offset: number) {
-  if (offset === 0) return 'Today'
-  if (offset === 1) return 'Tomorrow'
-  if (offset === -1) return 'Yesterday'
-  if (offset > 0) return `in ${offset}d`
-  return `${Math.abs(offset)}d ago`
-}
-
 function TasksPage() {
+  const { t } = useTranslation(['org'])
   const [tasks, setTasks] = useState<Task[]>(initialTasks)
+
+  function dueLabel(offset: number) {
+    if (offset === 0) return t('org:tasks.due.today')
+    if (offset === 1) return t('org:tasks.due.tomorrow')
+    if (offset === -1) return t('org:tasks.due.yesterday')
+    if (offset > 0) return t('org:tasks.due.inDays', { count: offset })
+    return t('org:tasks.due.daysAgo', { count: Math.abs(offset) })
+  }
 
   function move(id: string, dir: 1 | -1) {
     setTasks((prev) =>
@@ -63,65 +71,64 @@ function TasksPage() {
   return (
     <main className="flex-1 space-y-6 p-6">
       <div>
-        <h1 className="text-2xl font-semibold tracking-tight">Tasks</h1>
+        <h1 className="text-2xl font-semibold tracking-tight">
+          {t('org:tasks.title')}
+        </h1>
         <p className="text-muted-foreground text-sm">
-          Move cards between columns with the arrow buttons.
+          {t('org:tasks.subtitle')}
         </p>
       </div>
 
       <Alert>
         <Sparkles className="size-4" />
-        <AlertTitle>Demo data</AlertTitle>
-        <AlertDescription>
-          Local-state kanban board with mock tasks. Plug it into a Convex
-          `tasks` table for persistence.
-        </AlertDescription>
+        <AlertTitle>{t('org:tasks.demoTitle')}</AlertTitle>
+        <AlertDescription>{t('org:tasks.demoDescription')}</AlertDescription>
       </Alert>
 
       <div className="grid gap-4 lg:grid-cols-3">
         {COLUMNS.map((col) => {
-          const columnTasks = tasks.filter((t) => t.status === col.id)
+          const columnTasks = tasks.filter((task) => task.status === col.id)
           return (
             <Card key={col.id} className="bg-muted/30">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
                 <CardTitle className="text-sm font-medium">
-                  {col.label}
+                  {t(`org:tasks.columns.${col.id}`)}
                 </CardTitle>
                 <Badge variant="secondary">{columnTasks.length}</Badge>
               </CardHeader>
               <CardContent className="space-y-2">
                 {columnTasks.length === 0 ? (
                   <p className="text-muted-foreground py-6 text-center text-xs">
-                    No tasks
+                    {t('org:tasks.empty')}
                   </p>
                 ) : (
-                  columnTasks.map((t) => (
+                  columnTasks.map((task) => (
                     <div
-                      key={t.id}
+                      key={task.id}
                       className="bg-background space-y-2 rounded-md border p-3 shadow-sm"
                     >
                       <div className="flex items-start justify-between gap-2">
                         <h3 className="text-sm font-medium leading-snug">
-                          {t.title}
+                          {task.title}
                         </h3>
                         <Badge
-                          variant={PRIORITY_VARIANT[t.priority]}
-                          className="shrink-0 capitalize"
+                          variant={PRIORITY_VARIANT[task.priority]}
+                          className="shrink-0"
                         >
-                          {t.priority}
+                          {t(`org:tasks.priority.${task.priority}`)}
                         </Badge>
                       </div>
                       <p className="text-muted-foreground text-xs">
-                        {t.description}
+                        {task.description}
                       </p>
                       <div className="text-muted-foreground flex items-center gap-3 text-xs">
                         <span className="flex items-center gap-1">
                           <User className="size-3" />
-                          {t.assignee}
+                          {task.assignee}
                         </span>
                         <span className="flex items-center gap-1">
                           <CalendarDays className="size-3" />
-                          {dueLabel(t.dueOffset)}
+                          {dueLabel(task.dueOffset)}
                         </span>
                       </div>
                       <div className="flex justify-end gap-1 pt-1">
@@ -129,9 +136,9 @@ function TasksPage() {
                           variant="ghost"
                           size="icon"
                           className="size-7"
-                          onClick={() => move(t.id, -1)}
-                          disabled={!nextStatus(t.status, -1)}
-                          aria-label="Move left"
+                          onClick={() => move(task.id, -1)}
+                          disabled={!nextStatus(task.status, -1)}
+                          aria-label={t('org:tasks.moveLeft')}
                         >
                           <ArrowLeft className="size-3.5" />
                         </Button>
@@ -139,9 +146,9 @@ function TasksPage() {
                           variant="ghost"
                           size="icon"
                           className="size-7"
-                          onClick={() => move(t.id, 1)}
-                          disabled={!nextStatus(t.status, 1)}
-                          aria-label="Move right"
+                          onClick={() => move(task.id, 1)}
+                          disabled={!nextStatus(task.status, 1)}
+                          aria-label={t('org:tasks.moveRight')}
                         >
                           <ArrowRight className="size-3.5" />
                         </Button>

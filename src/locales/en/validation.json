@@ -4,6 +4,16 @@
     "required": "Name is required",
     "tooLong": "Too long"
   },
+  "title": {
+    "required": "Title is required",
+    "tooLong": "Too long"
+  },
+  "description": {
+    "tooLong": "Too long"
+  },
+  "slug": {
+    "pattern": "3–40 chars, lowercase letters, digits, dashes"
+  },
   "email": {
     "invalid": "Invalid email",
     "enterValid": "Enter a valid email first"

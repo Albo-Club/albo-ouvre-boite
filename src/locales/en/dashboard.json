@@ -1,1 +1,33 @@
-{}
+{
+  "metaTitle": "Dashboard — albo",
+  "subtitle": "Overview of your workspace",
+  "kpi": {
+    "totalItems": "Total items",
+    "activeMembers": "Active members",
+    "pendingInvitations": "Pending invitations",
+    "mrr": "MRR",
+    "vsLastMonth": "vs last month",
+    "pendingInvites_one": "{{count}} pending invite",
+    "pendingInvites_other": "{{count}} pending invites",
+    "adminOnly": "admin only",
+    "demoVsLastMonth": "demo · vs last month"
+  },
+  "activity": {
+    "title": "Activity",
+    "description": "Items + events over the last {{count}} days",
+    "items": "Items",
+    "events": "Events"
+  },
+  "roles": {
+    "title": "Members by role",
+    "total": "{{count}} total",
+    "none": "No members yet",
+    "membersLegend": "Members"
+  },
+  "recent": {
+    "title": "Recent items",
+    "description": "The 5 most recent items in this org",
+    "viewAll": "View all",
+    "empty": "No items yet. <link>Create one</link>."
+  }
+}

@@ -1,5 +1,6 @@
 import type { ColumnDef } from '@tanstack/react-table'
 import { MoreHorizontal } from 'lucide-react'
+import type { TFunction } from 'i18next'
 
 import type { Id } from '../../../convex/_generated/dataModel'
 import { Checkbox } from '~/components/ui/checkbox'
@@ -32,9 +33,11 @@ function formatDateTime(ts: number) {
 export function buildColumns({
   onEdit,
   onDelete,
+  t,
 }: {
   onEdit: (item: ItemRow) => void
   onDelete: (item: ItemRow) => void
+  t: TFunction<['items', 'common']>
 }): ColumnDef<ItemRow>[] {
   return [
     {
@@ -48,14 +51,14 @@ export function buildColumns({
           onCheckedChange={(value) =>
             table.toggleAllPageRowsSelected(!!value)
           }
-          aria-label="Select all"
+          aria-label={t('items:columns.selectAll')}
         />
       ),
       cell: ({ row }) => (
         <Checkbox
           checked={row.getIsSelected()}
           onCheckedChange={(value) => row.toggleSelected(!!value)}
-          aria-label="Select row"
+          aria-label={t('items:columns.selectRow')}
         />
       ),
       enableSorting: false,
@@ -64,7 +67,7 @@ export function buildColumns({
     {
       accessorKey: 'title',
       header: ({ column }) => (
-        <DataTableColumnHeader column={column} title="Title" />
+        <DataTableColumnHeader column={column} title={t('items:columns.title')} />
       ),
       cell: ({ row }) => (
         <div className="max-w-[300px] truncate font-medium">
@@ -74,10 +77,10 @@ export function buildColumns({
     },
     {
       accessorKey: 'description',
-      header: 'Description',
+      header: t('items:columns.description'),
       cell: ({ row }) => (
         <div className="text-muted-foreground max-w-[420px] truncate text-sm">
-          {row.original.description ?? '—'}
+          {row.original.description ?? t('items:columns.empty')}
         </div>
       ),
       enableSorting: false,
@@ -86,7 +89,10 @@ export function buildColumns({
       id: 'createdByLabel',
       accessorFn: (row) => row.createdBy.name ?? row.createdBy.email,
       header: ({ column }) => (
-        <DataTableColumnHeader column={column} title="Created by" />
+        <DataTableColumnHeader
+          column={column}
+          title={t('items:columns.createdBy')}
+        />
       ),
       cell: ({ row }) => (
         <div className="text-sm">
@@ -102,7 +108,10 @@ export function buildColumns({
     {
       accessorKey: 'createdAt',
       header: ({ column }) => (
-        <DataTableColumnHeader column={column} title="Created at" />
+        <DataTableColumnHeader
+          column={column}
+          title={t('items:columns.createdAt')}
+        />
       ),
       cell: ({ row }) => (
         <div className="text-muted-foreground text-sm tabular-nums">
@@ -118,19 +127,19 @@ export function buildColumns({
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" size="icon" className="size-8">
                 <MoreHorizontal className="size-4" />
-                <span className="sr-only">Open menu</span>
+                <span className="sr-only">{t('items:columns.openMenu')}</span>
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
               <DropdownMenuItem onSelect={() => onEdit(row.original)}>
-                Edit
+                {t('common:actions.edit')}
               </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem
                 onSelect={() => onDelete(row.original)}
                 className="text-destructive"
               >
-                Delete
+                {t('common:actions.delete')}
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>

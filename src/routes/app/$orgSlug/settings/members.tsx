@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { createFileRoute } from '@tanstack/react-router'
+import { Trans, useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
 import { ConvexError } from 'convex/values'
 import { useConvexMutation, useConvexQuery } from '@convex-dev/react-query'
@@ -32,24 +33,12 @@ import {
 
 type Role = 'owner' | 'admin' | 'member'
 
-const roleLabels: Record<Role, string> = {
-  owner: 'Owner',
-  admin: 'Admin',
-  member: 'Member',
-}
-
-const errorMessages: Record<string, string> = {
-  insufficient_role: 'Admins or owners only',
-  owner_only: 'Only an owner can perform this action',
-  last_owner: 'You cannot remove or demote the last owner',
-  not_found: 'Member not found',
-}
-
 export const Route = createFileRoute('/app/$orgSlug/settings/members')({
   component: MembersSettings,
 })
 
 function MembersSettings() {
+  const { t } = useTranslation(['settings', 'common'])
   const { orgSlug } = Route.useParams()
   const me = useConvexQuery(api.users.me)
   const org = useConvexQuery(api.organizations.bySlug, { slug: orgSlug })
@@ -74,7 +63,14 @@ function MembersSettings() {
 
   function reportError(err: unknown) {
     const code = err instanceof ConvexError ? (err.data as string) : ''
-    toast.error(errorMessages[code] ?? 'Action failed')
+    const known = ['insufficient_role', 'owner_only', 'last_owner', 'not_found']
+    toast.error(
+      t(
+        known.includes(code)
+          ? `settings:members.errors.${code}`
+          : 'settings:members.errors.default',
+      ),
+    )
   }
 
   async function handleChangeRole(
@@ -84,7 +80,7 @@ function MembersSettings() {
     if (!org) return
     try {
       await updateRole({ orgId: org._id, memberId, role })
-      toast.success('Role updated')
+      toast.success(t('settings:members.roleUpdated'))
     } catch (err) {
       reportError(err)
     }
@@ -97,7 +93,7 @@ function MembersSettings() {
         orgId: org._id,
         memberId: confirmRemove.memberId,
       })
-      toast.success('Member removed')
+      toast.success(t('settings:members.memberRemoved'))
       setConfirmRemove(null)
     } catch (err) {
       reportError(err)
@@ -107,16 +103,22 @@ function MembersSettings() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Members</CardTitle>
+        <CardTitle>{t('settings:members.title')}</CardTitle>
         <CardDescription>
-          People with access to {org?.name ?? 'this organization'}.
+          {t('settings:members.description', {
+            org: org?.name ?? t('settings:members.fallbackOrg'),
+          })}
         </CardDescription>
       </CardHeader>
       <CardContent>
         {!members ? (
-          <p className="text-muted-foreground text-sm">Loading…</p>
+          <p className="text-muted-foreground text-sm">
+            {t('settings:members.loading')}
+          </p>
         ) : members.length === 0 ? (
-          <p className="text-muted-foreground text-sm">No members yet.</p>
+          <p className="text-muted-foreground text-sm">
+            {t('settings:members.empty')}
+          </p>
         ) : (
           <ul className="divide-border divide-y text-sm">
             {members.map((m) => {
@@ -148,7 +150,7 @@ function MembersSettings() {
                         {m.name ?? m.email}
                         {isSelf && (
                           <span className="text-muted-foreground ml-2 text-xs">
-                            (you)
+                            {t('settings:members.you')}
                           </span>
                         )}
                       </p>
@@ -161,7 +163,7 @@ function MembersSettings() {
                   </div>
                   <div className="flex items-center gap-2">
                     <span className="text-muted-foreground text-xs">
-                      {roleLabels[targetRole]}
+                      {t(`common:roles.${targetRole}`)}
                     </span>
                     {canEditThis && (
                       <DropdownMenu>
@@ -179,7 +181,9 @@ function MembersSettings() {
                                 key={r}
                                 onSelect={() => handleChangeRole(m._id, r)}
                               >
-                                Make {roleLabels[r].toLowerCase()}
+                                {t('settings:members.makeRole', {
+                                  role: t(`common:roles.${r}`).toLowerCase(),
+                                })}
                               </DropdownMenuItem>
                             ))}
                           <DropdownMenuSeparator />
@@ -192,7 +196,7 @@ function MembersSettings() {
                               })
                             }
                           >
-                            Remove from org
+                            {t('settings:members.removeFromOrg')}
                           </DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>
@@ -211,18 +215,21 @@ function MembersSettings() {
       >
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Remove member?</DialogTitle>
+            <DialogTitle>{t('settings:members.removeTitle')}</DialogTitle>
             <DialogDescription>
-              <strong>{confirmRemove?.label}</strong> will lose access
-              immediately. They can be re-invited later.
+              <Trans
+                t={t}
+                i18nKey="settings:members.removeDescription"
+                values={{ label: confirmRemove?.label }}
+              />
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
             <Button variant="outline" onClick={() => setConfirmRemove(null)}>
-              Cancel
+              {t('common:actions.cancel')}
             </Button>
             <Button variant="destructive" onClick={handleRemove}>
-              Remove
+              {t('common:actions.remove')}
             </Button>
           </DialogFooter>
         </DialogContent>
