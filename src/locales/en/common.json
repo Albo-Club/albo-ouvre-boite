@@ -28,6 +28,9 @@
   },
   "demo": "Demo",
   "comingSoon": "Coming soon",
+  "theme": {
+    "toggle": "Toggle theme"
+  },
   "imageUpload": {
     "label": "Upload image",
     "uploading": "Uploading…",

@@ -28,6 +28,9 @@
   },
   "demo": "Démo",
   "comingSoon": "Bientôt disponible",
+  "theme": {
+    "toggle": "Changer de thème"
+  },
   "imageUpload": {
     "label": "Téléverser une image",
     "uploading": "Téléversement…",
