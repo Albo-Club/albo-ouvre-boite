@@ -19,5 +19,28 @@
     "label": "Langue",
     "en": "English",
     "fr": "Français"
+  },
+  "roles": {
+    "owner": "Propriétaire",
+    "admin": "Admin",
+    "member": "Membre"
+  },
+  "demo": "Démo",
+  "comingSoon": "Bientôt disponible",
+  "imageUpload": {
+    "label": "Téléverser une image",
+    "uploading": "Téléversement…",
+    "dropOrClick": "Déposez ou cliquez",
+    "replace": "Remplacer",
+    "upload": "Téléverser",
+    "updated": "Image mise à jour",
+    "removed": "Image supprimée",
+    "couldNotRemove": "Suppression impossible",
+    "uploadFailed": "Échec du téléversement",
+    "errors": {
+      "too_large": "L'image dépasse 20 Mo",
+      "invalid_type": "Utilisez une image PNG, JPEG, WEBP ou GIF",
+      "insufficient_role": "Réservé aux admins ou propriétaires"
+    }
   }
 }

@@ -312,6 +312,23 @@ export const remove = mutation({
 - ❌ Unrequested dark/light toggle.
 - ❌ `tailwind.config.js` (Tailwind v4 is CSS-first).
 - ❌ Editing `routeTree.gen.ts` or `convex/_generated/*` manually.
+- ❌ Hardcoding a user-facing string anywhere (UI **or** transactional
+  email). All user-facing copy goes through i18n: `t()` from react-i18next
+  with namespaced keys in `src/locales/{en,fr}/<ns>.json`, or the bilingual
+  templates in `convex/emailTemplates.ts`. **Dev-facing** strings stay in
+  English and are never translated: internal error codes
+  (`ConvexError('not_found')`, `AuthErrorCode` values), logs, comments,
+  i18n key names. New strings need both an `en` and a `fr` entry. See
+  `KNOWN_ISSUES.md` "i18n (react-i18next) SSR" for the no-flash rules.
+- ❌ Module-level Zod schema carrying a hardcoded user-facing message. Build
+  the schema inside the component via `useMemo(() => z.object({...}), [t])`
+  so messages resolve from the `validation` namespace.
+- ❌ A hardcoded page `<title>` in a route `head()`. `head()` runs outside
+  React — resolve titles with
+  `getI18n(getLocale()).getFixedT(null, '<ns>')('key')`.
+- ❌ Surfacing an auth error via raw copy. Classify with `classifyAuthError`,
+  then `formatAuthError(code, ctx, t)` where `t` resolves the `errors`
+  namespace (pass `(k) => t(\`errors:${k}\`)`).
 
 ## Security
 

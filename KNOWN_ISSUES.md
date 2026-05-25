@@ -383,6 +383,53 @@ the `app-color-theme` localStorage key and sets `data-theme` before React
 hydrates. Or migrate to a cookie-based scheme so SSR can render the right
 theme directly.
 
+## i18n (react-i18next) SSR — no-flash, per-request instance
+
+The app is bilingual (FR/EN). Three non-obvious decisions keep SSR correct:
+
+1. **One i18next instance per server request, never a shared singleton.**
+   `getI18n()` in `src/lib/i18n.ts` caches one read-only instance *per locale*
+   on the server and a single mutable instance on the client. A single shared
+   server instance whose `lng` we mutate with `changeLanguage` would leak one
+   request's locale into another concurrent request (the Node server is
+   long-running). The per-locale server cache is safe only because we never
+   call `changeLanguage` on the server.
+
+2. **Resources are imported statically (bundled), so init is synchronous.**
+   No `i18next-http-backend`, no lazy namespace loading. That means the very
+   first render already has the right strings — no Suspense boundary, no flash
+   of keys or of the wrong language. The cost is all locales ship in the
+   bundle; fine for two languages, revisit if the count grows.
+
+3. **The locale cookie is written on the server during SSR.**
+   `getLocale()` (`src/lib/locale.ts`) is a `createIsomorphicFn`: on the server
+   it reads the `lang` cookie, else parses `Accept-Language`, then **writes the
+   resolved value back into the `lang` cookie**. The client branch reads the
+   same cookie (else `navigator.language`). Writing the cookie server-side is
+   what guarantees the client reads the *exact* value the server rendered with —
+   without it, `Accept-Language` (server) vs `navigator.language` (client) can
+   disagree and cause a hydration mismatch. This is the cookie-based approach
+   the "Color theme picker SSR flash" section suggests as the future fix —
+   applied here from the start. English is the default; French wins only when a
+   French variant is the highest-priority language the client asked for.
+
+**Page `<title>` in `head()`**: `head()` runs outside React, so it can't use
+the `useTranslation` hook. Routes resolve titles via
+`getI18n(getLocale()).getFixedT(null, '<ns>')('key')` instead. A live language
+switch updates the body immediately but the `<title>` only refreshes on the
+next navigation — acceptable, titles are low-traffic.
+
+**Cross-device preference**: `users.preferredLanguage` (Convex) is written by
+the switcher and drives transactional email locale. We do **not** currently
+restore it into the cookie on login, so switching language on device A does not
+auto-apply the UI language on device B until the user switches there too (the
+cookie is per-browser). The email locale is always correct regardless. Restore
+on login is a deliberate follow-up, not a bug.
+
+**zxcvbn feedback strings** (password strength warnings) come from the zxcvbn
+English wordlist and are not translated — only our own labels around the meter
+are. Translating zxcvbn output would require loading its locale packs.
+
 ## Leaflet (and any `window`-touching lib) needs client-only mount
 
 `react-leaflet` and the `leaflet/dist/leaflet.css` import both reference

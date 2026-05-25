@@ -61,6 +61,23 @@ Tester avec un user neuf "Alice" (`alice@test.local`).
 > `/forgot-password → /reset-password` ni NewDeviceEmail — voir
 > `KNOWN_ISSUES.md` § "Post-event notification coverage" pour la roadmap.
 
+## Niveau 2 — Internationalisation i18n (8 min)
+
+App bilingue FR/EN. Anglais par défaut, français si le navigateur/les prefs le
+demandent. Détails archi : `KNOWN_ISSUES.md` § "i18n (react-i18next) SSR".
+
+| #   | Étape                                                                 | Résultat attendu                                                                                   |
+| --- | --------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------- |
+| I1  | Navigateur en `en-US`, cookie `lang` effacé, visiter `/`              | Tout en anglais. `<html lang="en">`. Pas de flash.                                                 |
+| I2  | Forcer `Accept-Language: fr-CA` (DevTools ou `curl -H`), cookie effacé, recharger `/` | **Dès le HTML source SSR** (View Source, JS désactivé) tout est en français. `<html lang="fr">`. |
+| I3  | Recharger en FR plusieurs fois                                        | Console **sans** warning "Text content does not match" (pas de hydration mismatch).                |
+| I4  | Switcher de langue (footer sidebar connecté, ou coin de `/`)          | Bascule FR↔EN immédiate. Cookie `lang` mis à jour. Survit au reload.                               |
+| I5  | Connecté, changer la langue                                           | `users.preferredLanguage` patché (vérifier dashboard Convex).                                      |
+| I6  | Variante `fr-BE` / `fr-FR` / `fr`                                     | Toutes → français (n'importe quelle variante fr).                                                  |
+| I7  | Emails (reset password, invitation) pour un user `preferredLanguage=fr` | Sujet + corps en français ; pour un user EN/sans préf → anglais.                                  |
+| I8  | Mauvais credentials en FR / formulaire invalide en FR                 | Message d'erreur auth FR (via classifier) ; messages Zod FR.                                       |
+| I9  | Grep régression : `git grep -nE "\"[A-Z][a-z]+ " src/routes src/components` | Aucune string UI codée en dur hors `src/components/ui/*` (chrome shadcn).                       |
+
 ## Niveau 2 — App shell UI (10 min)
 
 Connecté en tant qu'Alice sur `/app/acme/`.
