@@ -177,11 +177,17 @@ pnpm run setup:prod
 ```
 
 The script prompts for your prod domain, reads your dev env, mirrors the
-secrets (Resend, Anthropic, optional Sentry) to prod, generates a **fresh**
-`BETTER_AUTH_SECRET` (never reused from dev — same secret across envs would
-let a dev session token unlock prod), sets `APP_ENV=production`,
-`SITE_URL`, `BETTER_AUTH_URL`, `RESEND_TEST_MODE=false`, and runs
-`convex deploy`.
+secrets (Resend, Anthropic, optional Sentry, and the Google OAuth credentials
+if you set them in dev) to prod, generates a **fresh** `BETTER_AUTH_SECRET`
+(never reused from dev — same secret across envs would let a dev session token
+unlock prod), sets `APP_ENV=production`, `SITE_URL`, `BETTER_AUTH_URL`,
+`RESEND_TEST_MODE=false`, and runs `convex deploy`.
+
+If Google OAuth is mirrored, the script reminds you to register the prod
+redirect URI (`https://<your-domain>/api/auth/callback/google`) on the **same**
+Google Cloud OAuth client you use for dev — the credentials are mirrored
+automatically, but the redirect URI must be added by hand in the Google
+console, or Google sign-in returns `redirect_uri_mismatch`.
 
 `APP_ENV=production` activates a boot-time guard in `convex/auth.ts` that
 refuses to start if `SITE_URL` still points at `localhost` — this is what
@@ -199,6 +205,9 @@ pnpm exec convex env set --prod RESEND_API_KEY re_...
 pnpm exec convex env set --prod RESEND_FROM "hello@yourdomain.com"
 pnpm exec convex env set --prod RESEND_TEST_MODE false
 pnpm exec convex env set --prod APP_ENV production
+# optional — only if you use Google social login
+pnpm exec convex env set --prod GOOGLE_CLIENT_ID <id>
+pnpm exec convex env set --prod GOOGLE_CLIENT_SECRET <secret>
 pnpm exec convex deploy
 ```
 

@@ -88,6 +88,10 @@ not a dead/broken button.
    prod URL.
 3. `pnpm exec convex env set GOOGLE_CLIENT_ID …` / `… GOOGLE_CLIENT_SECRET …`
    (or answer the optional prompt in `pnpm run setup`).
+4. **Prod**: `pnpm run setup:prod` mirrors the dev `GOOGLE_*` creds to the prod
+   deployment automatically (same OAuth client). The prod redirect URI is *not*
+   set for you — add `https://<prod-domain>/api/auth/callback/google` to the same
+   Google client by hand (step 2), or sign-in fails with `redirect_uri_mismatch`.
 
 ### Why it's safe vs the account-linking trap
 Google returns a **verified** email on first sign-in, so it satisfies rule (1)
