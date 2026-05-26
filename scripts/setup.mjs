@@ -2,7 +2,7 @@
 /**
  * One-shot dev setup wizard.
  *
- * Usage: pnpm setup
+ * Usage: pnpm run setup   (NOT `pnpm setup` — that's a reserved pnpm built-in)
  *
  * What it does, in order:
  *   1. Detects whether this is still a fresh "albo" clone — if so, prompts for
@@ -187,7 +187,7 @@ async function bootstrapConvex() {
     if (!after.CONVEX_DEPLOYMENT || !after.VITE_CONVEX_URL) {
       fail(`Convex bootstrap incomplete — .env.local is missing CONVEX_DEPLOYMENT or VITE_CONVEX_URL.
 
-  Try running ${C.bold}pnpm exec convex dev${C.reset} manually to debug, then re-run ${C.bold}pnpm setup${C.reset}.`)
+  Try running ${C.bold}pnpm exec convex dev${C.reset} manually to debug, then re-run ${C.bold}pnpm run setup${C.reset}.`)
       process.exit(1)
     }
     ok(`Convex provisioned (${after.CONVEX_DEPLOYMENT})`)
@@ -318,7 +318,7 @@ async function applyPlan(plan) {
   }
   const go = (await ask('\n  Apply now? [Y/n] ')).trim().toLowerCase()
   if (go && go !== 'y' && go !== 'yes') {
-    warn('Aborted. Re-run `pnpm setup` whenever you\'re ready.')
+    warn('Aborted. Re-run `pnpm run setup` whenever you\'re ready.')
     return
   }
   for (const k of keys) {

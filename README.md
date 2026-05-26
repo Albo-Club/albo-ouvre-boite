@@ -40,17 +40,21 @@ cd my-project
 **2. Install + configure + run**
 
 ```bash
-pnpm install   # installs every dependency
-pnpm setup     # interactive wizard — rebrand + Convex + API keys
-pnpm dev       # starts Vite + Convex together
+pnpm install     # installs every dependency
+pnpm run setup   # interactive wizard — rebrand + Convex + API keys
+pnpm dev         # starts Vite + Convex together
 ```
 
-> During `pnpm setup`, the Convex step opens a browser to log you in, then
+> Use `pnpm run setup`, **not** `pnpm setup` — `setup` is a reserved pnpm
+> built-in (it configures `PNPM_HOME`), so the bare form never reaches this
+> project's script.
+>
+> During `pnpm run setup`, the Convex step opens a browser to log you in, then
 > runs `convex dev` in the foreground. Once you see **"Convex functions
 > ready!"**, press **Ctrl-C** to let the wizard continue — this is expected,
 > it doesn't abort the setup.
 
-`pnpm setup` walks you through everything :
+`pnpm run setup` walks you through everything :
 
 1. **Project name** — rebrands page titles, agent identity, cookie prefix.
 2. **Convex backend** — opens a browser to log in, provisions your dev
