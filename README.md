@@ -21,11 +21,34 @@ sidebar wired in, transactional emails, rate-limiting, and CI/CD on day one.
 
 ## Getting started
 
+**Prerequisites**
+
+- **Node 20+** (LTS recommended)
+- **pnpm** — enable it once via Corepack (bundled with Node): `corepack enable`
+- **git**
+
+**1. Get the code**
+
+This repo is a GitHub template. Either click **"Use this template"** on
+GitHub to create your own repo, or clone it directly:
+
 ```bash
-pnpm install
-pnpm setup     # interactive wizard — rebrand + Convex + API keys
-pnpm dev
+git clone https://github.com/Albo-Club/albo-ouvre-boite.git my-project
+cd my-project
 ```
+
+**2. Install + configure + run**
+
+```bash
+pnpm install   # installs every dependency
+pnpm setup     # interactive wizard — rebrand + Convex + API keys
+pnpm dev       # starts Vite + Convex together
+```
+
+> During `pnpm setup`, the Convex step opens a browser to log you in, then
+> runs `convex dev` in the foreground. Once you see **"Convex functions
+> ready!"**, press **Ctrl-C** to let the wizard continue — this is expected,
+> it doesn't abort the setup.
 
 `pnpm setup` walks you through everything :
 
