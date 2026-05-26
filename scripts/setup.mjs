@@ -165,23 +165,26 @@ async function bootstrapConvex() {
   } else {
     console.log(`
   We need to provision your Convex dev deployment.
-  A browser will open for Convex login (first time only).
-  When you see ${C.green}"Convex functions ready!"${C.reset} press ${C.bold}Ctrl-C${C.reset}
-  here to return to the setup.
+  A browser will open for Convex login (first time only), then you'll be
+  asked to create a project — pick ${C.bold}cloud deployment${C.reset} when prompted.
+  Once it has pushed your functions it returns here automatically — ${C.bold}no
+  Ctrl-C needed${C.reset}.
 `)
     await ask(`  ${C.dim}Press ENTER to launch \`convex dev\`…${C.reset}`)
 
     // Pause our readline so it doesn't eat the child's input.
     rl.pause()
-    // Swallow SIGINT in parent — Ctrl-C should only kill convex dev.
-    const swallow = () => {}
-    process.on('SIGINT', swallow)
-    await new Promise((done) => {
-      const child = spawn('pnpm', ['exec', 'convex', 'dev'], { stdio: 'inherit' })
-      child.on('exit', () => done(null))
+    // `--once` does the interactive project setup + a single push, then exits
+    // on its own — no manual Ctrl-C, which confused non-dev users.
+    const status = await new Promise((done) => {
+      const child = spawn('pnpm', ['exec', 'convex', 'dev', '--once'], { stdio: 'inherit' })
+      child.on('exit', (code) => done(code))
     })
-    process.off('SIGINT', swallow)
     rl.resume()
+    if (status !== 0) {
+      fail(`\`convex dev --once\` exited with code ${status}. Re-run ${C.bold}pnpm run setup${C.reset} to retry.`)
+      process.exit(1)
+    }
 
     const after = await parseEnvLocal()
     if (!after.CONVEX_DEPLOYMENT || !after.VITE_CONVEX_URL) {
