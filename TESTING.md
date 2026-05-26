@@ -59,6 +59,7 @@ Tester avec un user neuf "Alice" (`alice@test.local`).
 | A20 | **Google sign-in** — sans `GOOGLE_CLIENT_ID/SECRET`     | `/login` + `/register` : **pas** de bouton "Continue with Google" ni séparateur (template propre, aucune erreur). |
 | A21 | **Google sign-in** — avec creds + redirect URI Google Console (`${SITE_URL}/api/auth/callback/google`) | Bouton visible. Nouveau user → redirige `/app`, `users` row créée. Email d'un compte password existant → **pas** de doublon `users` (dédup email). |
 | A22 | Échec OAuth Google (annulation / erreur)               | Retour `/login?error=…` → toast "Couldn't sign in with that provider".             |
+| A22b | **Google en prod** — après `pnpm run setup:prod` (creds Google présentes en dev) | `convex env list --prod` contient `GOOGLE_CLIENT_ID` ; redirect URI prod ajoutée au même client Google ; bouton visible sur le domaine prod, sign-in OK. |
 
 > **A23+ (gaps connues)** : pas d'email "Password changed" sur le flow
 > `/forgot-password → /reset-password` ni NewDeviceEmail — voir

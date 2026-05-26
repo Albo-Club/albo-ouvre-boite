@@ -8,10 +8,11 @@
  * What it does:
  *   1. Prompts for your prod domain (e.g. https://app.example.com).
  *   2. Reads your dev Convex env vars (`convex env list`).
- *   3. Mirrors the secrets (RESEND_*, ANTHROPIC_*, optional SENTRY_DSN)
- *      onto the prod deployment, sets APP_ENV=production, SITE_URL +
- *      BETTER_AUTH_URL to the chosen domain, generates a FRESH
- *      BETTER_AUTH_SECRET (never reused from dev), and RESEND_TEST_MODE=false.
+ *   3. Mirrors the secrets (RESEND_*, ANTHROPIC_*, optional SENTRY_DSN and
+ *      optional Google OAuth credentials) onto the prod deployment, sets
+ *      APP_ENV=production, SITE_URL + BETTER_AUTH_URL to the chosen domain,
+ *      generates a FRESH BETTER_AUTH_SECRET (never reused from dev), and
+ *      RESEND_TEST_MODE=false.
  *   4. Asks for confirmation, then runs `convex env set --prod` for each
  *      and `convex deploy` to push the backend.
  *
@@ -105,10 +106,16 @@ async function main() {
     RESEND_TEST_MODE: 'false',
     ANTHROPIC_API_KEY: dev.get('ANTHROPIC_API_KEY'),
   }
-  for (const k of ['ANTHROPIC_MODEL', 'SENTRY_DSN']) {
+  for (const k of [
+    'ANTHROPIC_MODEL',
+    'SENTRY_DSN',
+    'GOOGLE_CLIENT_ID',
+    'GOOGLE_CLIENT_SECRET',
+  ]) {
     const v = dev.get(k)
     if (v) plan[k] = v
   }
+  const googleMirrored = !!plan.GOOGLE_CLIENT_ID
 
   console.log('\n  Will set on prod:')
   for (const [k, v] of Object.entries(plan)) {
@@ -156,6 +163,19 @@ async function main() {
   Then test a magic link from ${domain}. The link should point at
   ${domain}/api/auth/magic-link/verify (not localhost).
 `)
+
+  if (googleMirrored) {
+    console.log(`  ⚠️  Google OAuth was mirrored to prod. In Google Cloud Console,
+      on the SAME OAuth client you use for dev, add these alongside the
+      existing localhost entries:
+
+        Authorized redirect URI:  ${domain}/api/auth/callback/google
+        Authorized JS origin:     ${domain}
+
+      Until both prod URIs are registered, Google sign-in returns
+      redirect_uri_mismatch.
+`)
+  }
 }
 
 main().catch((e) => {
