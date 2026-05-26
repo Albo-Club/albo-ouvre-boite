@@ -56,8 +56,11 @@ Tester avec un user neuf "Alice" (`alice@test.local`).
 | A17 | **Cross-tab persistence** (régression localhost)        | Sign-in onglet A → ouvrir onglet B sur `/app/acme` → reste loggé. Hard refresh chaque onglet 3× → toujours loggé. |
 | A18 | Onboarding org avec slug réservé (`admin`, `api`, `me`) | Feedback inline "This slug is reserved" sous l'input. Submit toast "slug_reserved". |
 | A19 | Onboarding org avec slug déjà pris                      | Feedback inline "This slug is already taken" en temps réel (sans soumettre). Submit toast "slug_taken". |
+| A20 | **Google sign-in** — sans `GOOGLE_CLIENT_ID/SECRET`     | `/login` + `/register` : **pas** de bouton "Continue with Google" ni séparateur (template propre, aucune erreur). |
+| A21 | **Google sign-in** — avec creds + redirect URI Google Console (`${SITE_URL}/api/auth/callback/google`) | Bouton visible. Nouveau user → redirige `/app`, `users` row créée. Email d'un compte password existant → **pas** de doublon `users` (dédup email). |
+| A22 | Échec OAuth Google (annulation / erreur)               | Retour `/login?error=…` → toast "Couldn't sign in with that provider".             |
 
-> **A20+ (gaps connues)** : pas d'email "Password changed" sur le flow
+> **A23+ (gaps connues)** : pas d'email "Password changed" sur le flow
 > `/forgot-password → /reset-password` ni NewDeviceEmail — voir
 > `KNOWN_ISSUES.md` § "Post-event notification coverage" pour la roadmap.
 

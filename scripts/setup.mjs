@@ -274,6 +274,27 @@ async function promptSecrets() {
     ok('BETTER_AUTH_SECRET generated (32-byte hex)')
   }
 
+  // Google OAuth (optional) — the "Continue with Google" button only ships
+  // when both credentials are set. Safe to skip; everything else still works.
+  if (cx.GOOGLE_CLIENT_ID && cx.GOOGLE_CLIENT_SECRET) {
+    ok('Google OAuth already configured')
+  } else {
+    const redirectBase = cx.SITE_URL || 'http://localhost:3000'
+    console.log(
+      `\n  ${C.bold}Google OAuth${C.reset} ${C.dim}(optional)${C.reset} — adds a "Continue with Google" button.\n  ${C.cyan}→ Create an OAuth client: https://console.cloud.google.com/apis/credentials${C.reset}\n  ${C.dim}Authorized redirect URI: ${redirectBase}/api/auth/callback/google${C.reset}\n  ${C.dim}Press Enter to skip.${C.reset}`,
+    )
+    const id = (await ask('  GOOGLE_CLIENT_ID [skip]: ')).trim()
+    if (id) {
+      const secret = (await ask('  GOOGLE_CLIENT_SECRET: ')).trim()
+      if (secret) {
+        plan.GOOGLE_CLIENT_ID = id
+        plan.GOOGLE_CLIENT_SECRET = secret
+      } else {
+        warn('No client secret entered — skipping Google OAuth.')
+      }
+    }
+  }
+
   // Required dev defaults
   if (!cx.SITE_URL) plan.SITE_URL = 'http://localhost:3000'
   if (!cx.APP_ENV) plan.APP_ENV = 'development'

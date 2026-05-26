@@ -70,6 +70,35 @@ Pour les doublons `users` déjà créés en prod, `provisionAppUser` les
 convergera vers une seule rangée au prochain login du user, mais le
 second BA user reste en base. Cleanup manuel via dashboard Convex.
 
+## Google OAuth (template — opt-in)
+
+Google social login is wired but **off by default** so the repo stays a clean
+template. It activates only when **both** `GOOGLE_CLIENT_ID` and
+`GOOGLE_CLIENT_SECRET` are set in the Convex env. The `socialProviders` block in
+`convex/auth.ts` is spread conditionally on that, and the frontend hides the
+button via `api.publicConfig.enabledSocialProviders` (a boolean query — env
+presence, never the secret). Pattern: a missing provider must render *nothing*,
+not a dead/broken button.
+
+### Enabling it
+1. Create an OAuth client in Google Cloud Console → Credentials.
+2. **Authorized redirect URI** = `${SITE_URL}/api/auth/callback/google` (the BA
+   default; the request flows through the TanStack proxy `src/routes/api/auth/$.ts`
+   → Convex handler). Register both the dev (`http://localhost:3000/...`) and the
+   prod URL.
+3. `pnpm exec convex env set GOOGLE_CLIENT_ID …` / `… GOOGLE_CLIENT_SECRET …`
+   (or answer the optional prompt in `pnpm run setup`).
+
+### Why it's safe vs the account-linking trap
+Google returns a **verified** email on first sign-in, so it satisfies rule (1)
+of "Account linking & verified email" above (all enabled methods trusted). With
+`accountLinking.enabled: true` (already set) plus `provisionAppUser`'s email
+fallback, a Google sign-in whose email matches an existing password user **links**
+to the same Convex `users` row instead of creating a duplicate. No new
+provisioning code — the existing `/app` route trigger
+(`src/routes/app/route.tsx`) handles it. If you add GitHub/Apple later, the same
+trusted-email reasoning applies; flip the scaffold in `linked-accounts.tsx`.
+
 ## Auth hardening (Phase 0)
 
 ### `sendChangeEmailConfirmation`, pas `sendChangeEmailVerification`

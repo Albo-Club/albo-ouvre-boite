@@ -14,8 +14,10 @@ import { isPasswordPwned } from '~/lib/hibp'
 import { Button } from '~/components/ui/button'
 import { Input } from '~/components/ui/input'
 import { Spinner } from '~/components/ui/spinner'
+import { AuthShell } from '~/components/auth/auth-shell'
 import { PasswordInput } from '~/components/auth/password-input'
 import { PasswordStrength } from '~/components/auth/password-strength'
+import { SocialAuthButtons } from '~/components/auth/social-auth-buttons'
 import { VerificationSentCard } from '~/components/auth/verification-sent'
 import {
   Field,
@@ -24,14 +26,7 @@ import {
   FieldGroup,
   FieldLabel,
 } from '~/components/ui/field'
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from '~/components/ui/card'
+import { CardContent, CardFooter } from '~/components/ui/card'
 
 const searchSchema = z.object({
   redirect: z.string().optional(),
@@ -41,7 +36,11 @@ export const Route = createFileRoute('/register')({
   component: RegisterPage,
   validateSearch: searchSchema,
   head: () => ({
-    meta: [{ title: getI18n(getLocale()).getFixedT(null, 'auth')('signUp.metaTitle') }],
+    meta: [
+      {
+        title: getI18n(getLocale()).getFixedT(null, 'auth')('signUp.metaTitle'),
+      },
+    ],
   }),
 })
 
@@ -98,7 +97,11 @@ function RegisterPage() {
     setResendLoading(false)
     if (error) {
       const code = classifyAuthError(error)
-      console.warn('[register-resend]', error.code ?? error.status, error.message)
+      console.warn(
+        '[register-resend]',
+        error.code ?? error.status,
+        error.message,
+      )
       if (code === 'NETWORK' || code === 'RATE_LIMITED') {
         toast.error(formatAuthError(code, 'verify', te))
         return
@@ -147,159 +150,151 @@ function RegisterPage() {
   }
 
   return (
-    <main className="flex min-h-svh items-center justify-center p-4">
-      <Card className="w-full max-w-sm">
-        <CardHeader>
-          <CardTitle>{t('auth:signUp.title')}</CardTitle>
-          <CardDescription>
-            {isInviteFlow
-              ? t('auth:signUp.descriptionInvite')
-              : t('auth:signUp.description')}
-          </CardDescription>
-        </CardHeader>
-        <form
-          className="flex flex-col gap-6"
-          onSubmit={(e) => {
-            e.preventDefault()
-            e.stopPropagation()
-            void form.handleSubmit()
-          }}
-        >
-          <CardContent>
-            <FieldGroup>
-              <form.Field name="name">
-                {(field) => {
-                  const invalid =
-                    field.state.meta.isTouched && !field.state.meta.isValid
-                  return (
-                    <Field data-invalid={invalid || undefined}>
-                      <FieldLabel htmlFor={field.name}>
-                        {t('auth:fields.name')}
-                      </FieldLabel>
-                      <Input
-                        id={field.name}
-                        name={field.name}
-                        autoComplete="name"
-                        value={field.state.value}
-                        onBlur={field.handleBlur}
-                        onChange={(e) => field.handleChange(e.target.value)}
-                        aria-invalid={invalid || undefined}
-                      />
-                      {invalid && (
-                        <FieldError errors={field.state.meta.errors} />
-                      )}
-                    </Field>
-                  )
-                }}
-              </form.Field>
-              <form.Field name="email">
-                {(field) => {
-                  const invalid =
-                    field.state.meta.isTouched && !field.state.meta.isValid
-                  return (
-                    <Field data-invalid={invalid || undefined}>
-                      <FieldLabel htmlFor={field.name}>
-                        {t('auth:fields.email')}
-                      </FieldLabel>
-                      <Input
-                        id={field.name}
-                        name={field.name}
-                        type="email"
-                        autoComplete="email"
-                        value={field.state.value}
-                        onBlur={field.handleBlur}
-                        onChange={(e) => field.handleChange(e.target.value)}
-                        aria-invalid={invalid || undefined}
-                      />
-                      {invalid && (
-                        <FieldError errors={field.state.meta.errors} />
-                      )}
-                    </Field>
-                  )
-                }}
-              </form.Field>
-              <form.Field
-                name="password"
-                validators={{
-                  onBlurAsync: async ({ value }) => {
-                    if (!value || value.length < 12) return undefined
-                    const { pwned } = await isPasswordPwned(value)
-                    return pwned
-                      ? { message: t('validation:password.pwned') }
-                      : undefined
-                  },
-                }}
-              >
-                {(field) => {
-                  const invalid =
-                    field.state.meta.isTouched && !field.state.meta.isValid
-                  const isValidating = field.state.meta.isValidating
-                  return (
-                    <Field data-invalid={invalid || undefined}>
-                      <FieldLabel htmlFor={field.name}>
-                        {t('auth:fields.password')}
-                      </FieldLabel>
-                      <PasswordInput
-                        id={field.name}
-                        name={field.name}
-                        autoComplete="new-password"
-                        value={field.state.value}
-                        onBlur={field.handleBlur}
-                        onChange={(e) => field.handleChange(e.target.value)}
-                        aria-invalid={invalid || undefined}
-                      />
-                      <FieldDescription>
-                        {isValidating ? (
-                          <span
-                            className="flex items-center gap-1.5"
-                            aria-live="polite"
-                          >
-                            <Spinner className="size-3" />
-                            {t('auth:password.checking')}
-                          </span>
-                        ) : (
-                          t('auth:password.hint')
-                        )}
-                      </FieldDescription>
-                      <PasswordStrength
-                        value={field.state.value}
-                        userInputs={[
-                          form.getFieldValue('email'),
-                          form.getFieldValue('name'),
-                        ]}
-                      />
-                      {invalid && (
-                        <FieldError errors={field.state.meta.errors} />
-                      )}
-                    </Field>
-                  )
-                }}
-              </form.Field>
-            </FieldGroup>
-          </CardContent>
-          <CardFooter className="flex-col gap-3">
-            <Button type="submit" className="w-full" disabled={loading}>
-              {loading && <Spinner />}
-              {t('auth:signUp.submit')}
-            </Button>
-            <p className="text-muted-foreground text-sm">
-              <Trans
-                t={t}
-                i18nKey="auth:signUp.haveAccount"
-                components={{
-                  signin: (
-                    <Link
-                      to="/login"
-                      search={redirect ? { redirect } : undefined}
-                      className="underline"
+    <AuthShell
+      title={t('auth:signUp.title')}
+      description={
+        isInviteFlow
+          ? t('auth:signUp.descriptionInvite')
+          : t('auth:signUp.description')
+      }
+    >
+      <form
+        className="flex flex-col gap-6"
+        onSubmit={(e) => {
+          e.preventDefault()
+          e.stopPropagation()
+          void form.handleSubmit()
+        }}
+      >
+        <CardContent className="flex flex-col gap-6">
+          <SocialAuthButtons redirect={redirect} />
+          <FieldGroup>
+            <form.Field name="name">
+              {(field) => {
+                const invalid =
+                  field.state.meta.isTouched && !field.state.meta.isValid
+                return (
+                  <Field data-invalid={invalid || undefined}>
+                    <FieldLabel htmlFor={field.name}>
+                      {t('auth:fields.name')}
+                    </FieldLabel>
+                    <Input
+                      id={field.name}
+                      name={field.name}
+                      autoComplete="name"
+                      value={field.state.value}
+                      onBlur={field.handleBlur}
+                      onChange={(e) => field.handleChange(e.target.value)}
+                      aria-invalid={invalid || undefined}
                     />
-                  ),
-                }}
-              />
-            </p>
-          </CardFooter>
-        </form>
-      </Card>
-    </main>
+                    {invalid && <FieldError errors={field.state.meta.errors} />}
+                  </Field>
+                )
+              }}
+            </form.Field>
+            <form.Field name="email">
+              {(field) => {
+                const invalid =
+                  field.state.meta.isTouched && !field.state.meta.isValid
+                return (
+                  <Field data-invalid={invalid || undefined}>
+                    <FieldLabel htmlFor={field.name}>
+                      {t('auth:fields.email')}
+                    </FieldLabel>
+                    <Input
+                      id={field.name}
+                      name={field.name}
+                      type="email"
+                      autoComplete="email"
+                      value={field.state.value}
+                      onBlur={field.handleBlur}
+                      onChange={(e) => field.handleChange(e.target.value)}
+                      aria-invalid={invalid || undefined}
+                    />
+                    {invalid && <FieldError errors={field.state.meta.errors} />}
+                  </Field>
+                )
+              }}
+            </form.Field>
+            <form.Field
+              name="password"
+              validators={{
+                onBlurAsync: async ({ value }) => {
+                  if (!value || value.length < 12) return undefined
+                  const { pwned } = await isPasswordPwned(value)
+                  return pwned
+                    ? { message: t('validation:password.pwned') }
+                    : undefined
+                },
+              }}
+            >
+              {(field) => {
+                const invalid =
+                  field.state.meta.isTouched && !field.state.meta.isValid
+                const isValidating = field.state.meta.isValidating
+                return (
+                  <Field data-invalid={invalid || undefined}>
+                    <FieldLabel htmlFor={field.name}>
+                      {t('auth:fields.password')}
+                    </FieldLabel>
+                    <PasswordInput
+                      id={field.name}
+                      name={field.name}
+                      autoComplete="new-password"
+                      value={field.state.value}
+                      onBlur={field.handleBlur}
+                      onChange={(e) => field.handleChange(e.target.value)}
+                      aria-invalid={invalid || undefined}
+                    />
+                    <FieldDescription>
+                      {isValidating ? (
+                        <span
+                          className="flex items-center gap-1.5"
+                          aria-live="polite"
+                        >
+                          <Spinner className="size-3" />
+                          {t('auth:password.checking')}
+                        </span>
+                      ) : (
+                        t('auth:password.hint')
+                      )}
+                    </FieldDescription>
+                    <PasswordStrength
+                      value={field.state.value}
+                      userInputs={[
+                        form.getFieldValue('email'),
+                        form.getFieldValue('name'),
+                      ]}
+                    />
+                    {invalid && <FieldError errors={field.state.meta.errors} />}
+                  </Field>
+                )
+              }}
+            </form.Field>
+          </FieldGroup>
+        </CardContent>
+        <CardFooter className="flex-col gap-3">
+          <Button type="submit" className="w-full" disabled={loading}>
+            {loading && <Spinner />}
+            {t('auth:signUp.submit')}
+          </Button>
+          <p className="text-muted-foreground text-sm">
+            <Trans
+              t={t}
+              i18nKey="auth:signUp.haveAccount"
+              components={{
+                signin: (
+                  <Link
+                    to="/login"
+                    search={redirect ? { redirect } : undefined}
+                    className="underline"
+                  />
+                ),
+              }}
+            />
+          </p>
+        </CardFooter>
+      </form>
+    </AuthShell>
   )
 }

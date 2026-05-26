@@ -35,6 +35,11 @@ pnpm dev
 3. **API keys** — prompts for Anthropic + Resend with direct dashboard links
    so you don't have to hunt for the URLs.
 4. **Better Auth secret** — auto-generated.
+5. **Google OAuth** *(optional)* — prompts for `GOOGLE_CLIENT_ID` /
+   `GOOGLE_CLIENT_SECRET`; press Enter to skip. When set, a "Continue with
+   Google" button appears on `/login` and `/register`; otherwise it stays
+   hidden. Authorized redirect URI: `${SITE_URL}/api/auth/callback/google`.
+   See `KNOWN_ISSUES.md` § "Google OAuth (template — opt-in)".
 
 It's idempotent — re-run any time, each step skips if already done.
 

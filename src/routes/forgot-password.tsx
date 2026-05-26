@@ -19,20 +19,18 @@ import {
   FieldGroup,
   FieldLabel,
 } from '~/components/ui/field'
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from '~/components/ui/card'
+import { CardContent, CardFooter } from '~/components/ui/card'
+import { AuthShell } from '~/components/auth/auth-shell'
 import { VerificationSentCard } from '~/components/auth/verification-sent'
 
 export const Route = createFileRoute('/forgot-password')({
   component: ForgotPasswordPage,
   head: () => ({
-    meta: [{ title: getI18n(getLocale()).getFixedT(null, 'auth')('forgot.metaTitle') }],
+    meta: [
+      {
+        title: getI18n(getLocale()).getFixedT(null, 'auth')('forgot.metaTitle'),
+      },
+    ],
   }),
 })
 
@@ -61,7 +59,11 @@ function ForgotPasswordPage() {
       setLoading(false)
       if (error) {
         const code = classifyAuthError(error)
-        console.warn('[forgot-password]', error.code ?? error.status, error.message)
+        console.warn(
+          '[forgot-password]',
+          error.code ?? error.status,
+          error.message,
+        )
         // NETWORK / RATE_LIMITED: surface inline so the user can retry rather
         // than think a link was sent when it wasn't.
         if (code === 'NETWORK' || code === 'RATE_LIMITED') {
@@ -84,7 +86,11 @@ function ForgotPasswordPage() {
     setResendLoading(false)
     if (error) {
       const code = classifyAuthError(error)
-      console.warn('[forgot-password-resend]', error.code ?? error.status, error.message)
+      console.warn(
+        '[forgot-password-resend]',
+        error.code ?? error.status,
+        error.message,
+      )
       if (code === 'NETWORK' || code === 'RATE_LIMITED') {
         toast.error(formatAuthError(code, 'reset', te))
         return
@@ -116,68 +122,63 @@ function ForgotPasswordPage() {
   }
 
   return (
-    <main className="flex min-h-svh items-center justify-center p-4">
-      <Card className="w-full max-w-sm">
-        <CardHeader>
-          <CardTitle>{t('auth:forgot.title')}</CardTitle>
-          <CardDescription>{t('auth:forgot.description')}</CardDescription>
-        </CardHeader>
-        <form
-          className="flex flex-col gap-6"
-          onSubmit={(e) => {
-            e.preventDefault()
-            e.stopPropagation()
-            void form.handleSubmit()
-          }}
-        >
-          <CardContent>
-            {submitError && (
-              <Alert variant="destructive" className="mb-4">
-                <AlertDescription>{submitError}</AlertDescription>
-              </Alert>
-            )}
-            <FieldGroup>
-              <form.Field name="email">
-                {(field) => {
-                  const invalid =
-                    field.state.meta.isTouched && !field.state.meta.isValid
-                  return (
-                    <Field data-invalid={invalid || undefined}>
-                      <FieldLabel htmlFor={field.name}>
-                        {t('auth:fields.email')}
-                      </FieldLabel>
-                      <Input
-                        id={field.name}
-                        name={field.name}
-                        type="email"
-                        autoComplete="email"
-                        value={field.state.value}
-                        onBlur={field.handleBlur}
-                        onChange={(e) => field.handleChange(e.target.value)}
-                        aria-invalid={invalid || undefined}
-                      />
-                      {invalid && (
-                        <FieldError errors={field.state.meta.errors} />
-                      )}
-                    </Field>
-                  )
-                }}
-              </form.Field>
-            </FieldGroup>
-          </CardContent>
-          <CardFooter className="flex-col gap-3">
-            <Button type="submit" className="w-full" disabled={loading}>
-              {loading && <Spinner />}
-              {t('auth:forgot.submit')}
-            </Button>
-            <p className="text-muted-foreground text-sm">
-              <Link to="/login" className="underline">
-                {t('auth:backToSignIn')}
-              </Link>
-            </p>
-          </CardFooter>
-        </form>
-      </Card>
-    </main>
+    <AuthShell
+      title={t('auth:forgot.title')}
+      description={t('auth:forgot.description')}
+    >
+      <form
+        className="flex flex-col gap-6"
+        onSubmit={(e) => {
+          e.preventDefault()
+          e.stopPropagation()
+          void form.handleSubmit()
+        }}
+      >
+        <CardContent>
+          {submitError && (
+            <Alert variant="destructive" className="mb-4">
+              <AlertDescription>{submitError}</AlertDescription>
+            </Alert>
+          )}
+          <FieldGroup>
+            <form.Field name="email">
+              {(field) => {
+                const invalid =
+                  field.state.meta.isTouched && !field.state.meta.isValid
+                return (
+                  <Field data-invalid={invalid || undefined}>
+                    <FieldLabel htmlFor={field.name}>
+                      {t('auth:fields.email')}
+                    </FieldLabel>
+                    <Input
+                      id={field.name}
+                      name={field.name}
+                      type="email"
+                      autoComplete="email"
+                      value={field.state.value}
+                      onBlur={field.handleBlur}
+                      onChange={(e) => field.handleChange(e.target.value)}
+                      aria-invalid={invalid || undefined}
+                    />
+                    {invalid && <FieldError errors={field.state.meta.errors} />}
+                  </Field>
+                )
+              }}
+            </form.Field>
+          </FieldGroup>
+        </CardContent>
+        <CardFooter className="flex-col gap-3">
+          <Button type="submit" className="w-full" disabled={loading}>
+            {loading && <Spinner />}
+            {t('auth:forgot.submit')}
+          </Button>
+          <p className="text-muted-foreground text-sm">
+            <Link to="/login" className="underline">
+              {t('auth:backToSignIn')}
+            </Link>
+          </p>
+        </CardFooter>
+      </form>
+    </AuthShell>
   )
 }

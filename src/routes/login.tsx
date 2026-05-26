@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Link, createFileRoute, useNavigate } from '@tanstack/react-router'
 import { useForm } from '@tanstack/react-form'
 import { Trans, useTranslation } from 'react-i18next'
@@ -14,31 +14,33 @@ import { Alert, AlertDescription } from '~/components/ui/alert'
 import { Button } from '~/components/ui/button'
 import { Input } from '~/components/ui/input'
 import { Spinner } from '~/components/ui/spinner'
+import { AuthShell } from '~/components/auth/auth-shell'
 import { PasswordInput } from '~/components/auth/password-input'
+import { SocialAuthButtons } from '~/components/auth/social-auth-buttons'
 import {
   Field,
   FieldError,
   FieldGroup,
   FieldLabel,
 } from '~/components/ui/field'
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from '~/components/ui/card'
+import { CardContent, CardFooter } from '~/components/ui/card'
 
 const searchSchema = z.object({
   redirect: z.string().optional(),
+  // Better Auth appends ?error=... when a social sign-in fails via
+  // `errorCallbackURL`. We surface it as a toast on mount.
+  error: z.string().optional(),
 })
 
 export const Route = createFileRoute('/login')({
   component: LoginPage,
   validateSearch: searchSchema,
   head: () => ({
-    meta: [{ title: getI18n(getLocale()).getFixedT(null, 'auth')('signIn.metaTitle') }],
+    meta: [
+      {
+        title: getI18n(getLocale()).getFixedT(null, 'auth')('signIn.metaTitle'),
+      },
+    ],
   }),
 })
 
@@ -54,14 +56,21 @@ function LoginPage() {
       }),
     [t],
   )
-  const emailSchema = useMemo(() => z.email(t('validation:email.enterValid')), [t])
-  const { redirect } = Route.useSearch()
+  const emailSchema = useMemo(
+    () => z.email(t('validation:email.enterValid')),
+    [t],
+  )
+  const { redirect, error: socialError } = Route.useSearch()
   const navigate = useNavigate()
   const [loading, setLoading] = useState(false)
   const [magicLoading, setMagicLoading] = useState(false)
   const [unverifiedEmail, setUnverifiedEmail] = useState<string | null>(null)
   const [resendLoading, setResendLoading] = useState(false)
   const [submitError, setSubmitError] = useState<string | null>(null)
+
+  useEffect(() => {
+    if (socialError) toast.error(t('auth:social.error'))
+  }, [socialError, t])
 
   const form = useForm({
     defaultValues: { email: '', password: '' },
@@ -134,144 +143,140 @@ function LoginPage() {
   const isInviteFlow = redirect?.startsWith('/accept-invite/') ?? false
 
   return (
-    <main className="flex min-h-svh items-center justify-center p-4">
-      <Card className="w-full max-w-sm">
-        <CardHeader>
-          <CardTitle>{t('auth:signIn.title')}</CardTitle>
-          <CardDescription>
-            {isInviteFlow
-              ? t('auth:signIn.descriptionInvite')
-              : t('auth:signIn.description')}
-          </CardDescription>
-        </CardHeader>
-        <form
-          className="flex flex-col gap-6"
-          onSubmit={(e) => {
-            e.preventDefault()
-            e.stopPropagation()
-            void form.handleSubmit()
-          }}
-        >
-          <CardContent>
-            {submitError && !unverifiedEmail && (
-              <Alert variant="destructive" className="mb-4">
-                <AlertDescription>{submitError}</AlertDescription>
-              </Alert>
-            )}
-            {unverifiedEmail && (
-              <div className="border-border bg-muted/50 text-foreground mb-4 rounded-md border p-3 text-sm">
-                <p className="mb-2">
-                  <Trans
-                    t={t}
-                    i18nKey="auth:signIn.unverified"
-                    values={{ email: unverifiedEmail }}
-                  />
-                </p>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={onResendVerification}
-                  disabled={resendLoading}
-                >
-                  {resendLoading && <Spinner />}
-                  {t('auth:signIn.resendVerification')}
-                </Button>
-              </div>
-            )}
-            <FieldGroup>
-              <form.Field name="email">
-                {(field) => {
-                  const invalid =
-                    field.state.meta.isTouched && !field.state.meta.isValid
-                  return (
-                    <Field data-invalid={invalid || undefined}>
-                      <FieldLabel htmlFor={field.name}>
-                        {t('auth:fields.email')}
-                      </FieldLabel>
-                      <Input
-                        id={field.name}
-                        name={field.name}
-                        type="email"
-                        autoComplete="email"
-                        value={field.state.value}
-                        onBlur={field.handleBlur}
-                        onChange={(e) => field.handleChange(e.target.value)}
-                        aria-invalid={invalid || undefined}
-                      />
-                      {invalid && (
-                        <FieldError errors={field.state.meta.errors} />
-                      )}
-                    </Field>
-                  )
-                }}
-              </form.Field>
-              <form.Field name="password">
-                {(field) => {
-                  const invalid =
-                    field.state.meta.isTouched && !field.state.meta.isValid
-                  return (
-                    <Field data-invalid={invalid || undefined}>
+    <AuthShell
+      title={t('auth:signIn.title')}
+      description={
+        isInviteFlow
+          ? t('auth:signIn.descriptionInvite')
+          : t('auth:signIn.description')
+      }
+    >
+      <form
+        className="flex flex-col gap-6"
+        onSubmit={(e) => {
+          e.preventDefault()
+          e.stopPropagation()
+          void form.handleSubmit()
+        }}
+      >
+        <CardContent className="flex flex-col gap-6">
+          <SocialAuthButtons redirect={redirect} />
+          {submitError && !unverifiedEmail && (
+            <Alert variant="destructive">
+              <AlertDescription>{submitError}</AlertDescription>
+            </Alert>
+          )}
+          {unverifiedEmail && (
+            <div className="border-border bg-muted/50 text-foreground rounded-md border p-3 text-sm">
+              <p className="mb-2">
+                <Trans
+                  t={t}
+                  i18nKey="auth:signIn.unverified"
+                  values={{ email: unverifiedEmail }}
+                />
+              </p>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={onResendVerification}
+                disabled={resendLoading}
+              >
+                {resendLoading && <Spinner />}
+                {t('auth:signIn.resendVerification')}
+              </Button>
+            </div>
+          )}
+          <FieldGroup>
+            <form.Field name="email">
+              {(field) => {
+                const invalid =
+                  field.state.meta.isTouched && !field.state.meta.isValid
+                return (
+                  <Field data-invalid={invalid || undefined}>
+                    <FieldLabel htmlFor={field.name}>
+                      {t('auth:fields.email')}
+                    </FieldLabel>
+                    <Input
+                      id={field.name}
+                      name={field.name}
+                      type="email"
+                      autoComplete="email"
+                      value={field.state.value}
+                      onBlur={field.handleBlur}
+                      onChange={(e) => field.handleChange(e.target.value)}
+                      aria-invalid={invalid || undefined}
+                    />
+                    {invalid && <FieldError errors={field.state.meta.errors} />}
+                  </Field>
+                )
+              }}
+            </form.Field>
+            <form.Field name="password">
+              {(field) => {
+                const invalid =
+                  field.state.meta.isTouched && !field.state.meta.isValid
+                return (
+                  <Field data-invalid={invalid || undefined}>
+                    <div className="flex items-center">
                       <FieldLabel htmlFor={field.name}>
                         {t('auth:fields.password')}
                       </FieldLabel>
-                      <PasswordInput
-                        id={field.name}
-                        name={field.name}
-                        autoComplete="current-password"
-                        value={field.state.value}
-                        onBlur={field.handleBlur}
-                        onChange={(e) => field.handleChange(e.target.value)}
-                        aria-invalid={invalid || undefined}
-                      />
-                      {invalid && (
-                        <FieldError errors={field.state.meta.errors} />
-                      )}
-                    </Field>
-                  )
-                }}
-              </form.Field>
-            </FieldGroup>
-          </CardContent>
-          <CardFooter className="flex-col gap-3">
-            <Button type="submit" className="w-full" disabled={loading}>
-              {loading && <Spinner />}
-              {t('auth:signIn.submit')}
-            </Button>
-            <Button
-              type="button"
-              variant="outline"
-              className="w-full"
-              onClick={onMagicLink}
-              disabled={magicLoading}
-            >
-              {magicLoading && <Spinner />}
-              {t('auth:signIn.magicLink')}
-            </Button>
-            <Link
-              to="/forgot-password"
-              className="text-muted-foreground text-sm underline"
-            >
-              {t('auth:signIn.forgot')}
-            </Link>
-            <p className="text-muted-foreground text-sm">
-              <Trans
-                t={t}
-                i18nKey="auth:signIn.noAccount"
-                components={{
-                  signup: (
-                    <Link
-                      to="/register"
-                      search={redirect ? { redirect } : undefined}
-                      className="underline"
+                      <Link
+                        to="/forgot-password"
+                        className="text-muted-foreground ml-auto text-sm underline-offset-4 hover:underline"
+                      >
+                        {t('auth:signIn.forgot')}
+                      </Link>
+                    </div>
+                    <PasswordInput
+                      id={field.name}
+                      name={field.name}
+                      autoComplete="current-password"
+                      value={field.state.value}
+                      onBlur={field.handleBlur}
+                      onChange={(e) => field.handleChange(e.target.value)}
+                      aria-invalid={invalid || undefined}
                     />
-                  ),
-                }}
-              />
-            </p>
-          </CardFooter>
-        </form>
-      </Card>
-    </main>
+                    {invalid && <FieldError errors={field.state.meta.errors} />}
+                  </Field>
+                )
+              }}
+            </form.Field>
+          </FieldGroup>
+        </CardContent>
+        <CardFooter className="flex-col gap-3">
+          <Button type="submit" className="w-full" disabled={loading}>
+            {loading && <Spinner />}
+            {t('auth:signIn.submit')}
+          </Button>
+          <Button
+            type="button"
+            variant="outline"
+            className="w-full"
+            onClick={onMagicLink}
+            disabled={magicLoading}
+          >
+            {magicLoading && <Spinner />}
+            {t('auth:signIn.magicLink')}
+          </Button>
+          <p className="text-muted-foreground text-sm">
+            <Trans
+              t={t}
+              i18nKey="auth:signIn.noAccount"
+              components={{
+                signup: (
+                  <Link
+                    to="/register"
+                    search={redirect ? { redirect } : undefined}
+                    className="underline"
+                  />
+                ),
+              }}
+            />
+          </p>
+        </CardFooter>
+      </form>
+    </AuthShell>
   )
 }
