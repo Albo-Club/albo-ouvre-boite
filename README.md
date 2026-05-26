@@ -56,10 +56,9 @@ pnpm dev
 > built-in (it configures `PNPM_HOME`), so the bare form never reaches this
 > project's script.
 >
-> During `pnpm run setup`, the Convex step opens a browser to log you in, then
-> runs `convex dev` in the foreground. Once you see **"Convex functions
-> ready!"**, press **Ctrl-C** to let the wizard continue — this is expected,
-> it doesn't abort the setup.
+> During `pnpm run setup`, the Convex step opens a browser to log you in and
+> asks you to create a project (pick **cloud deployment**). It pushes your
+> functions once and returns to the wizard automatically — no Ctrl-C needed.
 
 `pnpm run setup` walks you through everything :
 
