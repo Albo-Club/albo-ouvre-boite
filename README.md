@@ -39,11 +39,18 @@ cd my-project
 
 **2. Install + configure + run**
 
+Run these one at a time (`pnpm run setup` is interactive and `pnpm dev`
+keeps running in the foreground):
+
 ```bash
-pnpm install     # installs every dependency
-pnpm run setup   # interactive wizard — rebrand + Convex + API keys
-pnpm dev         # starts Vite + Convex together
+pnpm install
+pnpm run setup
+pnpm dev
 ```
+
+- `pnpm install` — installs every dependency.
+- `pnpm run setup` — interactive wizard: rebrand + Convex + API keys.
+- `pnpm dev` — starts Vite + Convex together.
 
 > Use `pnpm run setup`, **not** `pnpm setup` — `setup` is a reserved pnpm
 > built-in (it configures `PNPM_HOME`), so the bare form never reaches this
