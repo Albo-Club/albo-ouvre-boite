@@ -34,6 +34,15 @@ export const authComponent = createClient<DataModel>(components.betterAuth)
 
 const isProd = process.env.APP_ENV === 'production'
 
+// Google OAuth is optional in this template: the button only ships when both
+// credentials are set in the Convex env. Google returns a verified email on
+// first sign-in, so it satisfies the "all methods must be trusted" invariant
+// that keeps account linking safe (see KNOWN_ISSUES.md). Redirect URI to
+// register in Google Cloud Console: `${SITE_URL}/api/auth/callback/google`.
+const googleEnabled = !!(
+  process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET
+)
+
 export const createAuth = (ctx: GenericCtx<DataModel>) =>
   betterAuth({
     baseURL: siteUrl,
@@ -53,6 +62,7 @@ export const createAuth = (ctx: GenericCtx<DataModel>) =>
         '/forgot-password': { window: 60, max: 3 },
         '/reset-password': { window: 60, max: 5 },
         '/sign-in/magic-link': { window: 60, max: 3 },
+        '/sign-in/social': { window: 60, max: 10 },
         '/magic-link/verify': { window: 60, max: 5 },
         '/email-verification/send': { window: 60, max: 3 },
         '/verify-email': { window: 60, max: 10 },
@@ -152,6 +162,19 @@ export const createAuth = (ctx: GenericCtx<DataModel>) =>
         })
       },
     },
+    ...(googleEnabled
+      ? {
+          socialProviders: {
+            google: {
+              clientId: process.env.GOOGLE_CLIENT_ID!,
+              clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
+              // Always show the account chooser so users can pick which Google
+              // account to use instead of being silently signed in.
+              prompt: 'select_account',
+            },
+          },
+        }
+      : {}),
     account: {
       accountLinking: {
         enabled: true,

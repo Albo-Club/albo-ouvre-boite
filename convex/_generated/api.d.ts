@@ -24,6 +24,7 @@ import type * as lib_storage from "../lib/storage.js";
 import type * as lib_webhooks from "../lib/webhooks.js";
 import type * as notifications from "../notifications.js";
 import type * as organizations from "../organizations.js";
+import type * as publicConfig from "../publicConfig.js";
 import type * as rateLimiters from "../rateLimiters.js";
 import type * as users from "../users.js";
 
@@ -50,6 +51,7 @@ declare const fullApi: ApiFromModules<{
   "lib/webhooks": typeof lib_webhooks;
   notifications: typeof notifications;
   organizations: typeof organizations;
+  publicConfig: typeof publicConfig;
   rateLimiters: typeof rateLimiters;
   users: typeof users;
 }>;

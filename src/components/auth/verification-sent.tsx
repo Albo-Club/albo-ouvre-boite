@@ -2,13 +2,8 @@ import { useTranslation } from 'react-i18next'
 import type { ReactNode } from 'react'
 import { Button } from '~/components/ui/button'
 import { Spinner } from '~/components/ui/spinner'
-import {
-  Card,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from '~/components/ui/card'
+import { CardFooter } from '~/components/ui/card'
+import { AuthShell } from '~/components/auth/auth-shell'
 
 type Props = {
   title?: string
@@ -32,28 +27,22 @@ export function VerificationSentCard({
   const resolvedTitle = title ?? t('verificationSent.title')
   const resolvedResendLabel = resendLabel ?? t('verificationSent.resendDefault')
   return (
-    <main className="flex min-h-svh items-center justify-center p-4">
-      <Card className="w-full max-w-sm">
-        <CardHeader>
-          <CardTitle>{resolvedTitle}</CardTitle>
-          <CardDescription>{description}</CardDescription>
-        </CardHeader>
-        <CardFooter className="flex-col gap-3">
-          {onResend && (
-            <Button
-              type="button"
-              variant="outline"
-              className="w-full"
-              onClick={() => void onResend()}
-              disabled={isResending}
-            >
-              {isResending && <Spinner />}
-              {resolvedResendLabel}
-            </Button>
-          )}
-          {footer}
-        </CardFooter>
-      </Card>
-    </main>
+    <AuthShell title={resolvedTitle} description={description}>
+      <CardFooter className="flex-col gap-3">
+        {onResend && (
+          <Button
+            type="button"
+            variant="outline"
+            className="w-full"
+            onClick={() => void onResend()}
+            disabled={isResending}
+          >
+            {isResending && <Spinner />}
+            {resolvedResendLabel}
+          </Button>
+        )}
+        {footer}
+      </CardFooter>
+    </AuthShell>
   )
 }
