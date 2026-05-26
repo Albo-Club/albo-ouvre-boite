@@ -270,7 +270,6 @@ curl -sI https://<your-vercel-domain>/             # expect HTTP 200
   pinned `pnpm.overrides` until you bump them.
 - `ci.yml`: install + typecheck on push/PR.
 - `sync-skills.yml`: weekly skill freshness PR.
-- `release-please.yml`: conventional-commit changelog + tags.
 
 ## Common commands
 

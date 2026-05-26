@@ -591,48 +591,27 @@ redirects on `!isAuthenticated` will fire during that gap.
    If you add a new route guard, prefer `useAuthState()` over
    `useConvexAuth()` directly.
 
-## release-please fails on every merge: `other side closed`
+## release-please was removed (failed on every merge with `other side closed`)
 
-### Symptom
-
-Every push to `main` turns the **Release please** workflow red (CI `check`
-and the Vercel build stay green). The failing step is
-`googleapis/release-please-action@v4`, with the annotation:
+The `release-please.yml` workflow turned the **Release please** check red on
+every push to `main` with:
 
 ```
 release-please failed: other side closed
 ```
 
-No tag, no `CHANGELOG.md`, and no release PR are ever produced — but a stray
-`release-please--branches--main--components--…` branch may exist (the action
-pushes its branch before the API call that dies).
+`other side closed` is an undici socket error during the action's GitHub API
+calls. Forcing the action onto Node 24 (`FORCE_JAVASCRIPT_ACTIONS_TO_NODE24`)
+did **not** fix it — the run still failed and still reported running on Node 20,
+so the env var never switched the runtime. It never produced a tag, a
+`CHANGELOG.md`, or a release PR.
 
-### Root cause
+**Decision: the workflow was deleted.** This template deploys continuously on
+Vercel (independent of GitHub Actions), so automated version tags / changelogs
+weren't needed. Deleting it does not affect deploys or the `ci.yml` typecheck.
 
-`other side closed` is an **undici socket error**: a keep-alive connection to
-`api.github.com` that GitHub already closed gets reused by the action's HTTP
-client. It's the well-known Node 20 keep-alive trap — and the runner also
-warns that `release-please-action@v4` still runs on the deprecated Node 20.
-
-### Fix
-
-Force the action onto Node 24 (newer undici) via a job-level env var in
-`.github/workflows/release-please.yml`:
-
-```yaml
-jobs:
-  release-please:
-    env:
-      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
-```
-
-This clears both the crash and the deprecation warning. If it ever recurs on
-Node 24, the next escalation is a retry wrapper or a dedicated PAT/App token.
-
-### Latent follow-up (not the crash)
-
-`package.json` has no `version` field and is `private: true`. `release-type:
-node` expects a version to read/bump. Once the network error is gone, add a
-`"version"` (e.g. `"0.1.0"`) — otherwise release-please still can't compute the
-next release. Left as a separate decision since it changes the template's
-`package.json`.
+If you later want automated releases, don't just re-add the old file — it had
+two latent problems on top of the crash: `package.json` has no `version` field
+(`release-type: node` needs one) and there was no `release-please-config.json` /
+`.release-please-manifest.json` bootstrap, so the first run scanned all history
+unbounded. Set those up before re-enabling.
