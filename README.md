@@ -37,6 +37,12 @@ git clone https://github.com/Albo-Club/albo-ouvre-boite.git my-project
 cd my-project
 ```
 
+> **Personalize with `pnpm run setup` — never by hand.** The wizard (step 2,
+> via `scripts/init.mjs`) renames the brand consistently across every file,
+> swaps in a clean product README, and de-templatizes `CLAUDE.md`. A manual
+> `sed`/find-replace will miss files and leave a half-template project — which
+> is exactly the mess this script exists to prevent.
+
 **2. Configure everything**
 
 One interactive command. It installs dependencies (if needed), logs you into
@@ -278,6 +284,27 @@ pnpm run upgrade-template         # merge upstream template changes
 pnpm exec convex env list         # inspect Convex env vars
 pnpm exec convex run admin:purgeExcept '{"keepEmail":"you@yourco.com"}'
 ```
+
+## Maintaining this template
+
+This repo is the **source** template. Two things keep derived projects clean:
+
+1. **The GitHub "Template repository" flag.** Enable it once so "Use this
+   template" creates repos *without* inheriting this history:
+
+   ```bash
+   gh repo edit Albo-Club/albo-ouvre-boite --template
+   # verify: gh repo view Albo-Club/albo-ouvre-boite --json isTemplate
+   ```
+
+   (Or toggle **Settings → Template repository** in the GitHub UI.)
+
+2. **`pnpm run setup` / `pnpm run init <name>` is the only supported way to
+   personalize a derivative.** `scripts/init.mjs` discovers files dynamically
+   (`git ls-files`), brand-replaces them, renders the product README, and
+   asserts zero residual brand token — failing loudly if anything is missed.
+   The upstream identity `Albo-Club/albo-ouvre-boite` is preserved so the
+   `pnpm run upgrade-template` channel keeps working downstream.
 
 ## See also
 
