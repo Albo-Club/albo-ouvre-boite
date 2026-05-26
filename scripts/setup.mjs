@@ -5,17 +5,19 @@
  * Usage: pnpm run setup   (NOT `pnpm setup` — that's a reserved pnpm built-in)
  *
  * What it does, in order:
- *   1. Detects whether this is still a fresh "albo" clone — if so, prompts for
+ *   1. Runs `pnpm install` if node_modules is missing, so the wizard works
+ *      straight after cloning without a separate install step.
+ *   2. Detects whether this is still a fresh "albo" clone — if so, prompts for
  *      a project name and runs the rebrand (scripts/init.mjs#rebrand).
- *   2. Provisions the Convex dev deployment if missing (spawns `convex dev`
- *      in the foreground; user logs in via the browser, then presses Ctrl-C
- *      when "Convex functions ready!" appears).
- *   3. Computes VITE_CONVEX_SITE_URL from VITE_CONVEX_URL (deterministic
+ *   3. Provisions the Convex dev deployment if missing via `convex dev --once`
+ *      (user logs in via the browser + creates the project; it pushes once and
+ *      exits on its own — no manual Ctrl-C).
+ *   4. Computes VITE_CONVEX_SITE_URL from VITE_CONVEX_URL (deterministic
  *      .cloud → .site swap) and writes it to .env.local if missing.
- *   4. Prompts for ANTHROPIC_API_KEY, RESEND_API_KEY, RESEND_FROM (with
+ *   5. Prompts for ANTHROPIC_API_KEY, RESEND_API_KEY, RESEND_FROM (with
  *      direct dashboard URLs printed inline so the user knows where to look).
- *   5. Generates a fresh BETTER_AUTH_SECRET.
- *   6. Confirms the plan with the user (secrets masked), then applies all
+ *   6. Generates a fresh BETTER_AUTH_SECRET.
+ *   7. Confirms the plan with the user (secrets masked), then applies all
  *      env vars via `convex env set` in one batch.
  *
  * Idempotent — re-run it any time; each step skips if already done.
@@ -130,9 +132,26 @@ function setConvexEnv(key, value) {
   }
 }
 
+// Step 0 — install dependencies if missing (lets users run `pnpm run setup`
+// straight after cloning, without a separate `pnpm install` first).
+function ensureDeps() {
+  section('1/5  Dependencies')
+  if (existsSync(resolve(ROOT, 'node_modules'))) {
+    ok('Dependencies already installed — skipping')
+    return
+  }
+  info('Installing dependencies (pnpm install)…')
+  const r = spawnSync('pnpm', ['install'], { stdio: 'inherit' })
+  if (r.status !== 0) {
+    fail('`pnpm install` failed. Fix the error above, then re-run `pnpm run setup`.')
+    process.exit(1)
+  }
+  ok('Dependencies installed')
+}
+
 // Step 1 — rebrand if still on "albo"
 async function maybeRebrand() {
-  section('1/4  Project name')
+  section('2/5  Project name')
   const pkg = JSON.parse(await readFile(resolve(ROOT, 'package.json'), 'utf8'))
   if (!/^albo[-_]?/.test(pkg.name)) {
     ok(`Already renamed to "${pkg.name}" — skipping rebrand`)
@@ -158,7 +177,7 @@ async function maybeRebrand() {
 
 // Step 2 — provision Convex dev (idempotent)
 async function bootstrapConvex() {
-  section('2/4  Convex backend')
+  section('3/5  Convex backend')
   const env = await parseEnvLocal()
   if (env.CONVEX_DEPLOYMENT && env.VITE_CONVEX_URL) {
     ok(`Convex already provisioned (${env.CONVEX_DEPLOYMENT})`)
@@ -207,7 +226,7 @@ async function bootstrapConvex() {
 
 // Step 3 — collect secrets
 async function promptSecrets() {
-  section('3/4  API keys')
+  section('4/5  API keys')
   const cx = listConvexEnv()
   if (cx === null) {
     fail('Could not read Convex env. Is `convex dev` reachable?')
@@ -308,7 +327,7 @@ async function promptSecrets() {
 
 // Step 4 — confirm + apply
 async function applyPlan(plan) {
-  section('4/4  Apply')
+  section('5/5  Apply')
   const keys = Object.keys(plan)
   if (keys.length === 0) {
     ok('Nothing to apply — Convex dev env is already complete.')
@@ -333,6 +352,7 @@ async function applyPlan(plan) {
 async function main() {
   console.log(`\n${C.bold}  Dev setup wizard${C.reset}  ${C.dim}(idempotent — safe to re-run)${C.reset}`)
 
+  ensureDeps()
   await maybeRebrand()
   await bootstrapConvex()
   const plan = await promptSecrets()

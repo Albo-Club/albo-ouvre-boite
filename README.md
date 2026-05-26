@@ -37,38 +37,44 @@ git clone https://github.com/Albo-Club/albo-ouvre-boite.git my-project
 cd my-project
 ```
 
-**2. Install + configure + run**
+**2. Configure everything**
 
-Run these one at a time (`pnpm run setup` is interactive and `pnpm dev`
-keeps running in the foreground):
+One interactive command. It installs dependencies (if needed), logs you into
+Convex, provisions your backend, and collects your API keys:
 
 ```bash
-pnpm install
 pnpm run setup
-pnpm dev
 ```
-
-- `pnpm install` — installs every dependency.
-- `pnpm run setup` — interactive wizard: rebrand + Convex + API keys.
-- `pnpm dev` — starts Vite + Convex together.
 
 > Use `pnpm run setup`, **not** `pnpm setup` — `setup` is a reserved pnpm
 > built-in (it configures `PNPM_HOME`), so the bare form never reaches this
 > project's script.
 >
-> During `pnpm run setup`, the Convex step opens a browser to log you in and
-> asks you to create a project (pick **cloud deployment**). It pushes your
-> functions once and returns to the wizard automatically — no Ctrl-C needed.
+> The Convex step opens a browser to log you in and asks you to create a
+> project (pick **cloud deployment**). It pushes your functions once and
+> returns to the wizard automatically — no Ctrl-C needed.
+
+**3. Start the app**
+
+Run this in its own terminal — it stays in the foreground (Vite + Convex
+together):
+
+```bash
+pnpm dev
+```
+
+Then open **http://localhost:3000** and create your first account.
 
 `pnpm run setup` walks you through everything :
 
-1. **Project name** — rebrands page titles, agent identity, cookie prefix.
-2. **Convex backend** — opens a browser to log in, provisions your dev
+1. **Dependencies** — runs `pnpm install` if `node_modules` is missing.
+2. **Project name** — rebrands page titles, agent identity, cookie prefix.
+3. **Convex backend** — opens a browser to log in, provisions your dev
    deployment, writes `CONVEX_DEPLOYMENT` + `VITE_CONVEX_URL` to `.env.local`.
-3. **API keys** — prompts for Anthropic + Resend with direct dashboard links
+4. **API keys** — prompts for Anthropic + Resend with direct dashboard links
    so you don't have to hunt for the URLs.
-4. **Better Auth secret** — auto-generated.
-5. **Google OAuth** *(optional)* — prompts for `GOOGLE_CLIENT_ID` /
+5. **Better Auth secret** — auto-generated.
+6. **Google OAuth** *(optional)* — prompts for `GOOGLE_CLIENT_ID` /
    `GOOGLE_CLIENT_SECRET`; press Enter to skip. When set, a "Continue with
    Google" button appears on `/login` and `/register`; otherwise it stays
    hidden. Authorized redirect URI: `${SITE_URL}/api/auth/callback/google`.
