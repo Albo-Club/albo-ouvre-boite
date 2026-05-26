@@ -11,6 +11,11 @@ permissions:
 jobs:
   release-please:
     runs-on: ubuntu-latest
+    env:
+      # Run the action on Node 24 (newer undici). Node 20's keep-alive socket
+      # reuse throws `other side closed` against the GitHub API, which failed
+      # every release-please run. Also clears the Node 20 deprecation warning.
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
     steps:
       - uses: googleapis/release-please-action@v4
         with:
