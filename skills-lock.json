@@ -29,7 +29,7 @@
       "source": "get-convex/agent-skills",
       "sourceType": "github",
       "skillPath": "skills/convex-migration-helper/SKILL.md",
-      "computedHash": "3eeb2cb39042c62d8961acecfaffeed2ef1d988ad487c145df4dc27615f926e9"
+      "computedHash": "77bc11973377357633cf80c1d111abd52daaa4249cc6ed25b76fac51457ce7ce"
     },
     "convex-performance-audit": {
       "source": "get-convex/agent-skills",
@@ -41,7 +41,7 @@
       "source": "get-convex/agent-skills",
       "sourceType": "github",
       "skillPath": "skills/convex-quickstart/SKILL.md",
-      "computedHash": "275a4ea554944728f8a314761085d6f43d75ddd0852f22fe8dd77fc1441d47fd"
+      "computedHash": "3cdc8fc0c306f662f35c559654798023b505de558b4e212a575babc574436b59"
     },
     "convex-setup-auth": {
       "source": "get-convex/agent-skills",
@@ -65,7 +65,7 @@
       "source": "anthropics/skills",
       "sourceType": "github",
       "skillPath": "skills/frontend-design/SKILL.md",
-      "computedHash": "063a0e6448123cd359ad0044cc46b0e490cc7964d45ef4bb9fd842bd2ffbca67"
+      "computedHash": "b81e2ff87ed8fa4d6c377ccb127a7254c9e6a77e3ae94f21e6b514f7bb2945a0"
     },
     "organization-best-practices": {
       "source": "better-auth/skills",
