@@ -36,7 +36,7 @@ export const usage = [
   { label: 'Photos & docs (GB)', used: 4.2, included: 20 },
 ]
 
-export const invoices: Invoice[] = [
+export const invoices: Array<Invoice> = [
   {
     id: 'inv_010',
     number: 'INV-2026-010',
@@ -103,7 +103,7 @@ export const invoices: Invoice[] = [
   },
 ]
 
-export const paymentMethods: PaymentMethod[] = [
+export const paymentMethods: Array<PaymentMethod> = [
   {
     id: 'pm_visa',
     brand: 'visa',

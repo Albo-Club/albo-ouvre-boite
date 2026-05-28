@@ -13,7 +13,7 @@ export type Task = {
   dueOffset: number // days from today
 }
 
-export const initialTasks: Task[] = [
+export const initialTasks: Array<Task> = [
   {
     id: 't1',
     title: 'Photographier le bureau Bastille',
@@ -106,7 +106,7 @@ export const PRIORITY_VARIANT: Record<
   low: 'secondary',
 }
 
-export const COLUMNS: { id: TaskStatus; label: string }[] = [
+export const COLUMNS: Array<{ id: TaskStatus; label: string }> = [
   { id: 'todo', label: 'To do' },
   { id: 'in_progress', label: 'In progress' },
   { id: 'done', label: 'Done' },

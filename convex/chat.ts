@@ -7,14 +7,8 @@ import {
   syncStreams,
   vStreamArgs,
 } from '@convex-dev/agent'
-import type {
-  GenericActionCtx,
-  GenericMutationCtx,
-  GenericQueryCtx,
-} from 'convex/server'
 
 import { components, internal } from './_generated/api'
-import type { DataModel, Id } from './_generated/dataModel'
 import {
   httpAction,
   internalAction,
@@ -26,6 +20,12 @@ import { requireOrgMember } from './lib/auth'
 import { chatAgent } from './agent'
 import { authComponent } from './auth'
 import { consumeLimit } from './rateLimiters'
+import type { DataModel, Id } from './_generated/dataModel'
+import type {
+  GenericActionCtx,
+  GenericMutationCtx,
+  GenericQueryCtx,
+} from 'convex/server'
 
 type AnyCtx =
   | GenericQueryCtx<DataModel>

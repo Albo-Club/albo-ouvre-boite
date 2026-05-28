@@ -3,9 +3,9 @@ import { QueryClient } from '@tanstack/react-query'
 import { routerWithQueryClient } from '@tanstack/react-router-with-query'
 import { ConvexQueryClient } from '@convex-dev/react-query'
 import { ConvexBetterAuthProvider } from '@convex-dev/better-auth/react'
+import { routeTree } from './routeTree.gen'
 import { authClient } from '~/lib/auth-client'
 import { initSentry } from '~/lib/sentry'
-import { routeTree } from './routeTree.gen'
 
 // Client-only singletons. getRouter() is called during SSR AND on every
 // client hydration; re-instantiating ConvexQueryClient on each call drops

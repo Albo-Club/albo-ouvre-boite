@@ -8,7 +8,7 @@ export type CalendarEvent = {
   minutes: number
   durationMin: number
   type: 'meeting' | 'review' | 'focus' | 'demo'
-  attendees: string[]
+  attendees: Array<string>
 }
 
 const types: Record<CalendarEvent['type'], string> = {
@@ -22,7 +22,7 @@ export function eventTypeLabel(t: CalendarEvent['type']) {
   return types[t]
 }
 
-export const events: CalendarEvent[] = [
+export const events: Array<CalendarEvent> = [
   {
     id: 'e1',
     title: 'Visite — Bureau privatif Paris 9 Trinité (Acme Co)',

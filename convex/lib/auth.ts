@@ -1,7 +1,7 @@
 import { ConvexError } from 'convex/values'
+import { authComponent } from '../auth'
 import type { GenericMutationCtx, GenericQueryCtx } from 'convex/server'
 import type { DataModel, Doc, Id } from '../_generated/dataModel'
-import { authComponent } from '../auth'
 
 type Ctx = GenericQueryCtx<DataModel> | GenericMutationCtx<DataModel>
 type MutCtx = GenericMutationCtx<DataModel>
@@ -56,8 +56,8 @@ export async function provisionAppUser(ctx: MutCtx): Promise<Doc<'users'>> {
     .withIndex('by_email', (q) => q.eq('email', baUser.email))
     .first()
   if (byEmail) {
-    await ctx.db.patch(byEmail._id, { betterAuthId: baUser._id })
-    const refreshed = await ctx.db.get(byEmail._id)
+    await ctx.db.patch("users", byEmail._id, { betterAuthId: baUser._id })
+    const refreshed = await ctx.db.get("users", byEmail._id)
     if (!refreshed) throw new ConvexError('provision_failed')
     return refreshed
   }
@@ -67,12 +67,12 @@ export async function provisionAppUser(ctx: MutCtx): Promise<Doc<'users'>> {
   const userId = await ctx.db.insert('users', {
     betterAuthId: baUser._id,
     email: baUser.email,
-    name: baUser.name ?? undefined,
+    name: baUser.name,
     avatarUrl: baUser.image ?? undefined,
     superAdmin: isFirst,
     createdAt: Date.now(),
   })
-  const created = await ctx.db.get(userId)
+  const created = await ctx.db.get("users", userId)
   if (!created) throw new ConvexError('provision_failed')
   return created
 }
