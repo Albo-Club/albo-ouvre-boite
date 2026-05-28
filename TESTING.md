@@ -27,6 +27,17 @@ Pré-requis :
 | B5 | Cookies prod  | `pnpm test:cookies`      | `albo.session_token` a Secure+HttpOnly+SameSite=Lax+Max-Age≈604800 |
 | B6 | Skills à jour | `pnpm sync:skills:check` | `0 skills drifted`            |
 
+## Niveau 1 bis — Plugin Resend Claude Code (dev tooling, optionnel)
+
+À vérifier dans Claude Code (pas en CI). Pré-requis : `export RESEND_API_KEY=re_…`
+dans le shell.
+
+| #  | Étape                              | Commande / action                                  | Résultat attendu                                       |
+| -- | ---------------------------------- | -------------------------------------------------- | ------------------------------------------------------ |
+| P1 | Plugin activé (scope projet)       | `claude plugin list`                               | `resend@claude-plugins-official` présent + enabled     |
+| P2 | MCP + skills chargés               | `/reload-plugins` dans Claude Code                 | Outils MCP `resend` + skills `resend:*` disponibles    |
+| P3 | Clé absente                        | unset `RESEND_API_KEY`, relancer un outil Resend   | Échoue côté shell (≠ erreur d'email applicatif Convex) |
+
 ## Niveau 2 — Auth (6 min)
 
 Les minutiae UI (texte exact, spinners, skeletons, aria-label) ne sont pas

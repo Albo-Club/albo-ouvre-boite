@@ -108,6 +108,13 @@ override here via `CLAUDE.md` / `KNOWN_ISSUES.md`. When
 `pnpm run sync:skills:check` reports drift, read the new SKILL.md and
 update project overrides if needed — don't mute the check.
 
+**Two skill channels, don't mix them.** The `sync:skills` pipeline is only for
+library skills that upstream does **not** ship as a Claude Code plugin. Skills
+delivered by a plugin (e.g. `resend@claude-plugins-official`, enabled in
+`.claude/settings.json`) auto-update via the marketplace — never re-vendor them
+into `skills-lock.json` / `.agents/skills/` (it would duplicate the skills and
+double the update machinery). See `KNOWN_ISSUES.md` § "Resend: two integrations".
+
 ---
 
 **These guidelines are working if:** fewer unnecessary changes in diffs, fewer rewrites due to overcomplication, and clarifying questions come before implementation rather than after mistakes.
