@@ -99,7 +99,7 @@ export function ImageUpload({
         onDrop={(e) => {
           e.preventDefault()
           setDragOver(false)
-          const file = e.dataTransfer.files[0]
+          const file = e.dataTransfer.files.item(0)
           if (file) void handleFile(file)
         }}
         className={cn(
@@ -113,7 +113,6 @@ export function ImageUpload({
         {uploading ? (
           t('imageUpload.uploading')
         ) : currentUrl ? (
-          // eslint-disable-next-line @next/next/no-img-element
           <img
             src={currentUrl}
             alt=""
@@ -165,7 +164,7 @@ export function ImageUpload({
         onChange={(e) => {
           const file = e.target.files?.[0]
           if (file) void handleFile(file)
-          if (e.target) e.target.value = ''
+          e.target.value = ''
         }}
       />
     </div>

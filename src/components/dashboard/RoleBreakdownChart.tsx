@@ -30,7 +30,7 @@ export function RoleBreakdownChart({
     admin: { label: t('common:roles.admin'), color: 'var(--chart-2)' },
     member: { label: t('common:roles.member'), color: 'var(--chart-3)' },
   }
-  const counts = (members ?? []).reduce<Record<string, number>>(
+  const counts = (members ?? []).reduce<Record<string, number | undefined>>(
     (acc, m) => {
       acc[m.role] = (acc[m.role] ?? 0) + 1
       return acc

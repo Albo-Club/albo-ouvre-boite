@@ -61,10 +61,10 @@ function TasksPage() {
 
   function move(id: string, dir: 1 | -1) {
     setTasks((prev) =>
-      prev.map((t) => {
-        if (t.id !== id) return t
-        const next = nextStatus(t.status, dir)
-        return next ? { ...t, status: next } : t
+      prev.map((task) => {
+        if (task.id !== id) return task
+        const next = nextStatus(task.status, dir)
+        return next ? { ...task, status: next } : task
       }),
     )
   }

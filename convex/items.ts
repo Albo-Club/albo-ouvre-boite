@@ -16,7 +16,7 @@ export const list = query({
       .collect()
     return await Promise.all(
       items.map(async (i) => {
-        const creator = await ctx.db.get(i.createdBy)
+        const creator = await ctx.db.get("users", i.createdBy)
         return {
           _id: i._id,
           title: i.title,
@@ -67,7 +67,7 @@ export const update = mutation({
     description: v.optional(v.string()),
   },
   handler: async (ctx, { itemId, title, description }) => {
-    const item = await ctx.db.get(itemId)
+    const item = await ctx.db.get("items", itemId)
     if (!item) throw new ConvexError('not_found')
     await requireOrgMember(ctx, item.orgId)
     const trimmedTitle = title.trim()
@@ -78,7 +78,7 @@ export const update = mutation({
     if (trimmedDescription && trimmedDescription.length > DESCRIPTION_MAX) {
       throw new ConvexError('description_too_long')
     }
-    await ctx.db.patch(itemId, {
+    await ctx.db.patch("items", itemId, {
       title: trimmedTitle,
       description: trimmedDescription ? trimmedDescription : undefined,
     })
@@ -89,13 +89,13 @@ export const update = mutation({
 export const remove = mutation({
   args: { itemId: v.id('items') },
   handler: async (ctx, { itemId }) => {
-    const item = await ctx.db.get(itemId)
+    const item = await ctx.db.get("items", itemId)
     if (!item) throw new ConvexError('not_found')
     const { user } = await requireOrgMember(ctx, item.orgId)
     if (item.createdBy !== user._id) {
       await requireOrgRole(ctx, item.orgId, 'admin')
     }
-    await ctx.db.delete(itemId)
+    await ctx.db.delete("items", itemId)
     return null
   },
 })

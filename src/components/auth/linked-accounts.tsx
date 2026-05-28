@@ -62,6 +62,9 @@ export function LinkedAccounts() {
     let alive = true
     void (async () => {
       const { data, error } = await authClient.listAccounts()
+      // `alive` is flipped to false by the cleanup below; the rule's flow
+      // analysis can't see that mutation across the closure.
+      // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
       if (!alive) return
       if (error) {
         toast.error(
@@ -72,7 +75,7 @@ export function LinkedAccounts() {
         setAccounts([])
         return
       }
-      setAccounts((data ?? []))
+      setAccounts(data)
     })()
     return () => {
       alive = false

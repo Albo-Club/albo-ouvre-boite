@@ -143,6 +143,9 @@ function MapPage() {
  */
 function LocationsMap() {
   const { t } = useTranslation(['org'])
+  // Deferred `import()` type queries are intentional here: a static top-level
+  // import would pull Leaflet's `window`-touching code into the SSR bundle.
+  /* eslint-disable @typescript-eslint/consistent-type-imports */
   type LeafletModules = {
     MapContainer: typeof import('react-leaflet').MapContainer
     TileLayer: typeof import('react-leaflet').TileLayer
@@ -150,6 +153,7 @@ function LocationsMap() {
     Popup: typeof import('react-leaflet').Popup
     divIcon: typeof import('leaflet').divIcon
   }
+  /* eslint-enable @typescript-eslint/consistent-type-imports */
 
   const [mods, setMods] = useState<LeafletModules | null>(null)
 

@@ -264,12 +264,38 @@ pnpm dlx vercel@latest inspect <url> --wait        # block until Ready
 curl -sI https://<your-vercel-domain>/             # expect HTTP 200
 ```
 
+## Claude Code plugin — Resend
+
+This template enables the official **Resend** Claude Code plugin at project
+scope (`.claude/settings.json` → `enabledPlugins`). It bundles the Resend
+**MCP server** and all Resend **skills** (send/receive email, React Email,
+deliverability) so Claude Code can work with email out of the box, and it
+**auto-updates** through Anthropic's official `claude-plugins-official`
+marketplace — no manual sync, the skills stay current on their own.
+
+The MCP server reads `RESEND_API_KEY` from your **shell** environment, so add
+it to your shell profile (never committed):
+
+```bash
+export RESEND_API_KEY=re_...
+```
+
+Then run `/reload-plugins` in Claude Code (first run only). If the plugin
+isn't found, refresh once with `/plugin marketplace update claude-plugins-official`.
+
+> ⚠️ This shell `RESEND_API_KEY` (dev tooling) is **separate** from the
+> `RESEND_API_KEY` the app uses at runtime, which lives in the **Convex** env.
+> See `KNOWN_ISSUES.md` § "Resend: two integrations".
+
 ## CI / Ops
 
+- pnpm pinned via `packageManager` (`pnpm@10.x`); CI/`sync-skills` read it from
+  there. Pinning keeps `pnpm.overrides` honoured — pnpm 11 ignores that field.
 - Renovate: weekly, groups non-majors, automerges devDeps, freezes the
   pinned `pnpm.overrides` until you bump them.
 - `ci.yml`: install + typecheck on push/PR.
 - `sync-skills.yml`: weekly skill freshness PR.
+- Claude Code plugins (e.g. Resend) auto-update via the official marketplace.
 
 ## Common commands
 
