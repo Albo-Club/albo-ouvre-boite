@@ -37,7 +37,7 @@ Tester avec un user neuf "Alice" (`alice@test.local`).
 
 | #   | Étape                                                  | Résultat attendu                                                                  |
 | --- | ------------------------------------------------------ | --------------------------------------------------------------------------------- |
-| A1  | `/register` → submit, onboarding org "Acme"            | Redirige `/app/acme`, user créé, `superAdmin: true` (premier user)                |
+| A1  | `/register` → submit, onboarding org "Acme"            | Redirige `/app/acme`, user créé, `superAdmin: true` (premier user). Si `DEV_NOTIFY_EMAIL` est set, un mail "[albo] New signup: …" arrive dans cette inbox (1× par nouveau user, pas sur re-login). |
 | A2  | Sign out → re-sign in correct                          | Redirige `/app/acme` (dernière org via `lastOrgSlug`)                              |
 | A3  | Sign in mauvais mdp                                    | Inline `<Alert>` destructive au-dessus du form (pas toast). Pas de session.       |
 | A4  | `/app/acme` non authentifié                            | Redirige `/login?redirect=…`                                                       |

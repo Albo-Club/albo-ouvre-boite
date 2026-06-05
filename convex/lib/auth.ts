@@ -1,7 +1,9 @@
 import { ConvexError } from 'convex/values'
+import { authComponent } from '../auth'
+import { RESEND_FROM, resend } from '../email'
+import { newUserSignupNotificationEmail } from '../emailTemplates'
 import type { GenericMutationCtx, GenericQueryCtx } from 'convex/server'
 import type { DataModel, Doc, Id } from '../_generated/dataModel'
-import { authComponent } from '../auth'
 
 type Ctx = GenericQueryCtx<DataModel> | GenericMutationCtx<DataModel>
 type MutCtx = GenericMutationCtx<DataModel>
@@ -74,6 +76,31 @@ export async function provisionAppUser(ctx: MutCtx): Promise<Doc<'users'>> {
   })
   const created = await ctx.db.get(userId)
   if (!created) throw new ConvexError('provision_failed')
+
+  // Dev-only signup notification. Sent only on the insert branch above, so it
+  // fires once per user (the dedup branches return early). Failures must never
+  // roll back the provisioning — same contract as convex/notifications.ts.
+  const devNotifyTo = process.env.DEV_NOTIFY_EMAIL
+  if (devNotifyTo) {
+    try {
+      const { subject, html, text } = newUserSignupNotificationEmail({
+        email: created.email,
+        name: created.name,
+        betterAuthId: created.betterAuthId,
+        isFirst,
+      })
+      await resend.sendEmail(ctx, {
+        from: RESEND_FROM,
+        to: devNotifyTo,
+        subject,
+        html,
+        text,
+      })
+    } catch (err) {
+      console.warn('dev signup notification failed', err)
+    }
+  }
+
   return created
 }
 
