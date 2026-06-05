@@ -23,7 +23,7 @@ export const me = query({
         baUser: {
           id: baUser._id,
           email: baUser.email,
-          name: baUser.name ?? null,
+          name: baUser.name,
         },
       }
     }

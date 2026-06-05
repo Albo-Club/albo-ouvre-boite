@@ -37,11 +37,13 @@ export function RoleBreakdownChart({
     },
     {},
   )
+  /* eslint-disable @typescript-eslint/no-unnecessary-condition -- Record<string, number> lookups are undefined at runtime without noUncheckedIndexedAccess */
   const data = [
     { role: 'owner', count: counts.owner ?? 0, fill: 'var(--chart-1)' },
     { role: 'admin', count: counts.admin ?? 0, fill: 'var(--chart-2)' },
     { role: 'member', count: counts.member ?? 0, fill: 'var(--chart-3)' },
   ].filter((d) => d.count > 0)
+  /* eslint-enable @typescript-eslint/no-unnecessary-condition */
   const total = data.reduce((s, d) => s + d.count, 0)
 
   return (

@@ -29,7 +29,7 @@ export const STATUS_COLOR: Record<LocationStatus, string> = {
   maintenance: '#6b7280', // gray-500
 }
 
-export const locations: Location[] = [
+export const locations: Array<Location> = [
   {
     id: 'loc-paris-9',
     title: 'Bureau privatif 4p — Paris 9 Trinité',

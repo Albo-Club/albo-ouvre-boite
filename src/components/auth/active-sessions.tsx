@@ -34,7 +34,7 @@ export function ActiveSessions() {
   const { t } = useTranslation(['account', 'common', 'errors'])
   const te = (k: string) => t(`errors:${k}`)
   const { data: current } = authClient.useSession()
-  const currentSessionId = current?.session?.id
+  const currentSessionId = current?.session.id
 
   const [sessions, setSessions] = useState<Array<BaSession> | null>(null)
   const [revokingId, setRevokingId] = useState<string | null>(null)
@@ -47,7 +47,7 @@ export function ActiveSessions() {
       toast.error(formatAuthError(classifyAuthError(error), 'signin', te))
       return
     }
-    setSessions((data ?? []))
+    setSessions(data)
   }
 
   useEffect(() => {

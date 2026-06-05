@@ -19,10 +19,10 @@ export type ActivityPoint = {
 // Multiplier indexed by JS getDay(): 0=Sun, 1=Mon, …, 6=Sat.
 const WEEKDAY_MULTIPLIER = [0.25, 0.85, 1.0, 1.05, 1.0, 0.75, 0.3]
 
-export function generateActivity(days = 30): ActivityPoint[] {
+export function generateActivity(days = 30): Array<ActivityPoint> {
   const rng = seededRandom(42)
   const today = new Date()
-  const out: ActivityPoint[] = []
+  const out: Array<ActivityPoint> = []
   for (let i = days - 1; i >= 0; i -= 1) {
     const d = new Date(today)
     d.setDate(today.getDate() - i)
