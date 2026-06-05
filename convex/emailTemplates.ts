@@ -482,3 +482,45 @@ export function magicLinkEmail({
 
   return { subject: c.subject, html, text: plainText(c.text) }
 }
+
+/**
+ * Dev-only signup notification. Sent to a single ops inbox (DEV_NOTIFY_EMAIL),
+ * never to end users — so this template intentionally bypasses the bilingual
+ * `pick(locale, …)` system and stays English-only.
+ */
+export function newUserSignupNotificationEmail({
+  email,
+  name,
+  betterAuthId,
+  isFirst,
+}: {
+  email: string
+  name?: string
+  betterAuthId: string
+  isFirst: boolean
+}) {
+  const displayName = name ?? '(no name)'
+  const tag = isFirst ? ' [FIRST USER]' : ''
+  const subject = `[${APP_NAME}] New signup: ${email}${tag}`
+  const heading = isFirst ? 'First user signed up' : 'New user signed up'
+  const paragraphs = [
+    `<strong>Email:</strong> ${email}`,
+    `<strong>Name:</strong> ${displayName}`,
+    `<strong>Better Auth id:</strong> <code>${betterAuthId}</code>`,
+  ]
+  const text = [
+    heading,
+    `Email: ${email}`,
+    `Name: ${displayName}`,
+    `Better Auth id: ${betterAuthId}`,
+    isFirst ? 'This is the first user on the deployment.' : '',
+  ]
+  const html = layout({
+    locale: 'en',
+    preheader: `New signup: ${email}`,
+    heading,
+    paragraphs,
+    footer: `${APP_NAME} — automated dev notification.`,
+  })
+  return { subject, html, text: plainText(text) }
+}
