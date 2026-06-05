@@ -6,6 +6,7 @@ import { provisionAppUser, requireOrgRole } from './lib/auth'
 import { RESEND_FROM, resend } from './email'
 import { invitationEmail } from './emailTemplates'
 import { consumeLimit } from './rateLimiters'
+import type { FunctionReference } from 'convex/server'
 
 const TOKEN_BYTES = 32
 const EXPIRES_MS = 1000 * 60 * 60 * 24 * 7 // 7 days
@@ -39,6 +40,7 @@ export const create = mutation({
       .withIndex('by_email_and_org', (q) =>
         q.eq('email', normalizedEmail).eq('orgId', orgId),
       )
+      // eslint-disable-next-line @convex-dev/no-filter-in-query -- post-index narrow on a max-1-row scan
       .filter((q) => q.eq(q.field('acceptedAt'), undefined))
       .first()
     if (existing) throw new ConvexError('already_invited')
@@ -105,10 +107,7 @@ export const preview = query({
       components as unknown as {
         betterAuth: {
           adapter: {
-            findMany: import('convex/server').FunctionReference<
-              'query',
-              'internal'
-            >
+            findMany: FunctionReference<'query', 'internal'>
           }
         }
       }
@@ -118,7 +117,7 @@ export const preview = query({
       paginationOpts: { numItems: 1, cursor: null },
       where: [{ field: 'email', operator: 'eq', value: inv.email }],
     })) as { page: Array<{ email?: string }> }
-    const accountExists = (result.page?.length ?? 0) > 0
+    const accountExists = result.page.length > 0
 
     return {
       kind: 'ok' as const,

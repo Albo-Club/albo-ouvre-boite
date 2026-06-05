@@ -3,13 +3,14 @@ import { createTool } from '@convex-dev/agent'
 import { z } from 'zod/v3'
 
 import { internal } from './_generated/api'
-import type { Doc, Id } from './_generated/dataModel'
 import {
+  
+  
   internalMutation,
-  internalQuery,
-  type MutationCtx,
-  type QueryCtx,
+  internalQuery
 } from './_generated/server'
+import type {MutationCtx, QueryCtx} from './_generated/server';
+import type { Doc, Id } from './_generated/dataModel'
 
 const TITLE_MAX = 120
 const DESCRIPTION_MAX = 2000
@@ -89,7 +90,7 @@ export const createItemInternal = internalMutation({
       createdBy: actorUserId,
       createdAt: Date.now(),
     })
-    const created = await ctx.db.get(itemId)
+    const created = await ctx.db.get("items", itemId)
     return serializeItem(created!)
   },
 })
@@ -107,7 +108,7 @@ export const updateItemInternal = internalMutation({
     { orgId, actorUserId, itemId, title, description },
   ) => {
     await readMembership(ctx, orgId, actorUserId)
-    const item = await ctx.db.get(itemId)
+    const item = await ctx.db.get("items", itemId)
     if (!item || item.orgId !== orgId) throw new ConvexError('not_found')
     const trimmedTitle = title.trim()
     if (!trimmedTitle || trimmedTitle.length > TITLE_MAX) {
@@ -117,11 +118,11 @@ export const updateItemInternal = internalMutation({
     if (trimmedDescription && trimmedDescription.length > DESCRIPTION_MAX) {
       throw new ConvexError('description_too_long')
     }
-    await ctx.db.patch(itemId, {
+    await ctx.db.patch("items", itemId, {
       title: trimmedTitle,
       description: trimmedDescription ? trimmedDescription : undefined,
     })
-    const updated = await ctx.db.get(itemId)
+    const updated = await ctx.db.get("items", itemId)
     return serializeItem(updated!)
   },
 })
@@ -139,12 +140,12 @@ export const deleteItemInternal = internalMutation({
   },
   handler: async (ctx, { orgId, actorUserId, itemId }) => {
     const member = await readMembership(ctx, orgId, actorUserId)
-    const item = await ctx.db.get(itemId)
+    const item = await ctx.db.get("items", itemId)
     if (!item || item.orgId !== orgId) throw new ConvexError('not_found')
     if (item.createdBy !== actorUserId && !ADMIN_ROLES.includes(member.role)) {
       throw new ConvexError('forbidden')
     }
-    await ctx.db.delete(itemId)
+    await ctx.db.delete("items", itemId)
     return { deletedId: itemId }
   },
 })

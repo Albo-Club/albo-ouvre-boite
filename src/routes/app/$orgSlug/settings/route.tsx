@@ -65,15 +65,15 @@ function SettingsLayout() {
       <div className="flex flex-col gap-6 md:flex-row">
         <nav className="flex flex-row gap-1 md:w-48 md:shrink-0 md:flex-col">
           {tabs
-            .filter((t) => !t.adminOnly || canManage)
-            .map((t) => {
+            .filter((tab) => !tab.adminOnly || canManage)
+            .map((tab) => {
               const active = location.pathname.startsWith(
-                t.to.replace('$orgSlug', orgSlug),
+                tab.to.replace('$orgSlug', orgSlug),
               )
               return (
                 <Link
-                  key={t.to}
-                  to={t.to}
+                  key={tab.to}
+                  to={tab.to}
                   params={{ orgSlug }}
                   className={cn(
                     'rounded-md px-3 py-2 text-sm transition-colors',
@@ -82,7 +82,7 @@ function SettingsLayout() {
                       : 'text-muted-foreground hover:bg-muted/50 hover:text-foreground',
                   )}
                 >
-                  {t.label}
+                  {tab.label}
                 </Link>
               )
             })}

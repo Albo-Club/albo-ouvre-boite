@@ -1,9 +1,9 @@
 import { ConvexError, v } from 'convex/values'
+import { mutation } from './_generated/server'
+import { requireAppUser, requireOrgRole } from './lib/auth'
 import type { GenericMutationCtx } from 'convex/server'
 
-import { mutation } from './_generated/server'
 import type { DataModel, Id } from './_generated/dataModel'
-import { requireAppUser, requireOrgRole } from './lib/auth'
 
 const MAX_BYTES = 20 * 1024 * 1024
 const ALLOWED_IMAGE_TYPES = [
@@ -17,7 +17,7 @@ async function validateImage(
   ctx: GenericMutationCtx<DataModel>,
   storageId: Id<'_storage'>,
 ): Promise<void> {
-  const meta = await ctx.db.system.get(storageId)
+  const meta = await ctx.db.system.get("_storage", storageId)
   if (!meta) throw new ConvexError('not_found')
   if (meta.size > MAX_BYTES) {
     await ctx.storage.delete(storageId)
@@ -45,7 +45,7 @@ export const setMyAvatar = mutation({
     if (user.avatarStorageId) {
       await ctx.storage.delete(user.avatarStorageId)
     }
-    await ctx.db.patch(user._id, {
+    await ctx.db.patch("users", user._id, {
       avatarStorageId: storageId,
       avatarUrl: undefined,
     })
@@ -60,7 +60,7 @@ export const removeMyAvatar = mutation({
     if (user.avatarStorageId) {
       await ctx.storage.delete(user.avatarStorageId)
     }
-    await ctx.db.patch(user._id, {
+    await ctx.db.patch("users", user._id, {
       avatarStorageId: undefined,
       avatarUrl: undefined,
     })
@@ -73,11 +73,11 @@ export const setOrgLogo = mutation({
   handler: async (ctx, { orgId, storageId }) => {
     await requireOrgRole(ctx, orgId, 'admin')
     await validateImage(ctx, storageId)
-    const org = await ctx.db.get(orgId)
+    const org = await ctx.db.get("organizations", orgId)
     if (org?.logoStorageId) {
       await ctx.storage.delete(org.logoStorageId)
     }
-    await ctx.db.patch(orgId, {
+    await ctx.db.patch("organizations", orgId, {
       logoStorageId: storageId,
       logoUrl: undefined,
     })
@@ -89,11 +89,11 @@ export const removeOrgLogo = mutation({
   args: { orgId: v.id('organizations') },
   handler: async (ctx, { orgId }) => {
     await requireOrgRole(ctx, orgId, 'admin')
-    const org = await ctx.db.get(orgId)
+    const org = await ctx.db.get("organizations", orgId)
     if (org?.logoStorageId) {
       await ctx.storage.delete(org.logoStorageId)
     }
-    await ctx.db.patch(orgId, {
+    await ctx.db.patch("organizations", orgId, {
       logoStorageId: undefined,
       logoUrl: undefined,
     })

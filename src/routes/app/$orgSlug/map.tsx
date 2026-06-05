@@ -3,6 +3,8 @@ import { createFileRoute } from '@tanstack/react-router'
 import { useTranslation } from 'react-i18next'
 import { Sparkles } from 'lucide-react'
 
+import type * as ReactLeaflet from 'react-leaflet'
+import type * as Leaflet from 'leaflet'
 import type {LocationStatus} from '~/lib/mocks/locations';
 import { getI18n } from '~/lib/i18n'
 import { getLocale } from '~/lib/locale'
@@ -144,11 +146,11 @@ function MapPage() {
 function LocationsMap() {
   const { t } = useTranslation(['org'])
   type LeafletModules = {
-    MapContainer: typeof import('react-leaflet').MapContainer
-    TileLayer: typeof import('react-leaflet').TileLayer
-    Marker: typeof import('react-leaflet').Marker
-    Popup: typeof import('react-leaflet').Popup
-    divIcon: typeof import('leaflet').divIcon
+    MapContainer: typeof ReactLeaflet.MapContainer
+    TileLayer: typeof ReactLeaflet.TileLayer
+    Marker: typeof ReactLeaflet.Marker
+    Popup: typeof ReactLeaflet.Popup
+    divIcon: typeof Leaflet.divIcon
   }
 
   const [mods, setMods] = useState<LeafletModules | null>(null)
