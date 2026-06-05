@@ -271,6 +271,24 @@ curl -sI https://<your-vercel-domain>/             # expect HTTP 200
 - `ci.yml`: install + typecheck on push/PR.
 - `sync-skills.yml`: weekly skill freshness PR.
 
+## Convex MCP server
+
+A project-scoped `.mcp.json` ships the Convex MCP server so Claude Code
+(and any MCP-aware tool launched from this repo) can read logs, list
+tables, run queries, and inspect functions on your **personal dev**
+deployment. Approve the server prompt the first time you open the repo
+in Claude Code.
+
+Safe by default:
+
+- Only reads `CONVEX_DEPLOYMENT` from your local `.env.local` (each dev
+  hits their own deployment — no shared state, no secrets in the JSON).
+- Prod is blocked unless you opt in with
+  `--dangerously-enable-production-deployments`; PII reads on prod
+  require `--cautiously-allow-production-pii`. Don't change the
+  committed config to flip these — pass the flag in your own
+  `~/.claude.json` if you ever need it.
+
 ## Common commands
 
 ```bash
