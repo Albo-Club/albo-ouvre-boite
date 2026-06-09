@@ -3,9 +3,6 @@
     "ai": "AI",
     "breadcrumb": {
       "items": "Items",
-      "calendar": "Calendar",
-      "tasks": "Tasks",
-      "billing": "Billing",
       "settings": "Settings",
       "members": "Members",
       "invitations": "Invitations",
@@ -14,17 +11,11 @@
   },
   "groups": {
     "platform": "Platform",
-    "billing": "Billing",
     "workspace": "Workspace"
   },
   "items": {
     "dashboard": "Dashboard",
     "items": "Items",
-    "locations": "Locations",
-    "calendar": "Calendar",
-    "tasks": "Tasks",
-    "payments": "Payments",
-    "invoices": "Invoices",
     "members": "Members",
     "invitations": "Invitations",
     "settings": "Settings"

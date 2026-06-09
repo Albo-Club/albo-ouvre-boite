@@ -2,6 +2,7 @@ import { Link } from '@tanstack/react-router'
 import { Trans, useTranslation } from 'react-i18next'
 
 import { Button } from '~/components/ui/button'
+import { Skeleton } from '~/components/ui/skeleton'
 import {
   Card,
   CardContent,
@@ -50,9 +51,15 @@ export function RecentItemsCard({
       </CardHeader>
       <CardContent>
         {!items ? (
-          <p className="text-muted-foreground py-6 text-center text-sm">
-            {t('common:loadingEllipsis')}
-          </p>
+          <div className="space-y-3 py-3">
+            {[0, 1, 2].map((i) => (
+              <div key={i} className="flex items-center gap-4">
+                <Skeleton className="h-4 flex-1" />
+                <Skeleton className="hidden h-4 w-24 sm:block" />
+                <Skeleton className="h-4 w-10" />
+              </div>
+            ))}
+          </div>
         ) : recent.length === 0 ? (
           <p className="text-muted-foreground py-6 text-center text-sm">
             <Trans

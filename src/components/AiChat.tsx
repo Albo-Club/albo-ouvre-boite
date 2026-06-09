@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next'
 import { useUIMessages } from '@convex-dev/agent/react'
 import { useConvexMutation } from '@convex-dev/react-query'
 import { ConvexError } from 'convex/values'
+import ReactMarkdown from 'react-markdown'
 import { toast } from 'sonner'
 
 import { api } from '../../convex/_generated/api'
@@ -143,13 +144,21 @@ export function AiChat({
                 >
                   <div
                     className={cn(
-                      'max-w-[85%] rounded-lg px-3 py-2 text-sm whitespace-pre-wrap',
+                      'max-w-[85%] rounded-lg px-3 py-2 text-sm',
                       m.role === 'user'
-                        ? 'bg-primary text-primary-foreground'
-                        : 'bg-muted',
+                        ? 'bg-primary text-primary-foreground whitespace-pre-wrap'
+                        : 'bg-muted space-y-2 [&_a]:underline [&_code]:bg-background/60 [&_code]:rounded [&_code]:px-1 [&_code]:py-0.5 [&_code]:font-mono [&_code]:text-xs [&_ol]:list-decimal [&_ol]:pl-5 [&_pre]:bg-background/60 [&_pre]:overflow-x-auto [&_pre]:rounded-md [&_pre]:p-2 [&_ul]:list-disc [&_ul]:pl-5',
                     )}
                   >
-                    {m.text || (m.status === 'streaming' ? '…' : '')}
+                    {m.role === 'user' ? (
+                      m.text
+                    ) : m.text ? (
+                      <ReactMarkdown>{m.text}</ReactMarkdown>
+                    ) : m.status === 'streaming' ? (
+                      '…'
+                    ) : (
+                      ''
+                    )}
                   </div>
                 </li>
               ))}

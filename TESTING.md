@@ -27,6 +27,9 @@ Pré-requis :
 | B5 | Cookies prod  | `pnpm test:cookies`      | `albo.session_token` a Secure+HttpOnly+SameSite=Lax+Max-Age≈604800 |
 | B6 | Skills à jour | `pnpm sync:skills:check` | `0 skills drifted`            |
 
+B2–B3 tournent aussi en CI sur chaque PR (`.github/workflows/ci.yml`).
+B4–B5 restent locaux : ils requièrent un déploiement Convex provisionné.
+
 ## Niveau 2 — Auth (6 min)
 
 Les minutiae UI (texte exact, spinners, skeletons, aria-label) ne sont pas
@@ -88,10 +91,10 @@ Connecté en tant qu'Alice sur `/app/acme/`.
 
 | #    | Étape                                                          | Résultat attendu                                                  |
 | ---- | -------------------------------------------------------------- | ----------------------------------------------------------------- |
-| SH1  | Sidebar `inset` (carte flottante arrondie) : groupes Platform / Billing en haut ; Members / Invitations / Settings épinglés en bas (nav secondaire `mt-auto`, sans label) | OK ; items admin-only masqués si rôle "member"                     |
+| SH1  | Sidebar `inset` (carte flottante arrondie) : groupe Platform en haut ; Members / Invitations / Settings épinglés en bas (nav secondaire `mt-auto`, sans label) | OK ; items admin-only masqués si rôle "member"                     |
 | SH2  | Clic sur `SidebarTrigger` (header) OU sur la `SidebarRail` (bande fine au bord droit de la sidebar) | Sidebar collapse en `icon` ; cookie `sidebar_state` persiste ; icônes orga/profil non écrasées en mode `icon` |
 | SH3  | Redimensionner < 768px                                         | Sidebar passe en `Sheet` mobile, ouverture via burger              |
-| SH4  | Naviguer Dashboard → Items → Locations → Calendar → Tasks → Billing | Breadcrumb du header se met à jour à chaque route             |
+| SH4  | Naviguer Dashboard → Items → Settings → Members              | Breadcrumb du header se met à jour à chaque route                  |
 | SH5  | Dashboard : 4 KPI cards + AreaChart + PieChart + recent items  | Counts cohérents avec items.list / listMembers réels               |
 | SH6  | Toggle dark mode (icône soleil/lune dans header)               | Page bascule light ↔ dark, sidebar + charts adaptés                |
 | SH7  | Theme picker (footer sidebar) → choisir Blue / Emerald / Violet| Primary + chart-1 changent ; survit au reload (localStorage)       |
@@ -99,6 +102,8 @@ Connecté en tant qu'Alice sur `/app/acme/`.
 | SH9  | NavUser (footer sidebar) → profile / switch org / sign out     | Avatar **rond** ; sans photo, initiales prénom+nom (ex. `BB`) ; mêmes destinations qu'avant refonte |
 | SH10 | Bouton AI dans header                                          | Ouvre le modal chat existant (non-régression)                      |
 | SH11 | Ouvrir une page au contenu plus haut que l'écran (ex. Items long) | Le cadre `inset` reste calé sur la hauteur du viewport ; le scroll se fait **dans** le cadre, bord bas arrondi toujours visible |
+| SH12 | URL inconnue (ex. `/app/acme/nope` ou `/nope`)                 | Carte 404 stylée (FR/EN selon locale) + bouton retour accueil      |
+| SH13 | Dashboard / Items pendant le chargement initial                | Skeletons animés (KPI, recent items, table) — pas de texte "Loading…" nu |
 
 ## Niveau 2 — Data table items (5 min)
 
@@ -111,21 +116,6 @@ Connecté en tant qu'Alice sur `/app/acme/`.
 | T5  | Bulk delete (admin only)                             | Demande confirmation, supprime tout, toast succès                  |
 | T6  | "New item" → Dialog → submit                         | Item créé, dialog se ferme, ligne apparaît en haut (real-time)     |
 | T7  | Actions row (menu `…`) → Edit / Delete               | Edit ouvre le même Dialog en mode update ; Delete demande confirm  |
-
-## Niveau 2 — Pages démo (mock, 3 min)
-
-| #   | Étape                                                | Résultat attendu                                                  |
-| --- | ---------------------------------------------------- | ----------------------------------------------------------------- |
-| D1  | `/app/acme/billing` Overview                         | 3 cards (plan, next invoice, usage) + alert "demo data"            |
-| D2  | `/app/acme/billing` Invoices                         | Table 8 lignes avec badges Paid/Pending/Failed colorés             |
-| D3  | `/app/acme/billing` Payment methods → "Add card"     | Dialog s'ouvre (placeholder), ferme sans erreur                    |
-| D4  | `/app/acme/calendar`                                 | Calendar avec points sous les dates ayant un event                 |
-| D5  | Cliquer une date dans le calendar                    | Panneau droit liste les events du jour (mock)                      |
-| D6  | `/app/acme/tasks`                                    | 3 colonnes kanban avec 9 tasks, badges priorité                    |
-| D7  | Cliquer flèches `→` / `←` sur une task               | La carte se déplace de colonne (state local)                       |
-| D8  | `/app/acme/map` (Locations)                          | Carte Leaflet de France + 8 pins colorés ; card "Portefeuille" à droite avec compte par statut |
-| D9  | Cliquer un pin sur la carte                          | Popup s'ouvre avec titre, adresse, capacité, prix formaté, badge statut |
-| D10 | Reload `/app/acme/map` 3-4 fois                      | Pas de flash blanc ni erreur d'hydratation (le composant Leaflet est monté en client-only via `useEffect`) |
 
 ## Niveau 2 — Multi-tenant (15 min)
 
@@ -206,6 +196,7 @@ Toujours connecté en tant qu'Alice. Préparer un 2e navigateur pour Bob.
 | -- | ------------------------------------------------------- | ----------------------------------------------------------------- |
 | C1 | Ouvrir le slide-over chat depuis `/app/acme`            | Premier thread créé automatiquement                                |
 | C2 | Envoyer un message simple ("ping")                      | Stream visible token par token, pas de blocage UI                  |
+| C2b | Demander une réponse formatée ("liste à puces + gras") | Rendu markdown dans la bulle assistant (puces, gras, code inline)  |
 | C3 | Demander à l'agent "liste mes items"                    | Tool `listItems` appelé, réponse contient les items d'Acme        |
 | C4 | "crée un item titre Test"                               | Tool `createItem` appelé, item visible dans `/app/acme/items` après refresh |
 | C5 | "supprime l'item Test" + confirmation                   | Tool `deleteItem` appelé, item disparaît                          |

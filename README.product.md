@@ -62,10 +62,15 @@ pnpm run upgrade-template -- --diff  # preview what would change first
 ```
 
 The first run adds a `template` git remote pointing at the starter; subsequent
-runs reuse it. Review the merge, resolve conflicts, then commit.
+runs reuse it. If your repo was created via GitHub's "Use this template" (no
+shared git history), the script grafts the ancestry automatically from
+`.template-version` on first run. Review the merge, resolve conflicts, then
+commit. Read the starter's `CHANGELOG.md` and [UPGRADING.md](UPGRADING.md)
+between your version and the latest before merging.
 
 ## See also
 
 - [TESTING.md](TESTING.md) — end-to-end test plan (auth, multi-tenant, AI…).
 - [KNOWN_ISSUES.md](KNOWN_ISSUES.md) — pinned versions and why.
+- [UPGRADING.md](UPGRADING.md) — pulling starter updates, per-version notes.
 - [CLAUDE.md](CLAUDE.md) — guidelines for AI-assisted work in this repo.

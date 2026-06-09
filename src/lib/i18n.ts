@@ -14,7 +14,6 @@ import enNav from '~/locales/en/nav.json'
 import enDashboard from '~/locales/en/dashboard.json'
 import enItems from '~/locales/en/items.json'
 import enAccount from '~/locales/en/account.json'
-import enOrg from '~/locales/en/org.json'
 import enSettings from '~/locales/en/settings.json'
 import enChat from '~/locales/en/chat.json'
 
@@ -27,7 +26,6 @@ import frNav from '~/locales/fr/nav.json'
 import frDashboard from '~/locales/fr/dashboard.json'
 import frItems from '~/locales/fr/items.json'
 import frAccount from '~/locales/fr/account.json'
-import frOrg from '~/locales/fr/org.json'
 import frSettings from '~/locales/fr/settings.json'
 import frChat from '~/locales/fr/chat.json'
 
@@ -41,7 +39,6 @@ export const NAMESPACES = [
   'dashboard',
   'items',
   'account',
-  'org',
   'settings',
   'chat',
 ] as const
@@ -59,7 +56,6 @@ export const resources = {
     dashboard: enDashboard,
     items: enItems,
     account: enAccount,
-    org: enOrg,
     settings: enSettings,
     chat: enChat,
   },
@@ -73,7 +69,6 @@ export const resources = {
     dashboard: frDashboard,
     items: frItems,
     account: frAccount,
-    org: frOrg,
     settings: frSettings,
     chat: frChat,
   },

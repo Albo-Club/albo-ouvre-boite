@@ -22,9 +22,6 @@ type Crumb = { label: string; href?: string }
 
 const CRUMB_SEGMENTS = [
   'items',
-  'calendar',
-  'tasks',
-  'billing',
   'settings',
   'members',
   'invitations',

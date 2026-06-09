@@ -2,7 +2,15 @@
   "appName": "albo",
   "appTitle": "albo — MVP starter",
   "loadingEllipsis": "Loading…",
-  "notFound": "Page not found",
+  "notFoundPage": {
+    "description": "This page doesn't exist or has been moved.",
+    "goHome": "Go to homepage"
+  },
+  "errorBoundary": {
+    "title": "Something went wrong",
+    "description": "An unexpected error occurred. Try again, or go back to the homepage.",
+    "goHome": "Go to homepage"
+  },
   "actions": {
     "save": "Save",
     "cancel": "Cancel",

@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next'
 import { api } from '../../../../convex/_generated/api'
 import { getI18n } from '~/lib/i18n'
 import { getLocale } from '~/lib/locale'
+import { Skeleton } from '~/components/ui/skeleton'
 import { ItemsDataTable } from '~/components/items/ItemsDataTable'
 
 export const Route = createFileRoute('/app/$orgSlug/items')({
@@ -42,9 +43,13 @@ function ItemsPage() {
       </div>
 
       {items === undefined ? (
-        <p className="text-muted-foreground text-sm">
-          {t('common:loadingEllipsis')}
-        </p>
+        <div className="space-y-3">
+          <div className="flex items-center justify-between">
+            <Skeleton className="h-9 w-64" />
+            <Skeleton className="h-9 w-28" />
+          </div>
+          <Skeleton className="h-64 w-full rounded-md" />
+        </div>
       ) : (
         <ItemsDataTable
           items={items}
