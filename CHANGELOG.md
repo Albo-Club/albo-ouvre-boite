@@ -20,6 +20,8 @@ transactional emails, rate limiting, i18n (en/fr), dark mode.
   clean 3-way merges. Previously the merge failed with
   `refusing to merge unrelated histories`.
 - `.template-version`, `pnpm run release`, this changelog and UPGRADING.md.
+- `release-tag` workflow: pushes to `main` touching `.template-version` or
+  `CHANGELOG.md` publish the release tag automatically (idempotent).
 - Global router error boundary and a styled 404 page.
 - Markdown rendering in the AI chat.
 - Skeleton loading states on the dashboard and items table.
