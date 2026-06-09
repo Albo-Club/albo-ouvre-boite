@@ -2,7 +2,15 @@
   "appName": "albo",
   "appTitle": "albo — starter MVP",
   "loadingEllipsis": "Chargement…",
-  "notFound": "Page introuvable",
+  "notFoundPage": {
+    "description": "Cette page n'existe pas ou a été déplacée.",
+    "goHome": "Retour à l'accueil"
+  },
+  "errorBoundary": {
+    "title": "Une erreur est survenue",
+    "description": "Une erreur inattendue s'est produite. Réessayez ou revenez à l'accueil.",
+    "goHome": "Retour à l'accueil"
+  },
   "actions": {
     "save": "Enregistrer",
     "cancel": "Annuler",

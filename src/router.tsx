@@ -6,6 +6,10 @@ import { ConvexBetterAuthProvider } from '@convex-dev/better-auth/react'
 import { routeTree } from './routeTree.gen'
 import { authClient } from '~/lib/auth-client'
 import { initSentry } from '~/lib/sentry'
+import {
+  RouterErrorFallback,
+  RouterNotFound,
+} from '~/components/RouterFallbacks'
 
 // Client-only singletons. getRouter() is called during SSR AND on every
 // client hydration; re-instantiating ConvexQueryClient on each call drops
@@ -64,8 +68,8 @@ export function getRouter() {
       context: { queryClient },
       scrollRestoration: true,
       defaultPreloadStaleTime: 0, // Let React Query handle all caching
-      defaultErrorComponent: (err) => <p>{err.error.stack}</p>,
-      defaultNotFoundComponent: () => <p>not found</p>,
+      defaultErrorComponent: RouterErrorFallback,
+      defaultNotFoundComponent: RouterNotFound,
       Wrap: ({ children }) => (
         <ConvexBetterAuthProvider
           client={convexQueryClient.convexClient}

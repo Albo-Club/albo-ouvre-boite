@@ -6,6 +6,7 @@ import { useTranslation } from 'react-i18next'
 import { api } from '../../../../convex/_generated/api'
 import { getI18n } from '~/lib/i18n'
 import { getLocale } from '~/lib/locale'
+import { Skeleton } from '~/components/ui/skeleton'
 import { KpiCard } from '~/components/dashboard/KpiCard'
 import { ActivityChart } from '~/components/dashboard/ActivityChart'
 import { RoleBreakdownChart } from '~/components/dashboard/RoleBreakdownChart'
@@ -62,6 +63,13 @@ function OrgDashboard() {
         </p>
       </div>
 
+      {org === undefined || items === undefined || members === undefined ? (
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          {[0, 1, 2, 3].map((i) => (
+            <Skeleton key={i} className="h-28 rounded-xl" />
+          ))}
+        </div>
+      ) : (
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <KpiCard
           label={t('dashboard:kpi.totalItems')}
@@ -94,6 +102,7 @@ function OrgDashboard() {
           icon={DollarSign}
         />
       </div>
+      )}
 
       <div className="grid gap-4 lg:grid-cols-3">
         <div className="lg:col-span-2">

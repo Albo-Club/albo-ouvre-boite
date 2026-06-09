@@ -15,7 +15,6 @@ import {
   SidebarGroupLabel,
   SidebarHeader,
   SidebarMenu,
-  SidebarMenuBadge,
   SidebarMenuButton,
   SidebarMenuItem,
   SidebarRail,
@@ -76,7 +75,6 @@ export function AppSidebar({
             <span>{title}</span>
           </Link>
         </SidebarMenuButton>
-        {item.demo && <SidebarMenuBadge>{t('common:demo')}</SidebarMenuBadge>}
       </SidebarMenuItem>
     )
   }

@@ -22,11 +22,7 @@ import { Route as AppAdminRouteImport } from './routes/app/admin'
 import { Route as AcceptInviteTokenRouteImport } from './routes/accept-invite.$token'
 import { Route as AppOrgSlugRouteRouteImport } from './routes/app/$orgSlug/route'
 import { Route as AppOrgSlugIndexRouteImport } from './routes/app/$orgSlug/index'
-import { Route as AppOrgSlugTasksRouteImport } from './routes/app/$orgSlug/tasks'
-import { Route as AppOrgSlugMapRouteImport } from './routes/app/$orgSlug/map'
 import { Route as AppOrgSlugItemsRouteImport } from './routes/app/$orgSlug/items'
-import { Route as AppOrgSlugCalendarRouteImport } from './routes/app/$orgSlug/calendar'
-import { Route as AppOrgSlugBillingRouteImport } from './routes/app/$orgSlug/billing'
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
 import { Route as AppOrgSlugSettingsRouteRouteImport } from './routes/app/$orgSlug/settings/route'
 import { Route as AppOrgSlugSettingsIndexRouteImport } from './routes/app/$orgSlug/settings/index'
@@ -99,29 +95,9 @@ const AppOrgSlugIndexRoute = AppOrgSlugIndexRouteImport.update({
   path: '/',
   getParentRoute: () => AppOrgSlugRouteRoute,
 } as any)
-const AppOrgSlugTasksRoute = AppOrgSlugTasksRouteImport.update({
-  id: '/tasks',
-  path: '/tasks',
-  getParentRoute: () => AppOrgSlugRouteRoute,
-} as any)
-const AppOrgSlugMapRoute = AppOrgSlugMapRouteImport.update({
-  id: '/map',
-  path: '/map',
-  getParentRoute: () => AppOrgSlugRouteRoute,
-} as any)
 const AppOrgSlugItemsRoute = AppOrgSlugItemsRouteImport.update({
   id: '/items',
   path: '/items',
-  getParentRoute: () => AppOrgSlugRouteRoute,
-} as any)
-const AppOrgSlugCalendarRoute = AppOrgSlugCalendarRouteImport.update({
-  id: '/calendar',
-  path: '/calendar',
-  getParentRoute: () => AppOrgSlugRouteRoute,
-} as any)
-const AppOrgSlugBillingRoute = AppOrgSlugBillingRouteImport.update({
-  id: '/billing',
-  path: '/billing',
   getParentRoute: () => AppOrgSlugRouteRoute,
 } as any)
 const ApiAuthSplatRoute = ApiAuthSplatRouteImport.update({
@@ -173,11 +149,7 @@ export interface FileRoutesByFullPath {
   '/app/': typeof AppIndexRoute
   '/app/$orgSlug/settings': typeof AppOrgSlugSettingsRouteRouteWithChildren
   '/api/auth/$': typeof ApiAuthSplatRoute
-  '/app/$orgSlug/billing': typeof AppOrgSlugBillingRoute
-  '/app/$orgSlug/calendar': typeof AppOrgSlugCalendarRoute
   '/app/$orgSlug/items': typeof AppOrgSlugItemsRoute
-  '/app/$orgSlug/map': typeof AppOrgSlugMapRoute
-  '/app/$orgSlug/tasks': typeof AppOrgSlugTasksRoute
   '/app/$orgSlug/': typeof AppOrgSlugIndexRoute
   '/app/$orgSlug/settings/general': typeof AppOrgSlugSettingsGeneralRoute
   '/app/$orgSlug/settings/invitations': typeof AppOrgSlugSettingsInvitationsRoute
@@ -196,11 +168,7 @@ export interface FileRoutesByTo {
   '/app/onboarding': typeof AppOnboardingRoute
   '/app': typeof AppIndexRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
-  '/app/$orgSlug/billing': typeof AppOrgSlugBillingRoute
-  '/app/$orgSlug/calendar': typeof AppOrgSlugCalendarRoute
   '/app/$orgSlug/items': typeof AppOrgSlugItemsRoute
-  '/app/$orgSlug/map': typeof AppOrgSlugMapRoute
-  '/app/$orgSlug/tasks': typeof AppOrgSlugTasksRoute
   '/app/$orgSlug': typeof AppOrgSlugIndexRoute
   '/app/$orgSlug/settings/general': typeof AppOrgSlugSettingsGeneralRoute
   '/app/$orgSlug/settings/invitations': typeof AppOrgSlugSettingsInvitationsRoute
@@ -223,11 +191,7 @@ export interface FileRoutesById {
   '/app/': typeof AppIndexRoute
   '/app/$orgSlug/settings': typeof AppOrgSlugSettingsRouteRouteWithChildren
   '/api/auth/$': typeof ApiAuthSplatRoute
-  '/app/$orgSlug/billing': typeof AppOrgSlugBillingRoute
-  '/app/$orgSlug/calendar': typeof AppOrgSlugCalendarRoute
   '/app/$orgSlug/items': typeof AppOrgSlugItemsRoute
-  '/app/$orgSlug/map': typeof AppOrgSlugMapRoute
-  '/app/$orgSlug/tasks': typeof AppOrgSlugTasksRoute
   '/app/$orgSlug/': typeof AppOrgSlugIndexRoute
   '/app/$orgSlug/settings/general': typeof AppOrgSlugSettingsGeneralRoute
   '/app/$orgSlug/settings/invitations': typeof AppOrgSlugSettingsInvitationsRoute
@@ -251,11 +215,7 @@ export interface FileRouteTypes {
     | '/app/'
     | '/app/$orgSlug/settings'
     | '/api/auth/$'
-    | '/app/$orgSlug/billing'
-    | '/app/$orgSlug/calendar'
     | '/app/$orgSlug/items'
-    | '/app/$orgSlug/map'
-    | '/app/$orgSlug/tasks'
     | '/app/$orgSlug/'
     | '/app/$orgSlug/settings/general'
     | '/app/$orgSlug/settings/invitations'
@@ -274,11 +234,7 @@ export interface FileRouteTypes {
     | '/app/onboarding'
     | '/app'
     | '/api/auth/$'
-    | '/app/$orgSlug/billing'
-    | '/app/$orgSlug/calendar'
     | '/app/$orgSlug/items'
-    | '/app/$orgSlug/map'
-    | '/app/$orgSlug/tasks'
     | '/app/$orgSlug'
     | '/app/$orgSlug/settings/general'
     | '/app/$orgSlug/settings/invitations'
@@ -300,11 +256,7 @@ export interface FileRouteTypes {
     | '/app/'
     | '/app/$orgSlug/settings'
     | '/api/auth/$'
-    | '/app/$orgSlug/billing'
-    | '/app/$orgSlug/calendar'
     | '/app/$orgSlug/items'
-    | '/app/$orgSlug/map'
-    | '/app/$orgSlug/tasks'
     | '/app/$orgSlug/'
     | '/app/$orgSlug/settings/general'
     | '/app/$orgSlug/settings/invitations'
@@ -416,39 +368,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppOrgSlugIndexRouteImport
       parentRoute: typeof AppOrgSlugRouteRoute
     }
-    '/app/$orgSlug/tasks': {
-      id: '/app/$orgSlug/tasks'
-      path: '/tasks'
-      fullPath: '/app/$orgSlug/tasks'
-      preLoaderRoute: typeof AppOrgSlugTasksRouteImport
-      parentRoute: typeof AppOrgSlugRouteRoute
-    }
-    '/app/$orgSlug/map': {
-      id: '/app/$orgSlug/map'
-      path: '/map'
-      fullPath: '/app/$orgSlug/map'
-      preLoaderRoute: typeof AppOrgSlugMapRouteImport
-      parentRoute: typeof AppOrgSlugRouteRoute
-    }
     '/app/$orgSlug/items': {
       id: '/app/$orgSlug/items'
       path: '/items'
       fullPath: '/app/$orgSlug/items'
       preLoaderRoute: typeof AppOrgSlugItemsRouteImport
-      parentRoute: typeof AppOrgSlugRouteRoute
-    }
-    '/app/$orgSlug/calendar': {
-      id: '/app/$orgSlug/calendar'
-      path: '/calendar'
-      fullPath: '/app/$orgSlug/calendar'
-      preLoaderRoute: typeof AppOrgSlugCalendarRouteImport
-      parentRoute: typeof AppOrgSlugRouteRoute
-    }
-    '/app/$orgSlug/billing': {
-      id: '/app/$orgSlug/billing'
-      path: '/billing'
-      fullPath: '/app/$orgSlug/billing'
-      preLoaderRoute: typeof AppOrgSlugBillingRouteImport
       parentRoute: typeof AppOrgSlugRouteRoute
     }
     '/api/auth/$': {
@@ -518,21 +442,13 @@ const AppOrgSlugSettingsRouteRouteWithChildren =
 
 interface AppOrgSlugRouteRouteChildren {
   AppOrgSlugSettingsRouteRoute: typeof AppOrgSlugSettingsRouteRouteWithChildren
-  AppOrgSlugBillingRoute: typeof AppOrgSlugBillingRoute
-  AppOrgSlugCalendarRoute: typeof AppOrgSlugCalendarRoute
   AppOrgSlugItemsRoute: typeof AppOrgSlugItemsRoute
-  AppOrgSlugMapRoute: typeof AppOrgSlugMapRoute
-  AppOrgSlugTasksRoute: typeof AppOrgSlugTasksRoute
   AppOrgSlugIndexRoute: typeof AppOrgSlugIndexRoute
 }
 
 const AppOrgSlugRouteRouteChildren: AppOrgSlugRouteRouteChildren = {
   AppOrgSlugSettingsRouteRoute: AppOrgSlugSettingsRouteRouteWithChildren,
-  AppOrgSlugBillingRoute: AppOrgSlugBillingRoute,
-  AppOrgSlugCalendarRoute: AppOrgSlugCalendarRoute,
   AppOrgSlugItemsRoute: AppOrgSlugItemsRoute,
-  AppOrgSlugMapRoute: AppOrgSlugMapRoute,
-  AppOrgSlugTasksRoute: AppOrgSlugTasksRoute,
   AppOrgSlugIndexRoute: AppOrgSlugIndexRoute,
 }
 

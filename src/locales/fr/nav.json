@@ -3,9 +3,6 @@
     "ai": "IA",
     "breadcrumb": {
       "items": "Éléments",
-      "calendar": "Calendrier",
-      "tasks": "Tâches",
-      "billing": "Facturation",
       "settings": "Paramètres",
       "members": "Membres",
       "invitations": "Invitations",
@@ -14,17 +11,11 @@
   },
   "groups": {
     "platform": "Plateforme",
-    "billing": "Facturation",
     "workspace": "Espace de travail"
   },
   "items": {
     "dashboard": "Tableau de bord",
     "items": "Éléments",
-    "locations": "Emplacements",
-    "calendar": "Calendrier",
-    "tasks": "Tâches",
-    "payments": "Paiements",
-    "invoices": "Factures",
     "members": "Membres",
     "invitations": "Invitations",
     "settings": "Paramètres"
