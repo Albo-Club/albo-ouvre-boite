@@ -1,0 +1,32 @@
+name: Tag release
+
+# Publishes the git tag for the version recorded in `.template-version`.
+# Complements `pnpm run release` for environments that can't push tags
+# (web sessions, CI). Downstream forks need this tag to graft ancestry on
+# their first `pnpm run upgrade-template` — see UPGRADING.md.
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  tag:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Create tag from .template-version
+        run: |
+          version="$(tr -d '[:space:]' < .template-version)"
+          echo "Version: $version"
+          grep -q "^## $version" CHANGELOG.md || {
+            echo "::error::No \"## $version\" section in CHANGELOG.md"
+            exit 1
+          }
+          if git ls-remote --tags origin "refs/tags/$version" | grep -q .; then
+            echo "Tag $version already exists — nothing to do."
+            exit 0
+          fi
+          git tag "$version"
+          git push origin "refs/tags/$version"
