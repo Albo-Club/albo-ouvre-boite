@@ -20,6 +20,7 @@
     "setup:prod": "node scripts/setup-prod.mjs",
     "init": "node scripts/init.mjs",
     "upgrade-template": "node scripts/upgrade-template.mjs",
+    "release": "node scripts/release.mjs",
     "test:smoke": "node scripts/e2e-smoke.mjs",
     "test:cookies": "bash scripts/test-cookies.sh"
   },

@@ -304,7 +304,7 @@ pnpm exec convex run admin:purgeExcept '{"keepEmail":"you@yourco.com"}'
 
 ## Maintaining this template
 
-This repo is the **source** template. Two things keep derived projects clean:
+This repo is the **source** template. Three things keep derived projects clean:
 
 1. **The GitHub "Template repository" flag.** Enable it once so "Use this
    template" creates repos *without* inheriting this history:
@@ -322,6 +322,14 @@ This repo is the **source** template. Two things keep derived projects clean:
    asserts zero residual brand token — failing loudly if anything is missed.
    The upstream identity `Albo-Club/albo-ouvre-boite` is preserved so the
    `pnpm run upgrade-template` channel keeps working downstream.
+
+3. **Tag releases with `pnpm run release vX.Y.Z`.** Write the release notes
+   in `CHANGELOG.md` first (and migration steps in `UPGRADING.md` if any),
+   then run the script: it syncs `.template-version`, commits, tags, and
+   tells you what to push. The tag is what lets "Use this template" snapshots
+   (no shared git history) graft ancestry on their first
+   `pnpm run upgrade-template` — without a pushed tag, that first upgrade
+   fails downstream.
 
 ## See also
 
