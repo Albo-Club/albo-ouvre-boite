@@ -266,48 +266,25 @@ curl -sI https://<your-vercel-domain>/             # expect HTTP 200
 
 ## CI / Ops
 
-What runs, and what each piece needs (the Day 1 checklist below covers the
-one-time settings):
-
 - `ci.yml` — lint (tsc + eslint) + build on push/PR, plus a `skills-drift`
-  job that runs the skills check against upstream. When it goes red, run
-  `pnpm run sync:skills`, review the SKILL.md diff, commit. This is the
-  guaranteed freshness path — it needs zero repo settings.
-- `sync-skills.yml` — Monday cron + manual trigger; opens a
-  `chore/sync-skills` PR when upstream skills changed. Requires the
-  "create and approve pull requests" Actions setting (checklist item 1);
-  the bot PR won't trigger CI on its own (close/reopen it, or use a PAT —
-  details in the workflow header).
+  job that checks SKILL.md files against upstream. When it goes red, run
+  `pnpm run sync:skills`, review the diff, commit. Zero repo settings
+  needed — this is the whole skills freshness chain. (A cron + auto-PR
+  workflow used to exist; see `KNOWN_ISSUES.md` for why it was removed.)
 - `release-tag.yml` — publishes the git tag for `.template-version` when a
   release bump merges to `main`. The downstream `pnpm run upgrade-template`
   channel depends on these tags.
 - Renovate — weekly, groups non-majors, automerges devDeps, freezes the
   pinned `pnpm.overrides` until you bump them. Also bumps action versions
   in `.github/workflows/*` (the `github-actions` manager is on by default
-  in `config:recommended`). Inert until the Renovate app is installed
-  (checklist item 2).
+  in `config:recommended`).
 
-### Day 1 checklist (new derived repo)
-
-Do these once, right after creating a repo from this template — none of
-them can ship inside the template itself:
-
-1. **Allow Actions to open PRs** — Settings → Actions → General → Workflow
-   permissions → check **"Allow GitHub Actions to create and approve pull
-   requests"**. Org-owned repo? An org admin must first allow it in the
-   org's Actions settings, otherwise the repo checkbox is greyed out.
-   Without it, `sync-skills.yml` fails at the create-pull-request step.
-2. **Install Renovate** — add the repo to the
-   [Renovate GitHub App](https://github.com/apps/renovate) (org install →
-   select the repo). `renovate.json` does nothing until the app is in.
-3. **Validate sync-skills** — Actions → "Sync skills" → Run workflow. A
-   green run (with or without a PR) proves the chain. Then confirm the
-   cron fired after the next Monday 06:00 UTC — schedules only run from
-   the default branch, and public repos auto-disable them after 60 days
-   without activity.
-
-Done when: CI is green on your first PR, Renovate has opened its
-onboarding PR, and a sync-skills run has succeeded (manual or cron).
+**Day 1 of a derived repo** — one setting, the only piece that can't ship
+inside the template: install the
+[Renovate GitHub App](https://github.com/apps/renovate) on the repo (org
+install → select the repo); `renovate.json` does nothing until the app is
+in. Done when your first PR has green CI and Renovate has opened its
+onboarding PR.
 
 ## Convex MCP server
 

@@ -144,9 +144,9 @@ domaines ci-dessous, lis la skill correspondante dans `.agents/skills/`
 d'entraînement, qui sont périmées sur ces libs.
 
 Manifest : `skills-lock.json` (source, chemin upstream, hash SHA-256).
-Sync hebdo via GitHub Action (`.github/workflows/sync-skills.yml`,
-lundi 06:00 UTC) + manuel via `pnpm run sync:skills`.
-Vérifier la dérive : `pnpm run sync:skills:check`.
+Dérive détectée en CI (job `skills-drift` de `.github/workflows/ci.yml`) ;
+remédiation : `pnpm run sync:skills` + revue du diff + commit.
+Vérifier localement : `pnpm run sync:skills:check`.
 
 | Skill                                     | Domaine                                | Source upstream                            | Officiel ? |
 | ----------------------------------------- | -------------------------------------- | ------------------------------------------ | ---------- |

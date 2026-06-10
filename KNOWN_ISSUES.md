@@ -595,8 +595,31 @@ unbounded. Set those up before re-enabling.
 Field data from a derived project (2 weeks in) confirms the removal:
 the workflow failed 47/47 runs with `GitHub Actions is not permitted to create
 or approve pull requests` (the Actions setting is off by default on new
-repos — see README § Day 1 checklist), and even repaired it would have
-produced empty changelogs because the commits there don't follow Conventional
-Commits. Re-enabling needs all four: the Actions setting, the `version` field,
-the manifest bootstrap, **and** Conventional Commits discipline. For this
-template's actual release flow (manual notes + tag), see `release-tag.yml`.
+repos), and even repaired it would have produced empty changelogs because the
+commits there don't follow Conventional Commits. Re-enabling needs all four:
+the Actions setting, the `version` field, the manifest bootstrap, **and**
+Conventional Commits discipline. For this template's actual release flow
+(manual notes + tag), see `release-tag.yml`.
+
+## sync-skills.yml (cron + auto-PR) was removed — CI drift check replaced it
+
+A weekly workflow (Monday cron + `peter-evans/create-pull-request`) used to
+open a `chore/sync-skills` PR when upstream SKILL.md files changed. Removed
+because every link in its chain was fragile while the alternative needs zero
+setup:
+
+- The PR step fails with `GitHub Actions is not permitted to create or
+  approve pull requests` unless a repo Actions setting (off by default, and
+  org-gated for org repos) is flipped on every derived repo.
+- Even then, PRs opened with the default `GITHUB_TOKEN` don't trigger
+  `on: pull_request` workflows — the bot PR shows no CI checks unless you
+  close/reopen it or wire up a PAT.
+- Crons are best-effort: they only run from the default branch, GitHub
+  auto-disables them on public repos after 60 days of inactivity, and on a
+  derived project the Monday cron never fired once in 2 weeks.
+
+Replacement: the `skills-drift` job in `ci.yml` runs
+`node scripts/sync-skills.mjs --check` on every push/PR (the script is
+dependency-free — no `pnpm install`). Red job → `pnpm run sync:skills`,
+review the diff, commit. Drift surfaces exactly when someone is coding,
+which is the only time fresh skills matter.

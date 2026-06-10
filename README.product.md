@@ -52,29 +52,14 @@ user across the deployment becomes `superAdmin: true` automatically.
 
 ## Day 1 — GitHub repo settings
 
-Three one-time settings keep the freshness chain (skills, dependencies,
-actions) alive. None of them can ship inside the repo itself:
+One setting keeps dependency updates alive — it can't ship inside the repo
+itself: install the [Renovate GitHub App](https://github.com/apps/renovate)
+on the repo (org install → select the repo). `renovate.json` does nothing
+until the app is in. Done when your first PR has green CI and Renovate has
+opened its onboarding PR.
 
-1. **Allow Actions to open PRs** — Settings → Actions → General → Workflow
-   permissions → check **"Allow GitHub Actions to create and approve pull
-   requests"**. Org-owned repo? An org admin must first allow it in the
-   org's Actions settings, otherwise the repo checkbox is greyed out.
-   Without it, `sync-skills.yml` fails at the create-pull-request step.
-2. **Install Renovate** — add the repo to the
-   [Renovate GitHub App](https://github.com/apps/renovate) (org install →
-   select the repo). `renovate.json` does nothing until the app is in.
-3. **Validate sync-skills** — Actions → "Sync skills" → Run workflow. A
-   green run (with or without a PR) proves the chain. Then confirm the
-   cron fired after the next Monday 06:00 UTC — schedules only run from
-   the default branch, and public repos auto-disable them after 60 days
-   without activity.
-
-Done when: CI is green on your first PR, Renovate has opened its
-onboarding PR, and a sync-skills run has succeeded (manual or cron).
-
-Fallback if you skip all three: the `skills-drift` job in `ci.yml` still
-goes red when upstream skills move — run `pnpm run sync:skills`, review,
-commit.
+Skills freshness needs nothing: the `skills-drift` job in `ci.yml` goes
+red when upstream skills move — run `pnpm run sync:skills`, review, commit.
 
 ## Staying up to date with the starter
 
