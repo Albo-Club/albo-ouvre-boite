@@ -104,6 +104,7 @@ Connecté en tant qu'Alice sur `/app/acme/`.
 | SH11 | Ouvrir une page au contenu plus haut que l'écran (ex. Items long) | Le cadre `inset` reste calé sur la hauteur du viewport ; le scroll se fait **dans** le cadre, bord bas arrondi toujours visible |
 | SH12 | URL inconnue (ex. `/app/acme/nope` ou `/nope`)                 | Carte 404 stylée (FR/EN selon locale) + bouton retour accueil      |
 | SH13 | Dashboard / Items pendant le chargement initial                | Skeletons animés (KPI, recent items, table) — pas de texte "Loading…" nu |
+| SH14 | Bouton "Nouveautés" (footer sidebar, pastille visible au 1ᵉʳ passage) | Dialog avec entrées datées FR/EN ; la pastille disparaît après ouverture et ne revient pas au reload |
 
 ## Niveau 2 — Data table items (5 min)
 

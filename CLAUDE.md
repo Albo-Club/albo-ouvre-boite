@@ -345,3 +345,6 @@ export const remove = mutation({
 - Create the target file BEFORE writing a local import.
 - `pnpm dev` runs Vite + `convex dev` in parallel (via `concurrently`).
 - Before commit: `pnpm typecheck` must pass + Convex log must show `ready`.
+- Shipped something users can see? Add an in-app changelog entry: metadata
+  in `src/lib/changelog.ts`, copy (en + fr) in
+  `src/locales/{en,fr}/changelog.json`.
