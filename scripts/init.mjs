@@ -114,8 +114,8 @@ async function detemplatizeClaudeMd() {
   if (!existsSync(path)) return false
   const before = await readFile(path, 'utf8')
   const after = before.replace(
-    'Avant de dériver le template en projet de prod, dérouler `TESTING.md`',
-    'Avant chaque mise en production, dérouler `TESTING.md`',
+    'Before forking the template into a prod project, run through `TESTING.md`',
+    'Before each production deployment, run through `TESTING.md`',
   )
   if (after === before) return false
   await writeFile(path, after)

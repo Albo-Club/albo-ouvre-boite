@@ -22,7 +22,7 @@ dedup'd only by `betterAuthId`.
 
 Result : prod had two duplicate `users` rows for one human.
 
-### The rule (anti-récidive)
+### The rule (preventing recurrence)
 
 **Before adding or modifying any auth method in `convex/auth.ts`**, check
 all three :
@@ -61,14 +61,14 @@ unverified, so BA refuses to link it.
 
 ### Legacy users
 
-Comptes prod créés avant ce fix ont `emailVerified: false` côté BA. Au
-prochain `signIn.email`, ils seront bloqués — l'écran `/login` détecte
-`EMAIL_NOT_VERIFIED` et propose "Resend verification email" pour
-débloquer. Pas de migration automatique.
+Prod accounts created before this fix have `emailVerified: false` on the BA
+side. On the next `signIn.email`, they will be blocked — the `/login` screen
+detects `EMAIL_NOT_VERIFIED` and offers "Resend verification email" to
+unblock. No automatic migration.
 
-Pour les doublons `users` déjà créés en prod, `provisionAppUser` les
-convergera vers une seule rangée au prochain login du user, mais le
-second BA user reste en base. Cleanup manuel via dashboard Convex.
+For duplicate `users` rows already created in prod, `provisionAppUser` will
+converge them to a single row on the user's next login, but the second BA
+user remains in the database. Manual cleanup via the Convex dashboard.
 
 ## Google OAuth (template — opt-in)
 
@@ -105,7 +105,7 @@ trusted-email reasoning applies; flip the scaffold in `linked-accounts.tsx`.
 
 ## Auth hardening (Phase 0)
 
-### `sendChangeEmailConfirmation`, pas `sendChangeEmailVerification`
+### `sendChangeEmailConfirmation`, not `sendChangeEmailVerification`
 
 The handler that fires on **email-change** lives under
 `user.changeEmail.sendChangeEmailConfirmation` in Better Auth (verified
@@ -389,9 +389,9 @@ audit.
   `@assistant-ui/react`. No Convex adapter exists for assistant-ui; the brief's
   pick would require ~200 lines of glue. Loss: markdown rendering, attachments,
   tool-call UI, edit/regenerate. Migrate later if polish is needed.
-- **Anthropic model default `claude-haiku-4-5`** — choisi pour le ratio
-  coût/latence sur un assistant in-app. Override via `ANTHROPIC_MODEL` env var
-  (ex. `claude-sonnet-4-6` pour des tâches plus lourdes).
+- **Anthropic model default `claude-haiku-4-5`** — chosen for its cost/latency
+  ratio in an in-app assistant. Override via `ANTHROPIC_MODEL` env var
+  (e.g. `claude-sonnet-4-6` for heavier tasks).
 - **Rate-limit thresholds** chosen for usable defaults (e.g. invitations 20/h
   burst 5) rather than the brief's tight 3/min example.
 - **Super-admin lacks impersonate** — out of scope for MVP, needs a careful

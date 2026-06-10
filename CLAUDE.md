@@ -116,14 +116,22 @@ update project overrides if needed — don't mute the check.
 
 # Project-specific guide
 
-## Plan de test bout-en-bout
+## Language
 
-Avant de dériver le template en projet de prod, dérouler `TESTING.md`
-(niveaux 1 → 6, ~70 min). Le niveau 1 est automatisé (`pnpm typecheck`,
-`pnpm lint`, `pnpm build`, `pnpm test:smoke`, `pnpm sync:skills:check`),
-le reste est manuel — checklist de signoff pour valider auth, multi-tenant,
+All code-related content must be written in English: source code comments,
+skill files, `CLAUDE.md`, `TESTING.md`, `KNOWN_ISSUES.md`, inline
+documentation, error messages visible to developers, log strings, and any
+other developer-facing text. The only exceptions are user-facing copy in
+`src/locales/fr/` and bilingual email templates in `convex/emailTemplates.ts`.
+
+## End-to-end test plan
+
+Before forking the template into a prod project, run through `TESTING.md`
+(levels 1 → 6, ~70 min). Level 1 is automated (`pnpm typecheck`,
+`pnpm lint`, `pnpm build`, `pnpm test:smoke`, `pnpm sync:skills:check`);
+the rest is manual — a sign-off checklist to validate auth, multi-tenant,
 invitations, items CRUD, uploads, account lifecycle, super-admin, AI chat,
-sécurité.
+security.
 
 ## Stack
 
@@ -138,78 +146,77 @@ sécurité.
 
 ## Skills (READ BEFORE CODING)
 
-**Obligation** : avant d'écrire ou de modifier du code touchant un des
-domaines ci-dessous, lis la skill correspondante dans `.agents/skills/`
-(symlinkée dans `.claude/skills/`). Elle remplace tes connaissances
-d'entraînement, qui sont périmées sur ces libs.
+**Required**: before writing or modifying any code touching one of the
+domains below, read the corresponding skill in `.agents/skills/`
+(symlinked at `.claude/skills/`). It supersedes your training knowledge,
+which is stale for these libraries.
 
-Manifest : `skills-lock.json` (source, chemin upstream, hash SHA-256).
-Dérive détectée en CI (job `skills-drift` de `.github/workflows/ci.yml`) ;
-remédiation : `pnpm run sync:skills` + revue du diff + commit.
-Vérifier localement : `pnpm run sync:skills:check`.
+Manifest: `skills-lock.json` (source, upstream path, SHA-256 hash).
+Drift detected in CI (job `skills-drift` in `.github/workflows/ci.yml`);
+remediation: `pnpm run sync:skills` + review the diff + commit.
+Verify locally: `pnpm run sync:skills:check`.
 
-| Skill                                     | Domaine                                | Source upstream                            | Officiel ? |
+| Skill                                     | Domain                                 | Upstream source                            | Official?  |
 | ----------------------------------------- | -------------------------------------- | ------------------------------------------ | ---------- |
-| `convex`                                  | Routeur entre skills Convex            | `get-convex/agent-skills`                  | ✅ officiel |
-| `convex-quickstart`                       | Bootstrap Convex                       | `get-convex/agent-skills`                  | ✅ officiel |
-| `convex-setup-auth`                       | Auth Convex + identité + RBAC          | `get-convex/agent-skills`                  | ✅ officiel |
-| `convex-create-component`                 | Construire un composant Convex         | `get-convex/agent-skills`                  | ✅ officiel |
-| `convex-migration-helper`                 | Migrations de schéma / data            | `get-convex/agent-skills`                  | ✅ officiel |
-| `convex-performance-audit`                | Audit perf reads/subscriptions/OCC     | `get-convex/agent-skills`                  | ✅ officiel |
-| `better-auth-best-practices`              | Config Better Auth générale            | `better-auth/skills`                       | ✅ officiel |
-| `better-auth-security-best-practices`     | Hardening (rate-limit, CSRF, sessions) | `better-auth/skills`                       | ✅ officiel |
-| `email-and-password-best-practices`       | Email/password BA                      | `better-auth/skills`                       | ✅ officiel |
-| `two-factor-authentication-best-practices`| 2FA / TOTP / backup codes              | `better-auth/skills`                       | ✅ officiel |
-| `organization-best-practices`             | Plugin `organization()` BA             | `better-auth/skills`                       | ✅ officiel ⚠️ |
-| `create-auth-skill`                       | Scaffolding auth BA                    | `better-auth/skills`                       | ✅ officiel |
-| `tanstack-start-best-practices`           | SSR, server functions, middleware      | `deckardger/tanstack-agent-skills`         | ⚠️ communauté |
+| `convex`                                  | Convex skill router                    | `get-convex/agent-skills`                  | ✅ official |
+| `convex-quickstart`                       | Convex bootstrap                       | `get-convex/agent-skills`                  | ✅ official |
+| `convex-setup-auth`                       | Convex auth + identity + RBAC          | `get-convex/agent-skills`                  | ✅ official |
+| `convex-create-component`                 | Building a Convex component            | `get-convex/agent-skills`                  | ✅ official |
+| `convex-migration-helper`                 | Schema / data migrations               | `get-convex/agent-skills`                  | ✅ official |
+| `convex-performance-audit`                | Perf audit reads/subscriptions/OCC     | `get-convex/agent-skills`                  | ✅ official |
+| `better-auth-best-practices`              | General Better Auth config             | `better-auth/skills`                       | ✅ official |
+| `better-auth-security-best-practices`     | Hardening (rate-limit, CSRF, sessions) | `better-auth/skills`                       | ✅ official |
+| `email-and-password-best-practices`       | Email/password BA                      | `better-auth/skills`                       | ✅ official |
+| `two-factor-authentication-best-practices`| 2FA / TOTP / backup codes              | `better-auth/skills`                       | ✅ official |
+| `organization-best-practices`             | BA `organization()` plugin             | `better-auth/skills`                       | ✅ official ⚠️ |
+| `create-auth-skill`                       | Auth BA scaffolding                    | `better-auth/skills`                       | ✅ official |
+| `tanstack-start-best-practices`           | SSR, server functions, middleware      | `deckardger/tanstack-agent-skills`         | ⚠️ community |
 
-**⚠️ `organization-best-practices`** : skill officielle BA, mais le plugin
-`organization()` est **désactivé** dans ce projet (voir `KNOWN_ISSUES.md`).
-Lis-la pour comprendre les concepts ; n'applique pas le code BA tel quel —
-nos orgs/membres vivent dans le schéma Convex maison.
+**⚠️ `organization-best-practices`**: official BA skill, but the
+`organization()` plugin is **disabled** in this project (see `KNOWN_ISSUES.md`).
+Read it to understand the concepts; don't apply the BA code as-is —
+our orgs/members live in the custom Convex schema.
 
-**⚠️ TanStack Start (`deckardger/tanstack-agent-skills`)** : TanStack ne
-publie pas (encore) de skill officielle. La meilleure source communautaire est
-le repo de Deckardger. Stratégie de maintenance :
-1. Vérifier le repo upstream tous les 1–2 mois (le sync hebdo détecte la dérive).
-2. Si la qualité se dégrade ou si TanStack publie un repo officiel, changer le
-   `source` + `skillPath` dans `skills-lock.json` et relancer `pnpm run sync:skills`.
-3. À défaut, fallback sur le MCP `context7` (`mcp__…__query-docs`) pour
-   `/tanstack/start` à la demande.
+**⚠️ TanStack Start (`deckardger/tanstack-agent-skills`)**: TanStack does not
+(yet) publish an official skill. The best community source is the Deckardger
+repo. Maintenance strategy:
+1. Check the upstream repo every 1–2 months (the weekly sync detects drift).
+2. If quality degrades or TanStack publishes an official repo, update
+   `source` + `skillPath` in `skills-lock.json` and re-run `pnpm run sync:skills`.
+3. As a fallback, use the `context7` MCP (`mcp__…__query-docs`) for
+   `/tanstack/start` on demand.
 
-**shadcn/ui** : pas de skill agent à ce jour. Les conventions vivent dans
-`components.json` (alias `@/components`, neutral theme, radius 0.5rem, tokens
-oklch dans `src/styles/brand.css`). Pour générer/maj un composant, utilise le
-CLI `pnpm dlx shadcn@latest add <component>` ou le MCP shadcn si configuré.
-Ne JAMAIS modifier `src/components/ui/*` à la main pour le restyler — passer
-par les tokens CSS.
+**shadcn/ui**: no agent skill yet. Conventions live in `components.json`
+(alias `@/components`, neutral theme, radius 0.5rem, oklch tokens in
+`src/styles/brand.css`). To generate/update a component, use the CLI
+`pnpm dlx shadcn@latest add <component>` or the shadcn MCP if configured.
+NEVER modify `src/components/ui/*` by hand to restyle — go through CSS tokens.
 
 **Better Auth UI** (`better-auth-ui.com`, `daveyplate/better-auth-ui`,
-shadcn registry, v1.6.x, actif) : kit drop-in officieux pour Better Auth qui
-shippe `<SignIn>`, `<SignUp>`, `<ForgotPassword>`, `<ResetPassword>`,
+shadcn registry, v1.6.x, active): unofficial drop-in kit for Better Auth that
+ships `<SignIn>`, `<SignUp>`, `<ForgotPassword>`, `<ResetPassword>`,
 `<SignOut>`, `<Settings>`, `<AccountSettings>`, `<ChangeEmail>`,
 `<ChangePassword>`, `<SecuritySettings>`, `<ActiveSessions>`,
-`<LinkedAccounts>`, `<UserButton>`, `<UserAvatar>`, plus des hooks React
-(`useSession`, `useListSessions`, `useChangePassword`, …) et des templates
-email (`<EmailVerificationEmail>`, `<MagicLinkEmail>`, `<PasswordChangedEmail>`,
+`<LinkedAccounts>`, `<UserButton>`, `<UserAvatar>`, plus React hooks
+(`useSession`, `useListSessions`, `useChangePassword`, …) and email templates
+(`<EmailVerificationEmail>`, `<MagicLinkEmail>`, `<PasswordChangedEmail>`,
 `<NewDeviceEmail>`, …). Install via `pnpm dlx shadcn@latest add
-https://better-auth-ui.com/r/auth.json`. Inventaire complet :
+https://better-auth-ui.com/r/auth.json`. Full inventory:
 `better-auth-ui.com/llms.txt`.
 
-**Quand consulter** : nouveaux projets ou nouvelles surfaces auth (passkey,
-multi-session, OAuth providers, OTP, sessions actives, captcha). Ne **pas**
-migrer rétroactivement `/login`, `/register`, `/forgot-password`,
-`/reset-password` : on a déjà du custom au-dessus (anti-enum, classifier
-d'erreurs, HIBP, zxcvbn meter, FieldDescription, inline alert) que le kit
-ne couvre pas. Pour les **gaps** identifiés vs Better Auth UI (sessions
-actives, notifs post-event, linked accounts), évaluer au cas par cas si on
-adopte les composants drop-in ou si on roule à la main pour rester
-cohérent avec le reste du projet.
+**When to consult**: new projects or new auth surfaces (passkey, multi-session,
+OAuth providers, OTP, active sessions, captcha). Do **not** retroactively
+migrate `/login`, `/register`, `/forgot-password`, `/reset-password`: we
+already have custom code on top (anti-enum, error classifier, HIBP, zxcvbn
+meter, FieldDescription, inline alert) that the kit doesn't cover. For
+**gaps** identified vs Better Auth UI (active sessions, post-event
+notifications, linked accounts), evaluate case by case whether to adopt the
+drop-in components or roll our own to stay consistent with the rest of the
+project.
 
-**Guidelines Convex spécifiques projet** : `convex/_generated/ai/guidelines.md`
-(régénéré par `convex dev`). Lecture obligatoire avant patterns Convex non
-triviaux — il override tout, y compris les skills upstream.
+**Project-specific Convex guidelines**: `convex/_generated/ai/guidelines.md`
+(regenerated by `convex dev`). Required reading before non-trivial Convex
+patterns — it overrides everything, including upstream skills.
 
 ## Routing conventions
 

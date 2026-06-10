@@ -1,233 +1,232 @@
-# TESTING — plan de validation bout-en-bout
+# TESTING — end-to-end validation plan
 
-Plan manuel + automatisé pour valider une copie fraîche du template avant
-de la dériver en SaaS de prod. Compter ~70 min de bout en bout.
+Manual + automated plan to validate a fresh copy of the template before
+forking it into a production SaaS. Allow ~70 min end-to-end.
 
-Pré-requis :
+Prerequisites:
 
 - `pnpm install`
-- `pnpm exec convex dev` lancé une fois (provisionne le déploiement)
-- Variables d'environnement Convex configurées :
+- `pnpm exec convex dev` run once (provisions the deployment)
+- Convex environment variables set:
   - `BETTER_AUTH_SECRET`
-  - `SITE_URL` (`http://localhost:3000` en local)
-  - `RESEND_API_KEY` + `RESEND_FROM` + `RESEND_TEST_MODE=true` en dev
-  - `ANTHROPIC_API_KEY` (modèle par défaut : `claude-haiku-4-5`)
-- `.env.local` rempli (`VITE_CONVEX_URL`, `CONVEX_DEPLOYMENT`)
-- 2 navigateurs (ou 1 navigateur + 1 fenêtre incognito) prêts pour les
-  tests multi-tenant
+  - `SITE_URL` (`http://localhost:3000` locally)
+  - `RESEND_API_KEY` + `RESEND_FROM` + `RESEND_TEST_MODE=true` in dev
+  - `ANTHROPIC_API_KEY` (default model: `claude-haiku-4-5`)
+- `.env.local` filled in (`VITE_CONVEX_URL`, `CONVEX_DEPLOYMENT`)
+- 2 browsers (or 1 browser + 1 incognito window) ready for multi-tenant tests
 
-## Niveau 1 — Build & smoke (automatisé, 2 min)
+## Level 1 — Build & smoke (automated, 2 min)
 
-| #  | Étape         | Commande                 | Résultat attendu              |
+| #  | Step          | Command                  | Expected result               |
 | -- | ------------- | ------------------------ | ----------------------------- |
-| B1 | Typecheck     | `pnpm typecheck`         | Exit 0, aucune erreur         |
-| B2 | Lint          | `pnpm lint`              | Exit 0, 0 warning             |
-| B3 | Build         | `pnpm build`             | Bundle écrit dans `.output/`  |
-| B4 | Smoke E2E     | `pnpm test:smoke`        | Tous les scénarios passent    |
-| B5 | Cookies prod  | `pnpm test:cookies`      | `albo.session_token` a Secure+HttpOnly+SameSite=Lax+Max-Age≈604800 |
-| B6 | Skills à jour | `pnpm sync:skills:check` | `0 skills drifted`            |
+| B1 | Typecheck     | `pnpm typecheck`         | Exit 0, no errors             |
+| B2 | Lint          | `pnpm lint`              | Exit 0, 0 warnings            |
+| B3 | Build         | `pnpm build`             | Bundle written to `.output/`  |
+| B4 | Smoke E2E     | `pnpm test:smoke`        | All scenarios pass            |
+| B5 | Prod cookies  | `pnpm test:cookies`      | `albo.session_token` has Secure+HttpOnly+SameSite=Lax+Max-Age≈604800 |
+| B6 | Skills up-to-date | `pnpm sync:skills:check` | `0 skills drifted`        |
 
-B2–B3 et B6 tournent aussi en CI sur chaque PR (`.github/workflows/ci.yml`,
-B6 via le job `skills-drift`).
-B4–B5 restent locaux : ils requièrent un déploiement Convex provisionné.
+B2–B3 and B6 also run in CI on every PR (`.github/workflows/ci.yml`,
+B6 via the `skills-drift` job).
+B4–B5 remain local: they require a provisioned Convex deployment.
 
-## Niveau 2 — Auth (6 min)
+## Level 2 — Auth (6 min)
 
-Les minutiae UI (texte exact, spinners, skeletons, aria-label) ne sont pas
-listées ici — elles tombent sous le CI visuel + typecheck. Ce niveau
-couvre uniquement les comportements qui peuvent **régresser silencieusement**.
+UI minutiae (exact text, spinners, skeletons, aria-label) are not listed
+here — they fall under visual CI + typecheck. This level covers only
+behaviours that can **silently regress**.
 
-Tester avec un user neuf "Alice" (`alice@test.local`).
+Test with a fresh user "Alice" (`alice@test.local`).
 
-| #   | Étape                                                  | Résultat attendu                                                                  |
+| #   | Step                                                   | Expected result                                                                   |
 | --- | ------------------------------------------------------ | --------------------------------------------------------------------------------- |
-| A1  | `/register` → submit, onboarding org "Acme"            | Redirige `/app/acme`, user créé, `superAdmin: true` (premier user). Si `DEV_NOTIFY_EMAIL` est set, un mail "[albo] New signup: …" arrive dans cette inbox (1× par nouveau user, pas sur re-login). |
-| A2  | Sign out → re-sign in correct                          | Redirige `/app/acme` (dernière org via `lastOrgSlug`)                              |
-| A3  | Sign in mauvais mdp                                    | Inline `<Alert>` destructive au-dessus du form (pas toast). Pas de session.       |
-| A4  | `/app/acme` non authentifié                            | Redirige `/login?redirect=…`                                                       |
-| A5  | `/app/me` → change password                            | Toast succès **+ email "Password changed"** (anti-takeover) + autres sessions invalidées |
-| A6  | Magic link enregistré + non-enregistré                 | Toast privacy-respecting identique. Aucune `users` row créée pour email inconnu.   |
-| A7  | Forgot → reset chain (email → token → nouveau mdp)     | Sign-in avec nouveau mdp marche. Sessions pré-reset toutes invalidées.            |
-| A8  | `/reset-password?token=expired` (ou sans token)        | Card "Invalid or expired link" + CTA primary "Send a new reset link"               |
-| A9  | `/register` avec email déjà enregistré                 | **Même** écran "Check your inbox" qu'un signup neuf (anti-enumeration), aucun email envoyé |
-| A10 | Rate-limit (sign-in 6×, sign-up 4×, magic 4× /60s)     | Toast "Too many attempts…" via classifier (plus de message BA cru)                |
-| A11 | `/app/me` → change email                               | Email **d'approbation** arrive à l'adresse **courante** (anti-takeover), pas à la nouvelle |
+| A1  | `/register` → submit, onboarding org "Acme"            | Redirects to `/app/acme`, user created, `superAdmin: true` (first user). If `DEV_NOTIFY_EMAIL` is set, a "[albo] New signup: …" email arrives in that inbox (1× per new user, not on re-login). |
+| A2  | Sign out → re-sign in correct                          | Redirects to `/app/acme` (last org via `lastOrgSlug`)                              |
+| A3  | Sign in with wrong password                            | Inline destructive `<Alert>` above the form (not a toast). No session.            |
+| A4  | `/app/acme` unauthenticated                            | Redirects to `/login?redirect=…`                                                  |
+| A5  | `/app/me` → change password                            | Success toast **+ "Password changed" email** (anti-takeover) + other sessions invalidated |
+| A6  | Magic link for registered + unregistered email         | Identical privacy-respecting toast. No `users` row created for unknown email.     |
+| A7  | Forgot → reset chain (email → token → new password)    | Sign-in with new password works. All pre-reset sessions invalidated.              |
+| A8  | `/reset-password?token=expired` (or no token)          | Card "Invalid or expired link" + primary CTA "Send a new reset link"              |
+| A9  | `/register` with already-registered email              | **Same** "Check your inbox" screen as a new signup (anti-enumeration), no email sent |
+| A10 | Rate-limit (sign-in 6×, sign-up 4×, magic 4× /60s)    | "Too many attempts…" toast via classifier (no raw BA message)                     |
+| A11 | `/app/me` → change email                               | **Approval email** arrives at the **current** address (anti-takeover), not the new one |
 | A12 | Password constraints (`/register` + `/reset-password`) | <12 chars → Zod block. HIBP leak → "appeared in known data breaches". zxcvbn meter visible. |
-| A13 | Password match feedback `/reset-password`              | Identiques → ✓ vert "Passwords match". Différents → rouge case-sensitive hint.    |
-| A14 | Resend (verification & reset)                          | 2e email arrive si email existe. Toast neutre privacy-respecting.                  |
-| A15 | Network error (offline) sur magic-link + forgot        | Inline `<Alert>` "Network error" (pas de fausse "link sent" trompeuse).            |
-| A16 | `/app/me` Sessions → list + Revoke + "Sign out others" | Session courante = badge Current sans bouton Revoke. Revoke autres OK. "Sign out other devices" demande confirm puis invalide tout sauf l'actuelle. |
-| A17 | **Cross-tab persistence** (régression localhost)        | Sign-in onglet A → ouvrir onglet B sur `/app/acme` → reste loggé. Hard refresh chaque onglet 3× → toujours loggé. |
-| A18 | Onboarding org avec slug réservé (`admin`, `api`, `me`) | Feedback inline "This slug is reserved" sous l'input. Submit toast "slug_reserved". |
-| A19 | Onboarding org avec slug déjà pris                      | Feedback inline "This slug is already taken" en temps réel (sans soumettre). Submit toast "slug_taken". |
-| A20 | **Google sign-in** — sans `GOOGLE_CLIENT_ID/SECRET`     | `/login` + `/register` : **pas** de bouton "Continue with Google" ni séparateur (template propre, aucune erreur). |
-| A21 | **Google sign-in** — avec creds + redirect URI Google Console (`${SITE_URL}/api/auth/callback/google`) | Bouton visible. Nouveau user → redirige `/app`, `users` row créée. Email d'un compte password existant → **pas** de doublon `users` (dédup email). |
-| A22 | Échec OAuth Google (annulation / erreur)               | Retour `/login?error=…` → toast "Couldn't sign in with that provider".             |
-| A22b | **Google en prod** — après `pnpm run setup:prod` (creds Google présentes en dev) | `convex env list --prod` contient `GOOGLE_CLIENT_ID` ; redirect URI prod ajoutée au même client Google ; bouton visible sur le domaine prod, sign-in OK. |
+| A13 | Password match feedback `/reset-password`              | Match → green ✓ "Passwords match". Mismatch → red case-sensitive hint.           |
+| A14 | Resend (verification & reset)                          | 2nd email arrives if address exists. Neutral privacy-respecting toast.            |
+| A15 | Network error (offline) on magic-link + forgot         | Inline `<Alert>` "Network error" (no misleading false "link sent").               |
+| A16 | `/app/me` Sessions → list + Revoke + "Sign out others" | Current session = "Current" badge, no Revoke button. Revoking others works. "Sign out other devices" asks confirmation then invalidates all except current. |
+| A17 | **Cross-tab persistence** (localhost regression)       | Sign in on tab A → open tab B on `/app/acme` → stays logged in. Hard-refresh each tab 3× → still logged in. |
+| A18 | Onboarding org with reserved slug (`admin`, `api`, `me`) | Inline "This slug is reserved" feedback below the input. Submit toast "slug_reserved". |
+| A19 | Onboarding org with already-taken slug                 | Inline "This slug is already taken" feedback in real time (before submit). Submit toast "slug_taken". |
+| A20 | **Google sign-in** — without `GOOGLE_CLIENT_ID/SECRET` | `/login` + `/register`: **no** "Continue with Google" button or separator (clean template, no errors). |
+| A21 | **Google sign-in** — with credentials + redirect URI in Google Console (`${SITE_URL}/api/auth/callback/google`) | Button visible. New user → redirects to `/app`, `users` row created. Email matching an existing password account → **no** duplicate `users` row (email dedup). |
+| A22 | Google OAuth failure (cancelled / error)               | Returns to `/login?error=…` → toast "Couldn't sign in with that provider".        |
+| A22b | **Google in prod** — after `pnpm run setup:prod` (Google creds present in dev) | `convex env list --prod` contains `GOOGLE_CLIENT_ID`; prod redirect URI added to the same Google client; button visible on prod domain, sign-in works. |
 
-> **A23+ (gaps connues)** : pas d'email "Password changed" sur le flow
-> `/forgot-password → /reset-password` ni NewDeviceEmail — voir
-> `KNOWN_ISSUES.md` § "Post-event notification coverage" pour la roadmap.
+> **A23+ (known gaps)**: no "Password changed" email on the
+> `/forgot-password → /reset-password` flow, nor NewDeviceEmail — see
+> `KNOWN_ISSUES.md` § "Post-event notification coverage" for the roadmap.
 
-## Niveau 2 — Internationalisation i18n (8 min)
+## Level 2 — Internationalisation i18n (8 min)
 
-App bilingue FR/EN. Anglais par défaut, français si le navigateur/les prefs le
-demandent. Détails archi : `KNOWN_ISSUES.md` § "i18n (react-i18next) SSR".
+App is bilingual FR/EN. English by default, French when the browser/preferences
+request it. Architecture details: `KNOWN_ISSUES.md` § "i18n (react-i18next) SSR".
 
-| #   | Étape                                                                 | Résultat attendu                                                                                   |
+| #   | Step                                                                  | Expected result                                                                                   |
 | --- | --------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------- |
-| I1  | Navigateur en `en-US`, cookie `lang` effacé, visiter `/`              | Tout en anglais. `<html lang="en">`. Pas de flash.                                                 |
-| I2  | Forcer `Accept-Language: fr-CA` (DevTools ou `curl -H`), cookie effacé, recharger `/` | **Dès le HTML source SSR** (View Source, JS désactivé) tout est en français. `<html lang="fr">`. |
-| I3  | Recharger en FR plusieurs fois                                        | Console **sans** warning "Text content does not match" (pas de hydration mismatch).                |
-| I4  | Switcher de langue (footer sidebar connecté, ou coin de `/`)          | Bascule FR↔EN immédiate. Cookie `lang` mis à jour. Survit au reload.                               |
-| I5  | Connecté, changer la langue                                           | `users.preferredLanguage` patché (vérifier dashboard Convex).                                      |
-| I6  | Variante `fr-BE` / `fr-FR` / `fr`                                     | Toutes → français (n'importe quelle variante fr).                                                  |
-| I7  | Emails (reset password, invitation) pour un user `preferredLanguage=fr` | Sujet + corps en français ; pour un user EN/sans préf → anglais.                                  |
-| I8  | Mauvais credentials en FR / formulaire invalide en FR                 | Message d'erreur auth FR (via classifier) ; messages Zod FR.                                       |
-| I9  | Grep régression : `git grep -nE "\"[A-Z][a-z]+ " src/routes src/components` | Aucune string UI codée en dur hors `src/components/ui/*` (chrome shadcn).                       |
+| I1  | Browser in `en-US`, `lang` cookie cleared, visit `/`                 | Everything in English. `<html lang="en">`. No flash.                                              |
+| I2  | Force `Accept-Language: fr-CA` (DevTools or `curl -H`), cookie cleared, reload `/` | **From the SSR HTML source** (View Source, JS disabled) everything is in French. `<html lang="fr">`. |
+| I3  | Reload in FR several times                                            | Console **without** "Text content does not match" warning (no hydration mismatch).                |
+| I4  | Language switcher (footer sidebar, connected, or corner of `/`)       | Instant FR↔EN toggle. `lang` cookie updated. Survives reload.                                     |
+| I5  | Logged in, change language                                            | `users.preferredLanguage` patched (check Convex dashboard).                                       |
+| I6  | Variants `fr-BE` / `fr-FR` / `fr`                                    | All → French (any fr variant).                                                                    |
+| I7  | Emails (reset password, invitation) for a user with `preferredLanguage=fr` | Subject + body in French; for EN/no-pref user → English.                                    |
+| I8  | Wrong credentials in FR / invalid form in FR                         | FR auth error message (via classifier); FR Zod messages.                                          |
+| I9  | Regression grep: `git grep -nE "\"[A-Z][a-z]+ " src/routes src/components` | No hardcoded UI string outside `src/components/ui/*` (shadcn chrome).                       |
 
-## Niveau 2 — App shell UI (10 min)
+## Level 2 — App shell UI (10 min)
 
-Connecté en tant qu'Alice sur `/app/acme/`.
+Logged in as Alice on `/app/acme/`.
 
-| #    | Étape                                                          | Résultat attendu                                                  |
-| ---- | -------------------------------------------------------------- | ----------------------------------------------------------------- |
-| SH1  | Sidebar `inset` (carte flottante arrondie) : groupe Platform en haut ; Members / Invitations / Settings épinglés en bas (nav secondaire `mt-auto`, sans label) | OK ; items admin-only masqués si rôle "member"                     |
-| SH2  | Clic sur `SidebarTrigger` (header) OU sur la `SidebarRail` (bande fine au bord droit de la sidebar) | Sidebar collapse en `icon` ; cookie `sidebar_state` persiste ; icônes orga/profil non écrasées en mode `icon` |
-| SH3  | Redimensionner < 768px                                         | Sidebar passe en `Sheet` mobile, ouverture via burger              |
-| SH4  | Naviguer Dashboard → Items → Settings → Members              | Breadcrumb du header se met à jour à chaque route                  |
-| SH5  | Dashboard : 4 KPI cards + AreaChart + PieChart + recent items  | Counts cohérents avec items.list / listMembers réels               |
-| SH6  | Toggle dark mode (icône soleil/lune dans header)               | Page bascule light ↔ dark, sidebar + charts adaptés                |
-| SH7  | Theme picker (footer sidebar) → choisir Blue / Emerald / Violet| Primary + chart-1 changent ; survit au reload (localStorage)       |
-| SH8  | Org switcher (header sidebar), orga **sans** logo             | Initiale (1ʳᵉ lettre) centrée dans le carré arrondi ; liste les orgs ; clic switch route + persiste `lastOrgSlug` |
-| SH9  | NavUser (footer sidebar) → profile / switch org / sign out     | Avatar **rond** ; sans photo, initiales prénom+nom (ex. `BB`) ; mêmes destinations qu'avant refonte |
-| SH10 | Bouton AI dans header                                          | Ouvre le modal chat existant (non-régression)                      |
-| SH11 | Ouvrir une page au contenu plus haut que l'écran (ex. Items long) | Le cadre `inset` reste calé sur la hauteur du viewport ; le scroll se fait **dans** le cadre, bord bas arrondi toujours visible |
-| SH12 | URL inconnue (ex. `/app/acme/nope` ou `/nope`)                 | Carte 404 stylée (FR/EN selon locale) + bouton retour accueil      |
-| SH13 | Dashboard / Items pendant le chargement initial                | Skeletons animés (KPI, recent items, table) — pas de texte "Loading…" nu |
-| SH14 | Bouton "Nouveautés" (footer sidebar, pastille visible au 1ᵉʳ passage) | Dialog avec entrées datées FR/EN ; la pastille disparaît après ouverture et ne revient pas au reload |
+| #    | Step                                                          | Expected result                                                   |
+| ---- | ------------------------------------------------------------- | ----------------------------------------------------------------- |
+| SH1  | `inset` sidebar (floating rounded card): Platform group at top; Members / Invitations / Settings pinned at bottom (`mt-auto`, no label) | OK; admin-only items hidden for "member" role |
+| SH2  | Click `SidebarTrigger` (header) OR the `SidebarRail` (thin strip on the right edge of the sidebar) | Sidebar collapses to `icon`; `sidebar_state` cookie persists; org/profile icons not overwritten in `icon` mode |
+| SH3  | Resize < 768px                                                | Sidebar switches to `Sheet` mobile, opened via burger             |
+| SH4  | Navigate Dashboard → Items → Settings → Members              | Header breadcrumb updates on each route                           |
+| SH5  | Dashboard: 4 KPI cards + AreaChart + PieChart + recent items  | Counts consistent with real `items.list` / `listMembers`          |
+| SH6  | Dark mode toggle (sun/moon icon in header)                    | Page switches light ↔ dark, sidebar + charts adapt               |
+| SH7  | Theme picker (sidebar footer) → choose Blue / Emerald / Violet | Primary + chart-1 change; survives reload (localStorage)          |
+| SH8  | Org switcher (sidebar header), org **without** a logo         | Initial (first letter) centered in the rounded square; lists orgs; click switches route + persists `lastOrgSlug` |
+| SH9  | NavUser (sidebar footer) → profile / switch org / sign out    | **Round** avatar; without photo, first+last initials (e.g. `BB`); same destinations as before the refactor |
+| SH10 | AI button in header                                           | Opens the existing chat modal (no regression)                     |
+| SH11 | Open a page taller than the viewport (e.g. long Items list)   | The `inset` frame stays fixed to viewport height; scroll happens **inside** the frame, rounded bottom edge always visible |
+| SH12 | Unknown URL (e.g. `/app/acme/nope` or `/nope`)                | Styled 404 card (FR/EN by locale) + back-home button              |
+| SH13 | Dashboard / Items on initial load                             | Animated skeletons (KPI, recent items, table) — no naked "Loading…" text |
+| SH14 | "What's new" button (sidebar footer, badge visible on first visit) | Dialog with dated FR/EN entries; badge disappears after opening and does not return on reload |
 
-## Niveau 2 — Data table items (5 min)
+## Level 2 — Data table items (5 min)
 
-| #   | Étape                                                | Résultat attendu                                                  |
+| #   | Step                                                 | Expected result                                                   |
 | --- | ---------------------------------------------------- | ----------------------------------------------------------------- |
-| T1  | Filtre global (champ "Filter items…")                | Réduit les rows en temps réel (title/description/createdBy)        |
-| T2  | Tri par "Created at" (clic header → dropdown)        | Asc/Desc fonctionne, indicateur visible                            |
-| T3  | Pagination (créer >10 items)                         | Boutons next/prev/first/last + page size 10/20/30/50                |
-| T4  | Sélection multiple via checkbox                      | Compteur "X of N row(s) selected" + bouton "Delete X" si admin     |
-| T5  | Bulk delete (admin only)                             | Demande confirmation, supprime tout, toast succès                  |
-| T6  | "New item" → Dialog → submit                         | Item créé, dialog se ferme, ligne apparaît en haut (real-time)     |
-| T7  | Actions row (menu `…`) → Edit / Delete               | Edit ouvre le même Dialog en mode update ; Delete demande confirm  |
+| T1  | Global filter ("Filter items…" field)                | Reduces rows in real time (title/description/createdBy)           |
+| T2  | Sort by "Created at" (click header → dropdown)       | Asc/Desc works, indicator visible                                 |
+| T3  | Pagination (create >10 items)                        | next/prev/first/last buttons + page size 10/20/30/50              |
+| T4  | Multi-select via checkbox                            | Counter "X of N row(s) selected" + "Delete X" button if admin     |
+| T5  | Bulk delete (admin only)                             | Confirms, deletes all, success toast                              |
+| T6  | "New item" → Dialog → submit                         | Item created, dialog closes, row appears at top (real-time)       |
+| T7  | Row actions (`…` menu) → Edit / Delete               | Edit opens the same Dialog in update mode; Delete asks confirmation |
 
-## Niveau 2 — Multi-tenant (15 min)
+## Level 2 — Multi-tenant (15 min)
 
-Toujours connecté en tant qu'Alice. Préparer un 2e navigateur pour Bob.
+Still logged in as Alice. Prepare a second browser for Bob.
 
-| #   | Étape                                                       | Résultat attendu                                                    |
+| #   | Step                                                        | Expected result                                                     |
 | --- | ----------------------------------------------------------- | ------------------------------------------------------------------- |
-| M1  | `/app/acme/settings/invitations` → invite `bob@test.local`  | Email envoyé, listée en pending                                     |
-| M2  | Browser 2 (incognito) → ouvrir le lien d'invitation         | Page `/accept-invite/<token>` accessible non-authentifié            |
-| M3  | Sign up Bob via le flow d'invitation                        | Bob créé, automatiquement membre d'Acme avec rôle "member"          |
-| M4  | Bob visite `/app/acme/items`                                | Voit la liste (vide ou items d'Alice), peut créer                   |
-| M5  | Alice change rôle Bob → "admin"                             | Persiste, Bob voit le badge mis à jour                              |
-| M6  | Bob crée une 2e org "Beta"                                  | Switch vers `/app/beta`, Alice n'est PAS membre                      |
-| M7  | Alice tente `/app/beta` directement                         | Redirige vers `/app` ou 403                                          |
-| M8  | Items isolés : Alice voit items d'Acme uniquement           | Aucun item de Beta côté Alice                                       |
-| M9  | Switch org via dropdown top bar                             | Routes recalculées, items rechargés                                 |
-| M10 | Bob (admin Acme) supprime un item créé par Alice            | Autorisé (admin override sur creator-only)                          |
-| M11 | Member non-admin tente de supprimer item d'un autre         | Erreur "forbidden", pas de delete                                   |
+| M1  | `/app/acme/settings/invitations` → invite `bob@test.local`  | Email sent, listed as pending                                       |
+| M2  | Browser 2 (incognito) → open the invitation link            | `/accept-invite/<token>` accessible unauthenticated                 |
+| M3  | Sign up Bob via the invitation flow                         | Bob created, automatically a member of Acme with "member" role      |
+| M4  | Bob visits `/app/acme/items`                                | Sees the list (empty or Alice's items), can create                  |
+| M5  | Alice changes Bob's role → "admin"                          | Persists, Bob sees the updated badge                                |
+| M6  | Bob creates a second org "Beta"                             | Switches to `/app/beta`, Alice is NOT a member                      |
+| M7  | Alice navigates to `/app/beta` directly                     | Redirects to `/app` or 403                                          |
+| M8  | Items isolated: Alice sees Acme items only                  | No Beta items on Alice's side                                       |
+| M9  | Switch org via top-bar dropdown                             | Routes recalculated, items reloaded                                 |
+| M10 | Bob (Acme admin) deletes an item created by Alice           | Allowed (admin override on creator-only)                            |
+| M11 | Non-admin member tries to delete another user's item        | Error "forbidden", no deletion                                      |
 
-## Niveau 3 — Invitations edge cases (8 min)
+## Level 3 — Invitations edge cases (8 min)
 
-| #  | Étape                                                      | Résultat attendu                                                    |
+| #  | Step                                                       | Expected result                                                     |
 | -- | ---------------------------------------------------------- | ------------------------------------------------------------------- |
-| I1 | Inviter un email déjà membre                               | Erreur "already_member", pas de doublon                              |
-| I2 | Inviter le même email 2× (en pending)                      | Refusé ou remplace l'invitation, pas de doublon                      |
-| I3 | Accepter une invitation expirée (forcer `expiresAt` passé) | Erreur "invitation_expired", pas d'ajout                             |
-| I4 | Accepter une invitation déjà acceptée                      | Erreur "already_accepted"                                            |
-| I5 | Accepter invitation avec un autre compte que celui invité  | Refus ("wrong_account") OU rejet selon politique                     |
-| I6 | Spammer 25 invitations en < 1h                             | Rate-limit déclenche → "rate_limited" après seuil                    |
-| I7 | Révoquer une invitation pending                            | Disparaît de la liste, lien devient invalide                         |
-| I8 | Vérifier que `RESEND_TEST_MODE=true` n'envoie pas d'email réel | Logs Convex montrent "skipped (test mode)"                       |
+| I1 | Invite an email already a member                           | Error "already_member", no duplicate                                |
+| I2 | Invite the same email twice (both pending)                 | Rejected or replaces the invitation, no duplicate                   |
+| I3 | Accept an expired invitation (force `expiresAt` in past)   | Error "invitation_expired", no member added                         |
+| I4 | Accept an already-accepted invitation                      | Error "already_accepted"                                            |
+| I5 | Accept invitation with a different account than the one invited | Rejected ("wrong_account") OR denied per policy                |
+| I6 | Spam 25 invitations in < 1h                                | Rate-limit triggers → "rate_limited" after threshold                |
+| I7 | Revoke a pending invitation                                | Disappears from list, link becomes invalid                          |
+| I8 | Verify `RESEND_TEST_MODE=true` sends no real email         | Convex logs show "skipped (test mode)"                              |
 
-## Niveau 3 — Items CRUD (8 min)
+## Level 3 — Items CRUD (8 min)
 
-| #  | Étape                                                  | Résultat attendu                                                  |
+| #  | Step                                                   | Expected result                                                   |
 | -- | ------------------------------------------------------ | ----------------------------------------------------------------- |
-| P1 | Create item via formulaire                             | Apparaît instantanément dans la liste                              |
-| P2 | Ouvrir l'app dans un 2e onglet → créer item depuis A   | Onglet B voit l'item sans refresh (real-time Convex)               |
-| P3 | Edit item → save                                       | Title/description mis à jour partout                               |
-| P4 | Delete item par son créateur                           | Disparaît                                                          |
-| P5 | Delete item d'un autre user en tant que member        | Bloqué                                                             |
-| P6 | Title vide / > 120 chars                               | Erreur de validation côté serveur                                  |
-| P7 | Description > 2000 chars                               | Erreur "description_too_long"                                      |
-| P8 | Items invisibles depuis une autre org (cf. M8)         | Isolation confirmée                                                |
+| P1 | Create item via form                                   | Appears instantly in the list                                     |
+| P2 | Open the app in a second tab → create item from tab A  | Tab B sees the item without refresh (Convex real-time)            |
+| P3 | Edit item → save                                       | Title/description updated everywhere                              |
+| P4 | Delete item by its creator                             | Disappears                                                        |
+| P5 | Delete another user's item as a member                 | Blocked                                                           |
+| P6 | Empty title / > 120 chars                              | Server-side validation error                                      |
+| P7 | Description > 2000 chars                               | Error "description_too_long"                                      |
+| P8 | Items invisible from another org (cf. M8)              | Isolation confirmed                                               |
 
-## Niveau 4 — Uploads (5 min)
+## Level 4 — Uploads (5 min)
 
-| #  | Étape                                                   | Résultat attendu                                                  |
+| #  | Step                                                    | Expected result                                                   |
 | -- | ------------------------------------------------------- | ----------------------------------------------------------------- |
-| U1 | `/app/me` → drag/drop avatar (PNG < 5 MB)               | Upload OK, avatar visible top bar                                 |
-| U2 | Avatar > 20 MB                                          | Refusé (cap Convex)                                               |
-| U3 | `/app/acme/settings/general` → upload logo org          | Logo visible dans le top bar et la liste des membres              |
-| U4 | Remplacer un logo existant                              | Ancien remplacé, pas d'orphelin (vérifier `_storage`)             |
+| U1 | `/app/me` → drag/drop avatar (PNG < 5 MB)               | Upload OK, avatar visible in top bar                              |
+| U2 | Avatar > 20 MB                                          | Rejected (Convex cap)                                             |
+| U3 | `/app/acme/settings/general` → upload org logo          | Logo visible in top bar and member list                           |
+| U4 | Replace an existing logo                                | Old one replaced, no orphan (check `_storage`)                    |
 
-## Niveau 4 — Account lifecycle (8 min)
+## Level 4 — Account lifecycle (8 min)
 
-| #  | Étape                                                   | Résultat attendu                                                  |
+| #  | Step                                                    | Expected result                                                   |
 | -- | ------------------------------------------------------- | ----------------------------------------------------------------- |
-| L1 | `/app/me` → change email                                | Email de vérif envoyé à l'ancienne adresse                         |
-| L2 | Clic lien de vérif                                      | Email mis à jour, sessions toujours valides                        |
-| L3 | `/app/me` → delete account                              | Email de confirmation envoyé                                       |
-| L4 | Clic lien dans email delete                             | User Convex purgé, memberships supprimées, BA user supprimé        |
-| L5 | Le user supprimé tente `/login`                         | Auth échoue                                                       |
+| L1 | `/app/me` → change email                                | Verification email sent to the old address                        |
+| L2 | Click the verification link                             | Email updated, sessions still valid                               |
+| L3 | `/app/me` → delete account                              | Confirmation email sent                                           |
+| L4 | Click the link in the delete email                      | Convex user purged, memberships removed, BA user deleted          |
+| L5 | Deleted user attempts `/login`                          | Auth fails                                                        |
 
-## Niveau 4 — Super-admin (5 min)
+## Level 4 — Super-admin (5 min)
 
-| #   | Étape                                              | Résultat attendu                                                  |
+| #   | Step                                               | Expected result                                                   |
 | --- | -------------------------------------------------- | ----------------------------------------------------------------- |
-| SA1 | `/app/admin` accessible uniquement pour `superAdmin: true` | Bob (non-SA) → 403/redirect                                        |
-| SA2 | Lister tous les users de tous les tenants         | Liste exhaustive, pagination OK                                    |
-| SA3 | Toggle `superAdmin` sur un autre user              | Persiste, l'autre user voit `/app/admin`                           |
-| SA4 | Last-SA guard : retirer son propre flag SA si seul SA | Erreur "cannot_demote_last_superadmin"                          |
-| SA5 | `purgeExcept` (dev cleanup) — uniquement en dev    | Conserve uniquement l'email indiqué, supprime le reste             |
+| SA1 | `/app/admin` accessible only for `superAdmin: true` | Bob (non-SA) → 403/redirect                                      |
+| SA2 | List all users across all tenants                  | Exhaustive list, pagination works                                 |
+| SA3 | Toggle `superAdmin` on another user                | Persists, the other user sees `/app/admin`                        |
+| SA4 | Last-SA guard: remove own SA flag when sole SA     | Error "cannot_demote_last_superadmin"                             |
+| SA5 | `purgeExcept` (dev cleanup) — dev only             | Keeps only the specified email, deletes everything else           |
 
-## Niveau 5 — AI chat (8 min)
+## Level 5 — AI chat (8 min)
 
-| #  | Étape                                                   | Résultat attendu                                                  |
-| -- | ------------------------------------------------------- | ----------------------------------------------------------------- |
-| C1 | Ouvrir le slide-over chat depuis `/app/acme`            | Premier thread créé automatiquement                                |
-| C2 | Envoyer un message simple ("ping")                      | Stream visible token par token, pas de blocage UI                  |
-| C2b | Demander une réponse formatée ("liste à puces + gras") | Rendu markdown dans la bulle assistant (puces, gras, code inline)  |
-| C3 | Demander à l'agent "liste mes items"                    | Tool `listItems` appelé, réponse contient les items d'Acme        |
-| C4 | "crée un item titre Test"                               | Tool `createItem` appelé, item visible dans `/app/acme/items` après refresh |
-| C5 | "supprime l'item Test" + confirmation                   | Tool `deleteItem` appelé, item disparaît                          |
-| C6 | Spammer 30 messages en 1 min                            | Rate-limit `chatSend` se déclenche                                |
-| C7 | Depuis `/app/beta`, vérifier que les threads d'Acme ne sont PAS listés | Isolation org confirmée (scope `${orgId}:${userId}`) |
+| #   | Step                                                    | Expected result                                                   |
+| --- | ------------------------------------------------------- | ----------------------------------------------------------------- |
+| C1  | Open the chat slide-over from `/app/acme`               | First thread created automatically                                |
+| C2  | Send a simple message ("ping")                          | Stream visible token by token, no UI blocking                     |
+| C2b | Ask for a formatted response ("bullet list + bold")     | Markdown rendered in the assistant bubble (bullets, bold, inline code) |
+| C3  | Ask the agent "list my items"                           | `listItems` tool called, response contains Acme items             |
+| C4  | "create an item titled Test"                            | `createItem` tool called, item visible in `/app/acme/items` after refresh |
+| C5  | "delete item Test" + confirmation                       | `deleteItem` tool called, item disappears                         |
+| C6  | Spam 30 messages in 1 min                               | `chatSend` rate-limit triggers                                    |
+| C7  | From `/app/beta`, verify Acme threads are NOT listed    | Org isolation confirmed (scope `${orgId}:${userId}`)              |
 
-## Niveau 6 — Sécurité + déploiement (5 min)
+## Level 6 — Security + deployment (5 min)
 
-| #  | Étape                                              | Résultat attendu                                                  |
+| #  | Step                                               | Expected result                                                   |
 | -- | -------------------------------------------------- | ----------------------------------------------------------------- |
-| S1 | Aucun secret avec préfixe `VITE_`                  | `grep -r "VITE_.*SECRET\|VITE_.*KEY"` → vide                       |
-| S2 | Aucun `process.env.X` top-level dans `src/`        | Vérifier client-side bundle                                       |
-| S3 | Headers de sécurité présents (CSP, HSTS, etc.)     | `curl -I http://localhost:3000` → headers attendus                 |
-| S4 | CORS Better Auth limité à `BETTER_AUTH_URL`        | Requête depuis un autre origin → bloquée                          |
-| S5 | Webhooks HMAC : payload modifié → rejeté          | Test manuel avec un payload tampered                              |
-| S6 | `pnpm build` + `pnpm start` (prod local)           | Le bundle prod tourne sans warning                                 |
+| S1 | No secret with `VITE_` prefix                      | `grep -r "VITE_.*SECRET\|VITE_.*KEY"` → empty                    |
+| S2 | No top-level `process.env.X` in `src/`             | Check client-side bundle                                          |
+| S3 | Security headers present (CSP, HSTS, etc.)         | `curl -I http://localhost:3000` → expected headers                |
+| S4 | Better Auth CORS restricted to `BETTER_AUTH_URL`   | Request from another origin → blocked                             |
+| S5 | Webhooks HMAC: modified payload → rejected         | Manual test with a tampered payload                               |
+| S6 | `pnpm build` + `pnpm start` (local prod)           | The prod bundle runs without warnings                             |
 
-## Seed dev rapide
+## Quick dev seed
 
-Pour gagner ~2 min de setup, un seed dev (à appeler via `convex run`)
-peut créer Alice (SA), Bob (member), une org "acme" et 3 items. À écrire
-dans `convex/admin.ts` sous un `internalMutation` `seedDev`, gated derrière
+To save ~2 min of setup, a dev seed (called via `convex run`) can create
+Alice (SA), Bob (member), an "acme" org, and 3 items. Write it in
+`convex/admin.ts` as an `internalMutation` named `seedDev`, gated behind
 `process.env.CONVEX_DEPLOYMENT !== 'production'`.
 
-## En cas d'échec
+## Failure recovery
 
-- Smoke échoue → ouvrir `KNOWN_ISSUES.md` (déploiement Convex / `pnpm rebuild esbuild`).
-- Auth échoue → vérifier `BETTER_AUTH_SECRET` + `SITE_URL` côté Convex env.
-- Emails non reçus → `RESEND_API_KEY` valide + `RESEND_TEST_MODE=false` pour
-  recevoir réellement.
-- AI ne stream pas → `ANTHROPIC_API_KEY` + vérifier `convex/agent.ts` (modèle
-  par défaut `claude-haiku-4-5`).
+- Smoke fails → open `KNOWN_ISSUES.md` (Convex deployment / `pnpm rebuild esbuild`).
+- Auth fails → check `BETTER_AUTH_SECRET` + `SITE_URL` on the Convex env.
+- Emails not received → valid `RESEND_API_KEY` + `RESEND_TEST_MODE=false` to
+  actually deliver.
+- AI not streaming → `ANTHROPIC_API_KEY` + check `convex/agent.ts` (default
+  model `claude-haiku-4-5`).
