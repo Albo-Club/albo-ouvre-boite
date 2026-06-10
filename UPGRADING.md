@@ -44,6 +44,13 @@ Keep your side with `git checkout --ours <path>`, take the template's with
 
 ## Per-version migration notes
 
+### → v0.2.0
+
+No manual steps required — this release adds the in-app "What's new" panel
+(`src/components/app-shell/WhatsNew.tsx`) and the `changelog` i18n namespace.
+If you've already customized `AppSidebar.tsx`, merge the `<WhatsNew />` footer
+item if you want the panel; otherwise skip it.
+
 ### → v0.1.0
 
 First tagged release — no migration steps if you derive from here. If your
