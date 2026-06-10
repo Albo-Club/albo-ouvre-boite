@@ -23,3 +23,15 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: pnpm lint
       - run: pnpm build
+
+  # Upstream skill drift (TESTING.md B6). The sync script is dependency-free,
+  # so no pnpm install needed. When this goes red: run `pnpm run sync:skills`,
+  # review the SKILL.md diff, commit. Don't mute the check — see CLAUDE.md.
+  skills-drift:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: node scripts/sync-skills.mjs --check

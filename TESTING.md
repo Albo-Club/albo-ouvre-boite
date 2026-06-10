@@ -27,7 +27,8 @@ Pré-requis :
 | B5 | Cookies prod  | `pnpm test:cookies`      | `albo.session_token` a Secure+HttpOnly+SameSite=Lax+Max-Age≈604800 |
 | B6 | Skills à jour | `pnpm sync:skills:check` | `0 skills drifted`            |
 
-B2–B3 tournent aussi en CI sur chaque PR (`.github/workflows/ci.yml`).
+B2–B3 et B6 tournent aussi en CI sur chaque PR (`.github/workflows/ci.yml`,
+B6 via le job `skills-drift`).
 B4–B5 restent locaux : ils requièrent un déploiement Convex provisionné.
 
 ## Niveau 2 — Auth (6 min)

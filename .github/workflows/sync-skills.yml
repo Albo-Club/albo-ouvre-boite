@@ -1,5 +1,25 @@
 name: Sync skills
 
+# Convenience layer: opens a PR when upstream SKILL.md files changed. The
+# guaranteed drift signal is the `skills-drift` job in ci.yml — this workflow
+# just saves you running `pnpm run sync:skills` by hand.
+#
+# Needs one repo setting or the create-pull-request step fails with
+# "GitHub Actions is not permitted to create or approve pull requests":
+#   Settings → Actions → General → Workflow permissions →
+#   ✓ Allow GitHub Actions to create and approve pull requests
+# (org-owned repos: an org admin must allow it org-wide first, otherwise the
+# repo checkbox is greyed out). See README § CI / Ops, Day 1 checklist.
+#
+# Known limitation: PRs opened with the default GITHUB_TOKEN don't trigger
+# `on: pull_request` workflows, so the chore/sync-skills PR shows no CI
+# checks. Close/reopen it to run CI, or switch the action to a PAT.
+#
+# After deriving a repo, validate once via workflow_dispatch (Actions →
+# Sync skills → Run workflow), then confirm the Monday cron fired. Schedules
+# only run from the default branch, and GitHub auto-disables them on public
+# repos after 60 days without activity.
+
 on:
   schedule:
     # Mondays at 06:00 UTC.

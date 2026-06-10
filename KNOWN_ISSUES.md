@@ -591,3 +591,12 @@ two latent problems on top of the crash: `package.json` has no `version` field
 (`release-type: node` needs one) and there was no `release-please-config.json` /
 `.release-please-manifest.json` bootstrap, so the first run scanned all history
 unbounded. Set those up before re-enabling.
+
+Field data from a derived project (2 weeks in) confirms the removal:
+the workflow failed 47/47 runs with `GitHub Actions is not permitted to create
+or approve pull requests` (the Actions setting is off by default on new
+repos — see README § Day 1 checklist), and even repaired it would have
+produced empty changelogs because the commits there don't follow Conventional
+Commits. Re-enabling needs all four: the Actions setting, the `version` field,
+the manifest bootstrap, **and** Conventional Commits discipline. For this
+template's actual release flow (manual notes + tag), see `release-tag.yml`.
