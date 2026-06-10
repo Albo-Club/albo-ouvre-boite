@@ -335,4 +335,5 @@ This repo is the **source** template. Three things keep derived projects clean:
 
 - [TESTING.md](TESTING.md) — end-to-end test plan (auth, multi-tenant, AI…).
 - [KNOWN_ISSUES.md](KNOWN_ISSUES.md) — pinned versions and why.
+- [UPGRADING.md](UPGRADING.md) — per-version migration notes for derived projects.
 - [CLAUDE.md](CLAUDE.md) — guidelines for AI-assisted work in this repo.
