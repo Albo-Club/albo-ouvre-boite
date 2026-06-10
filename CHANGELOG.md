@@ -5,6 +5,16 @@ commit. Downstream projects: read the sections between your version and the
 latest **before** running `pnpm run upgrade-template` — migration steps live
 in [UPGRADING.md](UPGRADING.md).
 
+## v0.2.0 — 2026-06-10
+
+### Added
+
+- **In-app changelog ("What's new")**: a sidebar-footer button (bottom left)
+  with an unread dot opens a dialog listing user-facing release notes,
+  newest first, bilingual. Entry metadata lives in `src/lib/changelog.ts`,
+  copy in `src/locales/{en,fr}/changelog.json` — add an entry there whenever
+  you ship something users can see.
+
 ## v0.1.0 — 2026-06-09
 
 First tagged release. Baseline: TanStack Start + Convex + Better Auth

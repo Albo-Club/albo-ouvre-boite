@@ -1,0 +1,23 @@
+{
+  "button": "Nouveautés",
+  "title": "Nouveautés",
+  "subtitle": "Les dernières améliorations de l'application.",
+  "entries": {
+    "whats-new-panel": {
+      "title": "Suivez les nouveautés",
+      "body": "Ce panneau liste les dernières améliorations. Une pastille sur le bouton vous signale quand quelque chose de nouveau est arrivé."
+    },
+    "ai-formatting": {
+      "title": "Réponses de l'assistant plus lisibles",
+      "body": "L'assistant met désormais en forme ses réponses : listes, gras et titres au lieu de blocs de texte bruts."
+    },
+    "loading-skeletons": {
+      "title": "Chargements plus fluides",
+      "body": "Des aperçus animés s'affichent pendant le chargement du tableau de bord et des listes."
+    },
+    "friendly-errors": {
+      "title": "Écrans d'erreur plus clairs",
+      "body": "En cas d'imprévu ou de page introuvable, un écran clair vous propose de réessayer ou de revenir à l'accueil."
+    }
+  }
+}

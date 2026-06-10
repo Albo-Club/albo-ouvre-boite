@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next'
 import { OrgSwitcher } from './OrgSwitcher'
 import { NavUser } from './NavUser'
 import { ThemePicker } from './ThemePicker'
+import { WhatsNew } from './WhatsNew'
 import { getNavGroups } from './nav'
 import { LanguageSwitcher } from '~/components/i18n/LanguageSwitcher'
 import {
@@ -111,6 +112,9 @@ export function AppSidebar({
       </SidebarContent>
       <SidebarFooter>
         <SidebarMenu>
+          <SidebarMenuItem>
+            <WhatsNew />
+          </SidebarMenuItem>
           <SidebarMenuItem>
             <ThemePicker />
           </SidebarMenuItem>

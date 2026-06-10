@@ -1,0 +1,23 @@
+{
+  "button": "What's new",
+  "title": "What's new",
+  "subtitle": "The latest improvements to the app.",
+  "entries": {
+    "whats-new-panel": {
+      "title": "Follow what's new",
+      "body": "This panel lists the latest improvements. A dot on the button lets you know when something new has landed."
+    },
+    "ai-formatting": {
+      "title": "Easier-to-read AI replies",
+      "body": "The assistant now formats its answers with lists, bold text and headings instead of plain blocks of text."
+    },
+    "loading-skeletons": {
+      "title": "Smoother loading",
+      "body": "Animated placeholders now appear while your dashboard and lists load."
+    },
+    "friendly-errors": {
+      "title": "Clearer error screens",
+      "body": "If something goes wrong or a page doesn't exist, a friendly screen helps you retry or get back home."
+    }
+  }
+}
