@@ -266,10 +266,25 @@ curl -sI https://<your-vercel-domain>/             # expect HTTP 200
 
 ## CI / Ops
 
-- Renovate: weekly, groups non-majors, automerges devDeps, freezes the
-  pinned `pnpm.overrides` until you bump them.
-- `ci.yml`: install + typecheck on push/PR.
-- `sync-skills.yml`: weekly skill freshness PR.
+- `ci.yml` — lint (tsc + eslint) + build on push/PR, plus a `skills-drift`
+  job that checks SKILL.md files against upstream. When it goes red, run
+  `pnpm run sync:skills`, review the diff, commit. Zero repo settings
+  needed — this is the whole skills freshness chain. (A cron + auto-PR
+  workflow used to exist; see `KNOWN_ISSUES.md` for why it was removed.)
+- `release-tag.yml` — publishes the git tag for `.template-version` when a
+  release bump merges to `main`. The downstream `pnpm run upgrade-template`
+  channel depends on these tags.
+- Renovate — weekly, groups non-majors, automerges devDeps, freezes the
+  pinned `pnpm.overrides` until you bump them. Also bumps action versions
+  in `.github/workflows/*` (the `github-actions` manager is on by default
+  in `config:recommended`).
+
+**Day 1 of a derived repo** — one setting, the only piece that can't ship
+inside the template: install the
+[Renovate GitHub App](https://github.com/apps/renovate) on the repo (org
+install → select the repo); `renovate.json` does nothing until the app is
+in. Done when your first PR has green CI and Renovate has opened its
+onboarding PR.
 
 ## Convex MCP server
 

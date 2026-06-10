@@ -50,6 +50,17 @@ pnpm dev
 Then open **http://localhost:3000** and create your first account. The first
 user across the deployment becomes `superAdmin: true` automatically.
 
+## Day 1 — GitHub repo settings
+
+One setting keeps dependency updates alive — it can't ship inside the repo
+itself: install the [Renovate GitHub App](https://github.com/apps/renovate)
+on the repo (org install → select the repo). `renovate.json` does nothing
+until the app is in. Done when your first PR has green CI and Renovate has
+opened its onboarding PR.
+
+Skills freshness needs nothing: the `skills-drift` job in `ci.yml` goes
+red when upstream skills move — run `pnpm run sync:skills`, review, commit.
+
 ## Staying up to date with the starter
 
 This project was scaffolded from the

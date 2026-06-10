@@ -23,7 +23,7 @@
       "source": "get-convex/agent-skills",
       "sourceType": "github",
       "skillPath": "skills/convex-create-component/SKILL.md",
-      "computedHash": "49753db634ba2edf749efd2d3d79e8edeec025617adf88c606eeeadfd3b686da"
+      "computedHash": "71c4781ec586f9dde750de892242848a3981f4b0003ec5d362c2921eb27017e9"
     },
     "convex-migration-helper": {
       "source": "get-convex/agent-skills",
@@ -65,7 +65,7 @@
       "source": "anthropics/skills",
       "sourceType": "github",
       "skillPath": "skills/frontend-design/SKILL.md",
-      "computedHash": "b81e2ff87ed8fa4d6c377ccb127a7254c9e6a77e3ae94f21e6b514f7bb2945a0"
+      "computedHash": "1608ea77fbb6fc30d13a97d12cfa8ebf31358d40f0dd97beed24829d6b3f45dd"
     },
     "organization-best-practices": {
       "source": "better-auth/skills",
