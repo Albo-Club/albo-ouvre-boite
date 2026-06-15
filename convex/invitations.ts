@@ -3,6 +3,7 @@ import { mutation, query } from './_generated/server'
 import { components } from './_generated/api'
 import { invitationRoleValidator } from './schema'
 import { provisionAppUser, requireOrgRole } from './lib/auth'
+import { setLastOrgSlug } from './lib/userPrefs'
 import { RESEND_FROM, resend } from './email'
 import { invitationEmail } from './emailTemplates'
 import { consumeLimit } from './rateLimiters'
@@ -162,7 +163,7 @@ export const accept = mutation({
 
     const org = await ctx.db.get("organizations", inv.orgId)
     if (!org) throw new ConvexError('not_found')
-    await ctx.db.patch("users", user._id, { lastOrgSlug: org.slug })
+    await setLastOrgSlug(ctx, user, org.slug)
     return { orgSlug: org.slug }
   },
 })

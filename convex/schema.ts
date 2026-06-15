@@ -20,12 +20,20 @@ export default defineSchema({
     avatarUrl: v.optional(v.string()),
     avatarStorageId: v.optional(v.id('_storage')),
     superAdmin: v.boolean(),
-    lastOrgSlug: v.optional(v.string()),
     preferredLanguage: v.optional(v.union(v.literal('en'), v.literal('fr'))),
     createdAt: v.number(),
   })
     .index('by_betterAuthId', ['betterAuthId'])
     .index('by_email', ['email']),
+
+  // Frequently-written per-user state, isolated from `users` on purpose:
+  // every query reads the caller's `users` row (requireAppUser), so writes
+  // there invalidate ALL open subscriptions. See KNOWN_ISSUES.md
+  // § "Hot `users` row".
+  userPrefs: defineTable({
+    userId: v.id('users'),
+    lastOrgSlug: v.optional(v.string()),
+  }).index('by_user', ['userId']),
 
   organizations: defineTable({
     slug: v.string(),

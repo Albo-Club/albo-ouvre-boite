@@ -323,6 +323,12 @@ export const remove = mutation({
 - ❌ Dedup users by `betterAuthId` only in any new code path. Always
   also fall back to email via `withIndex('by_email', ...)` — pattern in
   `convex/lib/auth.ts:provisionAppUser`.
+- ❌ A frequently-written field on the `users` row. Every query reads the
+  caller's row via `requireAppUser`, so each write re-runs ALL open
+  subscriptions. Per-user mutable state goes to `userPrefs`
+  (`convex/lib/userPrefs.ts`). Same family: a mutation fired from a
+  `useEffect` that depends on a Convex query observing the written data
+  (cross-tab infinite loop). See `KNOWN_ISSUES.md` "Hot `users` row".
 - ❌ Surfacing Better Auth errors via `error.message` (or worse, a regex
   on it) in any new client code. Always classify through
   `classifyAuthError()` + `formatAuthError(code, ctx)` from

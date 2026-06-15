@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Outlet, createFileRoute, useNavigate } from '@tanstack/react-router'
 import { useConvexMutation, useConvexQuery } from '@convex-dev/react-query'
 import { useTranslation } from 'react-i18next'
@@ -20,6 +20,10 @@ function OrgLayout() {
   const me = useConvexQuery(api.users.me)
   const org = useConvexQuery(api.organizations.bySlug, { slug: orgSlug })
   const setLastOrg = useConvexMutation(api.organizations.setLastOrg)
+  // Last slug this tab already persisted. Without it, two tabs open on
+  // different orgs ping-pong `setLastOrg` forever: each write updates `me`
+  // in the other tab, whose effect writes back, etc.
+  const lastOrgSyncedRef = useRef<string | null>(null)
   const [chatOpen, setChatOpen] = useState(false)
 
   useEffect(() => {
@@ -29,8 +33,13 @@ function OrgLayout() {
       navigate({ to: '/app' })
       return
     }
-    if (me.user.lastOrgSlug !== orgSlug) {
-      void setLastOrg({ slug: orgSlug })
+    // Persist at most once per visited slug: `me` updates (e.g. another tab
+    // writing its own last-org) must NOT re-trigger the write.
+    if (lastOrgSyncedRef.current !== orgSlug) {
+      lastOrgSyncedRef.current = orgSlug
+      if (me.user.lastOrgSlug !== orgSlug) {
+        void setLastOrg({ slug: orgSlug })
+      }
     }
   }, [me, orgSlug, navigate, setLastOrg])
 

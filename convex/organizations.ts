@@ -7,6 +7,7 @@ import {
   requireOrgRole,
   safeAppUser,
 } from './lib/auth'
+import { setLastOrgSlug } from './lib/userPrefs'
 import { resolveAvatarUrl, resolveLogoUrl } from './lib/storage'
 import type { DataModel, Id } from './_generated/dataModel'
 import type { GenericMutationCtx, GenericQueryCtx } from 'convex/server'
@@ -96,7 +97,7 @@ export const create = mutation({
       role: 'owner',
       joinedAt: Date.now(),
     })
-    await ctx.db.patch("users", user._id, { lastOrgSlug: normalizedSlug })
+    await setLastOrgSlug(ctx, user, normalizedSlug)
     return { orgId, slug: normalizedSlug }
   },
 })
@@ -135,9 +136,7 @@ export const setLastOrg = mutation({
       .unique()
     if (!org) throw new ConvexError('not_found')
     await requireOrgMember(ctx, org._id)
-    if (user.lastOrgSlug !== slug) {
-      await ctx.db.patch("users", user._id, { lastOrgSlug: slug })
-    }
+    await setLastOrgSlug(ctx, user, slug)
     return null
   },
 })
