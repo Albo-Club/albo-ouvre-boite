@@ -623,3 +623,31 @@ Replacement: the `skills-drift` job in `ci.yml` runs
 dependency-free — no `pnpm install`). Red job → `pnpm run sync:skills`,
 review the diff, commit. Drift surfaces exactly when someone is coding,
 which is the only time fresh skills matter.
+
+## Resend: two integrations (runtime Convex vs Claude Code plugin)
+
+There are **two unrelated Resend setups** in this repo and they read the same
+env var name from **different places** — don't conflate them.
+
+1. **Runtime email** (`@convex-dev/resend`, `convex/email.ts`). Sends the app's
+   transactional mail (auth, invitations, notifications). Its `RESEND_API_KEY`
+   and `RESEND_FROM` live in the **Convex deployment env** (`pnpm exec convex
+   env set …`, or via `pnpm run setup`). Nothing here touches your shell.
+
+2. **Dev tooling** (the `resend@claude-plugins-official` Claude Code plugin,
+   enabled in `.claude/settings.json`). Its bundled MCP server runs
+   `npx -y resend-mcp` and reads `RESEND_API_KEY` from the **developer's shell
+   environment** — not the Convex env, not `.env.local`. Set it in your shell
+   profile (`export RESEND_API_KEY=re_…`).
+
+So a missing/incorrect key produces different symptoms depending on which side:
+app emails failing → check the **Convex** env; the Claude Code Resend tools
+failing → check your **shell** env.
+
+**Why the plugin's skills aren't in `skills-lock.json`.** The plugin delivers
+its skills *and* MCP as one marketplace bundle that auto-updates at Claude Code
+startup. The `sync:skills` pipeline (`skills-lock.json`, the `skills-drift` CI
+job) is only for library skills that upstream does **not** ship as a Claude Code
+plugin (Convex, Better Auth, TanStack). Vendoring Resend there too would
+duplicate the skills (plugin cache *and* `.agents/skills/`) and double the
+update machinery — so we deliberately don't. Let the marketplace own Resend.
