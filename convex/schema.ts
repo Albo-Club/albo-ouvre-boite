@@ -22,6 +22,12 @@ export default defineSchema({
     superAdmin: v.boolean(),
     preferredLanguage: v.optional(v.union(v.literal('en'), v.literal('fr'))),
     createdAt: v.number(),
+    // Deprecated: the per-user "last viewed org" now lives in `userPrefs`
+    // (see below) to keep it off the hot `users` row. Kept here as an
+    // optional legacy field so documents written before the move still
+    // validate; never written anymore, only read as a fallback by
+    // `getLastOrgSlug` until `userPrefs` is populated on next navigation.
+    lastOrgSlug: v.optional(v.string()),
   })
     .index('by_betterAuthId', ['betterAuthId'])
     .index('by_email', ['email']),

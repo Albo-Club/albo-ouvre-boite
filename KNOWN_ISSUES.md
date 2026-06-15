@@ -632,6 +632,18 @@ and ~10 MB of data burned **4.8 GB of Database Bandwidth** this way.
    `useRef` (see `lastOrgSyncedRef` in `app/$orgSlug/route.tsx`): persist at
    most once per visited slug so a `me` update from another tab can't
    re-trigger the write.
+3. **Moving a field off `users` is a schema *narrow* — widen + deprecate, do
+   not delete in the same shippable change.** Convex validates the new schema
+   against documents at rest, and `convex deploy` runs inside Vercel's
+   `build:vercel`. Removing `lastOrgSlug` from the `users` validator while prod
+   rows still carried it failed the production deploy with
+   `Object contains extra field `lastOrgSlug` that is not in the validator`
+   (Vite built fine — the failure is the Convex push, not the bundle). Fix:
+   keep the field as `v.optional` with a `// Deprecated` comment and read it as
+   a fallback in `getLastOrgSlug` (writes still go only to `userPrefs`, so the
+   hot-row win holds). Only narrow the validator in a *later* deploy, after a
+   migration has cleared the field from every row — the
+   `convex-migration-helper` skill's widen → migrate → narrow.
 
 ## release-please was removed (failed on every merge with `other side closed`)
 
