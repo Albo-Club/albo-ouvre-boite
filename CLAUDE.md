@@ -159,10 +159,21 @@ domains below, read the corresponding skill in `.agents/skills/`
 (symlinked at `.claude/skills/`). It supersedes your training knowledge,
 which is stale for these libraries.
 
-Manifest: `skills-lock.json` (source, upstream path, SHA-256 hash).
-Drift detected in CI (job `skills-drift` in `.github/workflows/ci.yml`);
-remediation: `pnpm run sync:skills` + review the diff + commit.
-Verify locally: `pnpm run sync:skills:check`.
+Manifest: `skills-lock.json` — each skill pins an immutable commit
+(`pinnedRef`, reproducible) and watches a moving branch (`trackingRef`) to
+notice when upstream advances; `computedHash` is the SHA-256 of the vendored
+content. Drift detected in CI (job `skills-drift` in `.github/workflows/ci.yml`).
+
+- `pnpm run sync:skills` — vendor each skill at its `pinnedRef`
+  (reproducible, no network surprise; idempotent).
+- `pnpm run sync:skills:check` — compare each `trackingRef` tip against the
+  vendored content; exit 2 on drift (upstream moved since the last bump).
+- `pnpm run sync:skills:update` — advance `pinnedRef` to the current
+  `trackingRef` tip, re-vendor, rewrite the lock. The deliberate bump — do it
+  after reviewing the diff.
+
+Rule: `--check` detects, `--update` bumps. Never `--update` without reading
+what the new version changes.
 
 | Skill                                     | Domain                                 | Upstream source                            | Official?  |
 | ----------------------------------------- | -------------------------------------- | ------------------------------------------ | ---------- |
@@ -178,21 +189,18 @@ Verify locally: `pnpm run sync:skills:check`.
 | `two-factor-authentication-best-practices`| 2FA / TOTP / backup codes              | `better-auth/skills`                       | ✅ official |
 | `organization-best-practices`             | BA `organization()` plugin             | `better-auth/skills`                       | ✅ official ⚠️ |
 | `create-auth-skill`                       | Auth BA scaffolding                    | `better-auth/skills`                       | ✅ official |
-| `tanstack-start-best-practices`           | SSR, server functions, middleware      | `deckardger/tanstack-agent-skills`         | ⚠️ community |
+| `tanstack-start-best-practices`           | SSR, server functions, middleware      | `TanStack/router` (official monorepo)      | ✅ official |
 
 **⚠️ `organization-best-practices`**: official BA skill, but the
 `organization()` plugin is **disabled** in this project (see `KNOWN_ISSUES.md`).
 Read it to understand the concepts; don't apply the BA code as-is —
 our orgs/members live in the custom Convex schema.
 
-**⚠️ TanStack Start (`deckardger/tanstack-agent-skills`)**: TanStack does not
-(yet) publish an official skill. The best community source is the Deckardger
-repo. Maintenance strategy:
-1. Check the upstream repo every 1–2 months (the weekly sync detects drift).
-2. If quality degrades or TanStack publishes an official repo, update
-   `source` + `skillPath` in `skills-lock.json` and re-run `pnpm run sync:skills`.
-3. As a fallback, use the `context7` MCP (`mcp__…__query-docs`) for
-   `/tanstack/start` on demand.
+**TanStack Start (`TanStack/router`)**: official source since June 2026
+(`packages/react-start/skills/react-start/SKILL.md`), versioned with the
+`@tanstack/react-start` releases in the monorepo. If a behavior change is
+unclear, fall back to the `context7` MCP (`mcp__…__query-docs`) for
+`/tanstack/start`.
 
 **shadcn/ui**: no agent skill yet. Conventions live in `components.json`
 (alias `@/components`, neutral theme, radius 0.5rem, oklch tokens in
