@@ -1,109 +1,287 @@
 ---
-name: tanstack-start-best-practices
-description: TanStack Start best practices for full-stack React applications. Server functions, middleware, SSR, authentication, and deployment patterns. Activate when building full-stack apps with TanStack Start.
+name: react-start
+description: >-
+  React bindings for TanStack Start: createStart, StartClient,
+  StartServer, React-specific imports, re-exports from
+  @tanstack/react-router, full project setup with React, useServerFn
+  hook.
+type: framework
+library: tanstack-start
+library_version: '1.166.2'
+framework: react
+requires:
+  - start-core
+sources:
+  - TanStack/router:packages/react-start/src
+  - TanStack/router:docs/start/framework/react/build-from-scratch.md
 ---
 
-# TanStack Start Best Practices
+# React Start (`@tanstack/react-start`)
 
-Comprehensive guidelines for implementing TanStack Start patterns in full-stack React applications. These rules cover server functions, middleware, SSR, authentication, and deployment.
+This skill builds on start-core. Read [start-core](../../../start-client-core/skills/start-core/SKILL.md) first for foundational concepts.
 
-## When to Apply
+This skill covers the React-specific bindings, setup, and patterns for TanStack Start.
 
-- Creating server functions for data mutations
-- Setting up middleware for auth/logging
-- Configuring SSR and hydration
-- Implementing authentication flows
-- Handling errors across client/server boundary
-- Organizing full-stack code
-- Deploying to various platforms
+For React Server Components patterns, see [react-start/server-components](./server-components/SKILL.md).
 
-## Rule Categories by Priority
+> **CRITICAL**: All code is ISOMORPHIC by default. Loaders run on BOTH server and client. Use `createServerFn` for server-only logic.
 
-| Priority | Category | Rules | Impact |
-|----------|----------|-------|--------|
-| CRITICAL | Server Functions | 5 rules | Core data mutation patterns |
-| CRITICAL | Security | 4 rules | Prevents vulnerabilities |
-| HIGH | Middleware | 4 rules | Request/response handling |
-| HIGH | Authentication | 4 rules | Secure user sessions |
-| MEDIUM | API Routes | 1 rule | External endpoint patterns |
-| MEDIUM | SSR | 6 rules | Server rendering patterns |
-| MEDIUM | Error Handling | 3 rules | Graceful failure handling |
-| MEDIUM | Environment | 1 rule | Configuration management |
-| LOW | File Organization | 3 rules | Maintainable code structure |
-| LOW | Deployment | 2 rules | Production readiness |
+> **CRITICAL**: Do not confuse `@tanstack/react-start` with Next.js or Remix. They are completely different frameworks with different APIs.
 
-## Quick Reference
+> **CRITICAL**: Types are FULLY INFERRED. Never cast, never annotate inferred values.
 
-### Server Functions (Prefix: `sf-`)
+## Package API Surface
 
-- `sf-create-server-fn` — Use createServerFn for server-side logic
-- `sf-input-validation` — Always validate server function inputs
-- `sf-method-selection` — Choose appropriate HTTP method
-- `sf-error-handling` — Handle errors in server functions
-- `sf-response-headers` — Customize response headers when needed
+`@tanstack/react-start` re-exports everything from `@tanstack/start-client-core` plus:
 
-### Security (Prefix: `sec-`)
+- `useServerFn` — React hook for calling server functions from components
 
-- `sec-validate-inputs` — Validate all user inputs with schemas
-- `sec-auth-middleware` — Protect routes with auth middleware
-- `sec-sensitive-data` — Keep secrets server-side only
-- `sec-csrf-protection` — Implement CSRF protection for mutations
+All core APIs (`createServerFn`, `createMiddleware`, `createStart`, `createIsomorphicFn`, `createServerOnlyFn`, `createClientOnlyFn`) are available from `@tanstack/react-start`.
 
-### Middleware (Prefix: `mw-`)
+Server utilities (`getRequest`, `getRequestHeader`, `setResponseHeader`, `setResponseHeaders`, `setResponseStatus`) are imported from `@tanstack/react-start/server`.
 
-- `mw-request-middleware` — Use request middleware for cross-cutting concerns
-- `mw-function-middleware` — Use function middleware for server functions
-- `mw-context-flow` — Properly pass context through middleware
-- `mw-composability` — Compose middleware effectively
+## Full Project Setup
 
-### Authentication (Prefix: `auth-`)
+### 1. Install Dependencies
 
-- `auth-session-management` — Implement secure session handling
-- `auth-route-protection` — Protect routes with beforeLoad
-- `auth-server-functions` — Verify auth in server functions
-- `auth-cookie-security` — Configure secure cookie settings
+```bash
+npm i @tanstack/react-start @tanstack/react-router react react-dom
+npm i -D vite @vitejs/plugin-react typescript @types/react @types/react-dom
+```
 
-### API Routes (Prefix: `api-`)
+### 2. package.json
 
-- `api-routes` — Create API routes for external consumers
+```json
+{
+  "type": "module",
+  "scripts": {
+    "dev": "vite dev",
+    "build": "vite build",
+    "start": "node .output/server/index.mjs"
+  }
+}
+```
 
-### SSR (Prefix: `ssr-`)
+### 3. tsconfig.json
 
-- `ssr-data-loading` — Load data appropriately for SSR
-- `ssr-hydration-safety` — Prevent hydration mismatches
-- `ssr-streaming` — Implement streaming SSR for faster TTFB
-- `ssr-selective` — Apply selective SSR when beneficial
-- `ssr-prerender` — Configure static prerendering and ISR
+```json
+{
+  "compilerOptions": {
+    "jsx": "react-jsx",
+    "moduleResolution": "Bundler",
+    "module": "ESNext",
+    "target": "ES2022",
+    "skipLibCheck": true,
+    "strictNullChecks": true
+  }
+}
+```
 
-### Environment (Prefix: `env-`)
+### 4. vite.config.ts
 
-- `env-functions` — Use environment functions for configuration
+```ts
+import { defineConfig } from 'vite'
+import { tanstackStart } from '@tanstack/react-start/plugin/vite'
+import viteReact from '@vitejs/plugin-react'
 
-### Error Handling (Prefix: `err-`)
+export default defineConfig({
+  plugins: [
+    tanstackStart(), // MUST come before react()
+    viteReact(),
+  ],
+})
+```
 
-- `err-server-errors` — Handle server function errors
-- `err-redirects` — Use redirects appropriately
-- `err-not-found` — Handle not-found scenarios
+### 5. Router Factory (src/router.tsx)
 
-### File Organization (Prefix: `file-`)
+```tsx
+import { createRouter } from '@tanstack/react-router'
+import { routeTree } from './routeTree.gen'
 
-- `file-separation` — Separate server and client code
-- `file-functions-file` — Use .functions.ts pattern
-- `file-shared-validation` — Share validation schemas
+export function getRouter() {
+  const router = createRouter({
+    routeTree,
+    scrollRestoration: true,
+  })
+  return router
+}
+```
 
-### Deployment (Prefix: `deploy-`)
+### 6. Root Route (src/routes/\_\_root.tsx)
 
-- `deploy-env-config` — Configure environment variables
-- `deploy-adapters` — Choose appropriate deployment adapter
+```tsx
+import type { ReactNode } from 'react'
+import {
+  Outlet,
+  createRootRoute,
+  HeadContent,
+  Scripts,
+} from '@tanstack/react-router'
 
-## How to Use
+export const Route = createRootRoute({
+  head: () => ({
+    meta: [
+      { charSet: 'utf-8' },
+      { name: 'viewport', content: 'width=device-width, initial-scale=1' },
+      { title: 'My TanStack Start App' },
+    ],
+  }),
+  component: RootComponent,
+})
 
-Each rule file in the `rules/` directory contains:
-1. **Explanation** — Why this pattern matters
-2. **Bad Example** — Anti-pattern to avoid
-3. **Good Example** — Recommended implementation
-4. **Context** — When to apply or skip this rule
+function RootComponent() {
+  return (
+    <RootDocument>
+      <Outlet />
+    </RootDocument>
+  )
+}
 
-## Full Reference
+function RootDocument({ children }: Readonly<{ children: ReactNode }>) {
+  return (
+    <html>
+      <head>
+        <HeadContent />
+      </head>
+      <body>
+        {children}
+        <Scripts />
+      </body>
+    </html>
+  )
+}
+```
 
-See individual rule files in `rules/` directory for detailed guidance and code examples.
+### 7. Index Route (src/routes/index.tsx)
+
+```tsx
+import { createFileRoute } from '@tanstack/react-router'
+import { createServerFn } from '@tanstack/react-start'
+
+const getGreeting = createServerFn({ method: 'GET' }).handler(async () => {
+  return 'Hello from TanStack Start!'
+})
+
+export const Route = createFileRoute('/')({
+  loader: () => getGreeting(),
+  component: HomePage,
+})
+
+function HomePage() {
+  const greeting = Route.useLoaderData()
+  return <h1>{greeting}</h1>
+}
+```
+
+## useServerFn Hook
+
+Use `useServerFn` to call server functions from React components with proper integration:
+
+```tsx
+import { createServerFn, useServerFn } from '@tanstack/react-start'
+
+const updatePost = createServerFn({ method: 'POST' })
+  .validator((data: { id: string; title: string }) => data)
+  .handler(async ({ data }) => {
+    await db.posts.update(data.id, { title: data.title })
+    return { success: true }
+  })
+
+function EditPostForm({ postId }: { postId: string }) {
+  const updatePostFn = useServerFn(updatePost)
+  const [title, setTitle] = useState('')
+
+  return (
+    <form
+      onSubmit={async (e) => {
+        e.preventDefault()
+        await updatePostFn({ data: { id: postId, title } })
+      }}
+    >
+      <input value={title} onChange={(e) => setTitle(e.target.value)} />
+      <button type="submit">Save</button>
+    </form>
+  )
+}
+```
+
+## Global Start Configuration (src/start.ts)
+
+```tsx
+import { createStart, createMiddleware } from '@tanstack/react-start'
+
+const requestLogger = createMiddleware().server(async ({ next, request }) => {
+  console.log(`${request.method} ${request.url}`)
+  return next()
+})
+
+export const startInstance = createStart(() => ({
+  requestMiddleware: [requestLogger],
+}))
+```
+
+## React-Specific Components
+
+All routing components from `@tanstack/react-router` work in Start:
+
+- `<RouterProvider>` — not needed in Start (handled automatically)
+- `<Outlet>` — renders matched child route
+- `<Link>` — type-safe navigation
+- `<Navigate>` — declarative redirect
+- `<HeadContent>` — renders head tags (must be in `<head>`)
+- `<Scripts>` — renders body scripts (must be in `<body>`)
+- `<Await>` — renders deferred data with Suspense
+- `<ClientOnly>` — renders children only after hydration
+- `<CatchBoundary>` — error boundary
+
+## Hooks Reference
+
+All hooks from `@tanstack/react-router` work in Start:
+
+- `useRouter()` — router instance
+- `useRouterState()` — subscribe to router state
+- `useNavigate()` — programmatic navigation
+- `useSearch({ from })` — validated search params
+- `useParams({ from })` — path params
+- `useLoaderData({ from })` — loader data
+- `useMatch({ from })` — full route match
+- `useRouteContext({ from })` — route context
+- `Route.useLoaderData()` — typed loader data (preferred in route files)
+- `Route.useSearch()` — typed search params (preferred in route files)
+
+## Common Mistakes
+
+### 1. CRITICAL: Importing from wrong package
+
+```tsx
+// WRONG — this is the SPA router, NOT Start
+import { createServerFn } from '@tanstack/react-router'
+
+// CORRECT — server functions come from react-start
+import { createServerFn } from '@tanstack/react-start'
+
+// CORRECT — routing APIs come from react-router (re-exported by Start too)
+import { createFileRoute, Link } from '@tanstack/react-router'
+```
+
+### 2. HIGH: Using React hooks in beforeLoad or loader
+
+```tsx
+// WRONG — beforeLoad/loader are NOT React components
+beforeLoad: () => {
+  const auth = useAuth() // React hook, cannot be used here
+}
+
+// CORRECT — pass state via router context
+const rootRoute = createRootRouteWithContext<{ auth: AuthState }>()({})
+```
+
+### 3. HIGH: Missing Scripts component
+
+Without `<Scripts />` in the root route's `<body>`, client JavaScript doesn't load and the app won't hydrate.
+
+## Cross-References
+
+- [start-core](../../../start-client-core/skills/start-core/SKILL.md) — core Start concepts
+- [router-core](../../../router-core/skills/router-core/SKILL.md) — routing fundamentals
+- [react-router](../../../react-router/skills/react-router/SKILL.md) — React Router hooks and components

@@ -5,84 +5,112 @@
       "source": "better-auth/skills",
       "sourceType": "github",
       "skillPath": "better-auth/best-practices/SKILL.md",
+      "trackingRef": "main",
+      "pinnedRef": "6a1636950a1d7fc53602639ce7505a4a5d39c797",
       "computedHash": "c62acc0464f80bf8be72e0b55046a06c7762fa1ffaac1e78f61159b50072c9cf"
     },
     "better-auth-security-best-practices": {
       "source": "better-auth/skills",
       "sourceType": "github",
       "skillPath": "security/SKILL.MD",
+      "trackingRef": "main",
+      "pinnedRef": "6a1636950a1d7fc53602639ce7505a4a5d39c797",
       "computedHash": "042f01c76b63b436c71797c8a1b84470c5b6e0c7cd2400aa0928f733da96facf"
     },
     "convex": {
       "source": "get-convex/agent-skills",
       "sourceType": "github",
       "skillPath": "skills/convex/SKILL.md",
+      "trackingRef": "main",
+      "pinnedRef": "7a6fcc6882f344577a34365fdadbd0f8f8c467d7",
       "computedHash": "d0fc889b645ea292dc301968c2113e624c119381ebd82bfe628b6ca1585c6129"
     },
     "convex-create-component": {
       "source": "get-convex/agent-skills",
       "sourceType": "github",
       "skillPath": "skills/convex-create-component/SKILL.md",
+      "trackingRef": "main",
+      "pinnedRef": "7a6fcc6882f344577a34365fdadbd0f8f8c467d7",
       "computedHash": "71c4781ec586f9dde750de892242848a3981f4b0003ec5d362c2921eb27017e9"
     },
     "convex-migration-helper": {
       "source": "get-convex/agent-skills",
       "sourceType": "github",
       "skillPath": "skills/convex-migration-helper/SKILL.md",
+      "trackingRef": "main",
+      "pinnedRef": "7a6fcc6882f344577a34365fdadbd0f8f8c467d7",
       "computedHash": "77bc11973377357633cf80c1d111abd52daaa4249cc6ed25b76fac51457ce7ce"
     },
     "convex-performance-audit": {
       "source": "get-convex/agent-skills",
       "sourceType": "github",
       "skillPath": "skills/convex-performance-audit/SKILL.md",
+      "trackingRef": "main",
+      "pinnedRef": "7a6fcc6882f344577a34365fdadbd0f8f8c467d7",
       "computedHash": "829b60b8d56df95a149656f9e832f6545ce07c08d00c722539630a028c17b5dd"
     },
     "convex-quickstart": {
       "source": "get-convex/agent-skills",
       "sourceType": "github",
       "skillPath": "skills/convex-quickstart/SKILL.md",
+      "trackingRef": "main",
+      "pinnedRef": "7a6fcc6882f344577a34365fdadbd0f8f8c467d7",
       "computedHash": "3cdc8fc0c306f662f35c559654798023b505de558b4e212a575babc574436b59"
     },
     "convex-setup-auth": {
       "source": "get-convex/agent-skills",
       "sourceType": "github",
       "skillPath": "skills/convex-setup-auth/SKILL.md",
+      "trackingRef": "main",
+      "pinnedRef": "7a6fcc6882f344577a34365fdadbd0f8f8c467d7",
       "computedHash": "771d9fb3c0e4c3ecad71634e3acdd1c69f5e8529879a036005fa9a680c8ffbfb"
     },
     "create-auth-skill": {
       "source": "better-auth/skills",
       "sourceType": "github",
       "skillPath": "better-auth/create-auth/SKILL.md",
+      "trackingRef": "main",
+      "pinnedRef": "6a1636950a1d7fc53602639ce7505a4a5d39c797",
       "computedHash": "5f21170914d4e3cf5b1a5503fa2e68d4e48ebe2b9792cb44cb3dead9cdf52117"
     },
     "email-and-password-best-practices": {
       "source": "better-auth/skills",
       "sourceType": "github",
       "skillPath": "better-auth/emailAndPassword/SKILL.md",
+      "trackingRef": "main",
+      "pinnedRef": "6a1636950a1d7fc53602639ce7505a4a5d39c797",
       "computedHash": "ef9b2d86e9e0ef89f1e8fd62ec86df212a370d4c8f6ebe43936e6f225c94cb63"
     },
     "frontend-design": {
       "source": "anthropics/skills",
       "sourceType": "github",
       "skillPath": "skills/frontend-design/SKILL.md",
+      "trackingRef": "main",
+      "pinnedRef": "57546260929473d4e0d1c1bb75297be2fdfa1949",
       "computedHash": "1608ea77fbb6fc30d13a97d12cfa8ebf31358d40f0dd97beed24829d6b3f45dd"
     },
     "organization-best-practices": {
       "source": "better-auth/skills",
       "sourceType": "github",
       "skillPath": "better-auth/organization/SKILL.md",
+      "trackingRef": "main",
+      "pinnedRef": "6a1636950a1d7fc53602639ce7505a4a5d39c797",
       "computedHash": "667aa2530d1e2df3f3bec5146bb6d37b9321e189a35a9e45a798af553d06cfb0"
     },
     "tanstack-start-best-practices": {
-      "source": "deckardger/tanstack-agent-skills",
+      "source": "TanStack/router",
       "sourceType": "github",
-      "skillPath": "skills/tanstack-start/SKILL.md",
-      "computedHash": "9fc7b6f7733d53b3b86e6bcd50070499afad6dbaa03665587900ef717c60e75a"
+      "skillPath": "packages/react-start/skills/react-start/SKILL.md",
+      "trackingRef": "main",
+      "pinnedRef": "52db7034fd83b17cc45da9ba775ec253f2a9a149",
+      "computedHash": "516b6777246ba41125fd6ab40b2ca2b41809e59b8e8638fdce67086cfdf4bebb"
     },
     "two-factor-authentication-best-practices": {
       "source": "better-auth/skills",
       "sourceType": "github",
       "skillPath": "better-auth/twoFactor/SKILL.md",
+      "trackingRef": "main",
+      "pinnedRef": "6a1636950a1d7fc53602639ce7505a4a5d39c797",
       "computedHash": "6ce79cab3240aa55eec9278b096d6daa6b9daea5fede6df638a2f744e32de503"
     }
   }
