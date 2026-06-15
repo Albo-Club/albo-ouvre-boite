@@ -5,6 +5,39 @@ commit. Downstream projects: read the sections between your version and the
 latest **before** running `pnpm run upgrade-template` — migration steps live
 in [UPGRADING.md](UPGRADING.md).
 
+## v0.3.0 — 2026-06-15
+
+### Added
+
+- **Resend Claude Code plugin** enabled at project scope
+  (`.claude/settings.json` → `enabledPlugins`): bundles the Resend MCP server
+  + skills, auto-updating via the official `claude-plugins-official`
+  marketplace (so it stays out of `skills-lock.json` on purpose). Put your
+  `RESEND_API_KEY` in the gitignored `.claude/settings.local.json` `env`
+  block. See README "Claude Code plugin — Resend" and `KNOWN_ISSUES.md`
+  "Resend: two integrations".
+- **`pnpm run sync:skills:update`** — deliberate pin bump for skills.
+
+### Changed
+
+- **Skills are now pinned to immutable commits.** `skills-lock.json` gains
+  `trackingRef` (watched branch) + `pinnedRef` (vendored SHA); `sync:skills`
+  vendors at the pin (reproducible), `sync:skills:check` flags drift,
+  `sync:skills:update` bumps. Stops a silent upstream change landing
+  unreviewed. **Downstream:** `skills-lock.json` will conflict on
+  `upgrade-template` — keep the template's pinned format (`--theirs`), then
+  `pnpm run sync:skills`.
+- **TanStack Start skill** now sourced from the official `TanStack/router`
+  monorepo (`packages/react-start/skills/react-start/SKILL.md`) instead of
+  the community `deckardger/tanstack-agent-skills`.
+- All developer-facing docs translated to English.
+
+### Removed
+
+- The weekly `sync-skills.yml` cron + auto-PR workflow (Actions off by
+  default, bot PRs without CI, cron never fired). The `skills-drift` CI job
+  in `ci.yml` is now the whole freshness chain — see `KNOWN_ISSUES.md`.
+
 ## v0.2.0 — 2026-06-10
 
 ### Added
