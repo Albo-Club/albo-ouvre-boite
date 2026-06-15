@@ -1,6 +1,7 @@
 {
   "appShell": {
     "ai": "AI",
+    "aiToggle": "Toggle AI panel (⌘J)",
     "breadcrumb": {
       "items": "Items",
       "settings": "Settings",

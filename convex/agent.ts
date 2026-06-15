@@ -3,6 +3,7 @@ import { Agent, stepCountIs } from '@convex-dev/agent'
 
 import { components } from './_generated/api'
 import { itemTools } from './agentTools'
+import { BASE_INSTRUCTIONS } from './lib/instructions'
 
 const ANTHROPIC_MODEL = process.env.ANTHROPIC_MODEL ?? 'claude-haiku-4-5'
 
@@ -13,13 +14,10 @@ export function getModel() {
 export const chatAgent = new Agent(components.agent, {
   name: 'albo',
   languageModel: getModel(),
-  instructions:
-    "You are albo's helpful in-app assistant. Answer concisely. " +
-    "You can act on the user's organization through tools (list/create/" +
-    'update/delete items). Always confirm destructive actions (delete) by ' +
-    'restating the target before calling the tool. ' +
-    'If a user asks something you cannot answer from context or do via ' +
-    'tools, say so and suggest what they might do next.',
+  // Per-message system prompt (route/org context) is layered on top at
+  // stream time via `buildInstructions` in convex/chat.ts.
+  instructions: BASE_INSTRUCTIONS,
   tools: itemTools,
-  stopWhen: stepCountIs(5),
+  // Room for a multi-step loop: tool call → approval → resume → final answer.
+  stopWhen: stepCountIs(10),
 })

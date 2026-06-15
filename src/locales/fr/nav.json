@@ -1,6 +1,7 @@
 {
   "appShell": {
     "ai": "IA",
+    "aiToggle": "Afficher/masquer le panneau IA (⌘J)",
     "breadcrumb": {
       "items": "Éléments",
       "settings": "Paramètres",

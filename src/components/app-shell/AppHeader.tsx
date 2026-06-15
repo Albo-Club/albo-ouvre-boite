@@ -58,11 +58,11 @@ function buildCrumbs(
 export function AppHeader({
   orgSlug,
   orgName,
-  onOpenAiChat,
+  onToggleAiPanel,
 }: {
   orgSlug: string
   orgName: string
-  onOpenAiChat: () => void
+  onToggleAiPanel: () => void
 }) {
   const location = useLocation()
   const { t } = useTranslation(['nav'])
@@ -95,7 +95,12 @@ export function AppHeader({
         </BreadcrumbList>
       </Breadcrumb>
       <div className="ml-auto flex items-center gap-1">
-        <Button variant="ghost" size="sm" onClick={onOpenAiChat}>
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={onToggleAiPanel}
+          title={t('nav:appShell.aiToggle')}
+        >
           <Sparkles className="mr-1.5 size-4" />
           {t('nav:appShell.ai')}
         </Button>
