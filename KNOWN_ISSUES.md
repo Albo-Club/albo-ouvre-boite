@@ -655,3 +655,59 @@ Replacement: the `skills-drift` job in `ci.yml` runs
 dependency-free — no `pnpm install`). Red job → `pnpm run sync:skills`,
 review the diff, commit. Drift surfaces exactly when someone is coding,
 which is the only time fresh skills matter.
+
+## Streamdown (AI panel) — `@source` Tailwind v4, plugins removed
+
+The AI panel renders assistant markdown with `streamdown` (via
+`MessageResponse` in `src/components/ai-elements/message.tsx`). Two traps if
+you touch this area:
+
+1. **Unstyled markdown.** Streamdown styles its elements with Tailwind classes
+   that live inside `node_modules`. The line
+   `@source '../../node_modules/streamdown/dist/*.js';` in `src/styles/app.css`
+   is mandatory — without it, Tailwind v4 doesn't scan the package and all
+   assistant markdown renders raw.
+2. **Plugins removed on purpose.** Upstream AI Elements' `message.tsx` imports
+   `@streamdown/{code,math,mermaid,cjk}` (Shiki + KaTeX + Mermaid = megabytes).
+   We keep only the core (GFM: tables, lists). Likewise `tool.tsx` replaces the
+   upstream Shiki `CodeBlock` with a local `<pre>`. Comments mark both trims in
+   the files.
+
+## AI Elements (AI panel) — trimmed vendoring
+
+The panel uses a small subset of Vercel AI Elements, vendored in
+`src/components/ai-elements/` and **deliberately trimmed**. Re-apply these
+after any reinstall from the registry (`npx ai-elements@latest add <name>`):
+
+- `prompt-input.tsx` is a **minimal rewrite**. Upstream ships attachments + a
+  model picker, pulling in `command` / `hover-card` / `input-group` / `nanoid`;
+  the panel only needs a multiline composer + submit/stop, so we vendor a tiny
+  version exporting `PromptInput*` + `PromptInputMessage`.
+- `message.tsx` uses `size="icon"` on action buttons. Upstream uses an
+  `icon-sm` size; this template's `Button` has no such variant (and we don't
+  hand-edit `src/components/ui/*`), so we map it down.
+- `streamdown` plugins and the `tool.tsx` `CodeBlock` are trimmed — see the
+  "Streamdown (AI panel)" section above.
+
+## Tool approval (AI panel) — resuming the stream is mandatory
+
+The agent's write tools carry `needsApproval: true` (`createTool` from
+`@convex-dev/agent`). Four traps:
+
+1. **Generation does NOT resume on its own.** `approveToolCall` /
+   `denyToolCall` only record the decision and return a `messageId`; you MUST
+   re-run `streamText` with `promptMessageId: messageId`, or the thread stays
+   frozen on "Confirmation required". `chat.respondToToolApproval` does exactly
+   this (decision → re-schedule `internal.chat.streamAsync`). Any new approval
+   entry point must follow this contract.
+2. **Minimum `@convex-dev/agent` 0.6.2.** Below that, the message is duplicated
+   after approval with `saveStreamDeltas` and the final step isn't persisted
+   (get-convex/agent#185, fixed in 0.6.2). We are on `^0.6.3`.
+3. **Built-in auto-deny.** Sending a new message while an approval is pending
+   auto-denies it (reason `auto-denied: new generation started`). Intended —
+   the UI shows "Action rejected"; don't "fix" it.
+4. **Approval state rides the tool parts** of `useUIMessages`
+   (`approval-requested` → `approval-responded` → `output-available` /
+   `output-denied`, field `part.approval`) — `confirmation.tsx` is driven by
+   that. `dynamicTool()` does not support approval (vercel/ai#11434): don't
+   convert these tools to dynamic.

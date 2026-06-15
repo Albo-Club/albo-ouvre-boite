@@ -9,39 +9,11 @@ import {
   internalMutation,
   internalQuery
 } from './_generated/server'
-import type {MutationCtx, QueryCtx} from './_generated/server';
+import { parseScope, readMembership } from './lib/agentScope'
 import type { Doc, Id } from './_generated/dataModel'
 
 const TITLE_MAX = 120
 const DESCRIPTION_MAX = 2000
-
-function parseScope(scope: string | undefined | null): {
-  orgId: Id<'organizations'>
-  userId: Id<'users'>
-} {
-  if (!scope) throw new ConvexError('agent_tools_missing_scope')
-  const idx = scope.indexOf(':')
-  if (idx <= 0) throw new ConvexError('agent_tools_invalid_scope')
-  return {
-    orgId: scope.slice(0, idx) as Id<'organizations'>,
-    userId: scope.slice(idx + 1) as Id<'users'>,
-  }
-}
-
-async function readMembership(
-  ctx: QueryCtx | MutationCtx,
-  orgId: Id<'organizations'>,
-  userId: Id<'users'>,
-): Promise<Doc<'organizationMembers'>> {
-  const member = await ctx.db
-    .query('organizationMembers')
-    .withIndex('by_org_and_user', (q) =>
-      q.eq('orgId', orgId).eq('userId', userId),
-    )
-    .unique()
-  if (!member) throw new ConvexError('agent_tools_forbidden')
-  return member
-}
 
 function serializeItem(item: Doc<'items'>) {
   return {
@@ -169,6 +141,9 @@ const createItem = createTool({
   description:
     'Create a new item in the current organization. Always pass a clear ' +
     'human-readable title. Description is optional.',
+  // Gated: the user confirms via the in-app Confirm / Reject buttons before
+  // anything is written. See KNOWN_ISSUES.md "Tool approval (AI panel)".
+  needsApproval: true,
   inputSchema: z.object({
     title: z.string().min(1).max(TITLE_MAX).describe('Short title'),
     description: z
@@ -193,6 +168,7 @@ const updateItem = createTool({
     'Update an existing item by id. Pass the full new title (required) and ' +
     'optionally a new description. Use listItems first if you do not know ' +
     'the id.',
+  needsApproval: true,
   inputSchema: z.object({
     itemId: z.string().describe('The Convex id of the item to update'),
     title: z.string().min(1).max(TITLE_MAX),
@@ -215,6 +191,7 @@ const deleteItem = createTool({
     'Delete an item by id. Only the creator can delete their own items; ' +
     'admins/owners can delete any item in the org. Confirm with the user ' +
     'before calling this tool.',
+  needsApproval: true,
   inputSchema: z.object({
     itemId: z.string().describe('The Convex id of the item to delete'),
   }),

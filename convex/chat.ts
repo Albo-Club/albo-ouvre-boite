@@ -1,10 +1,13 @@
 import { ConvexError, v } from 'convex/values'
 import { paginationOptsValidator } from 'convex/server'
 import {
+  abortStream,
   createThread,
   getThreadMetadata,
+  listStreams,
   listUIMessages,
   syncStreams,
+  updateThreadMetadata,
   vStreamArgs,
 } from '@convex-dev/agent'
 
@@ -18,6 +21,7 @@ import {
 } from './_generated/server'
 import { requireOrgMember } from './lib/auth'
 import { chatAgent } from './agent'
+import { buildInstructions } from './lib/instructions'
 import { authComponent } from './auth'
 import { consumeLimit } from './rateLimiters'
 import type { DataModel, Id } from './_generated/dataModel'
@@ -35,6 +39,11 @@ type AnyCtx =
 function scopeKey(orgId: Id<'organizations'>, userId: Id<'users'>): string {
   return `${orgId}:${userId}`
 }
+
+// Keep the per-message system prompt bounded.
+const ROUTE_CONTEXT_MAX = 200
+// Auto-title a thread from its first user message.
+const AUTO_TITLE_MAX = 80
 
 export const actionAuthProbe = internalQuery({
   args: { orgId: v.id('organizations') },
@@ -102,6 +111,26 @@ export const deleteThread = mutation({
   },
 })
 
+export const renameThread = mutation({
+  args: {
+    orgId: v.id('organizations'),
+    threadId: v.string(),
+    title: v.string(),
+  },
+  handler: async (ctx, { orgId, threadId, title }) => {
+    const { user } = await requireOrgMember(ctx, orgId)
+    const scope = scopeKey(orgId, user._id)
+    await authorizeThread(ctx, threadId, scope)
+    const trimmed = title.trim().slice(0, 120)
+    if (!trimmed) throw new ConvexError('invalid_title')
+    await updateThreadMetadata(ctx, components.agent, {
+      threadId,
+      patch: { title: trimmed },
+    })
+    return null
+  },
+})
+
 export const listMessages = query({
   args: {
     orgId: v.id('organizations'),
@@ -130,12 +159,24 @@ export const sendMessage = mutation({
     orgId: v.id('organizations'),
     threadId: v.string(),
     prompt: v.string(),
+    // Where the user currently is in the app, fed into the per-message
+    // system prompt so the agent can ground its answers.
+    context: v.optional(v.object({ route: v.string() })),
   },
-  handler: async (ctx, { orgId, threadId, prompt }) => {
+  handler: async (ctx, { orgId, threadId, prompt, context }) => {
     const { user } = await requireOrgMember(ctx, orgId)
     await consumeLimit(ctx, 'chatSend', user._id)
     const scope = scopeKey(orgId, user._id)
-    await authorizeThread(ctx, threadId, scope)
+    const meta = await getThreadMetadata(ctx, components.agent, { threadId })
+    if (meta.userId !== scope) throw new ConvexError('forbidden')
+    // Auto-title the thread from its first message.
+    if (!meta.title) {
+      await updateThreadMetadata(ctx, components.agent, {
+        threadId,
+        patch: { title: prompt.slice(0, AUTO_TITLE_MAX) },
+      })
+    }
+    const org = await ctx.db.get('organizations', orgId)
     const { messageId } = await chatAgent.saveMessage(ctx, {
       threadId,
       prompt,
@@ -144,18 +185,80 @@ export const sendMessage = mutation({
     await ctx.scheduler.runAfter(0, internal.chat.streamAsync, {
       threadId,
       promptMessageId: messageId,
+      route: context?.route.slice(0, ROUTE_CONTEXT_MAX),
+      orgName: org?.name,
     })
     return { messageId }
   },
 })
 
+/**
+ * Approve or deny a pending tool call, then RESUME generation.
+ *
+ * `approveToolCall` / `denyToolCall` only record the decision and return a new
+ * `messageId`; the stream does NOT restart on its own. We must re-schedule
+ * `streamAsync` with that `promptMessageId`, or the thread stays frozen on
+ * "Confirmation required". See KNOWN_ISSUES.md "Tool approval (AI panel)".
+ */
+export const respondToToolApproval = mutation({
+  args: {
+    orgId: v.id('organizations'),
+    threadId: v.string(),
+    approvalId: v.string(),
+    approved: v.boolean(),
+    context: v.optional(v.object({ route: v.string() })),
+  },
+  handler: async (ctx, { orgId, threadId, approvalId, approved, context }) => {
+    const { user } = await requireOrgMember(ctx, orgId)
+    await consumeLimit(ctx, 'chatSend', user._id)
+    const scope = scopeKey(orgId, user._id)
+    await authorizeThread(ctx, threadId, scope)
+    const org = await ctx.db.get('organizations', orgId)
+    const { messageId } = approved
+      ? await chatAgent.approveToolCall(ctx, { threadId, approvalId })
+      : await chatAgent.denyToolCall(ctx, { threadId, approvalId })
+    await ctx.scheduler.runAfter(0, internal.chat.streamAsync, {
+      threadId,
+      promptMessageId: messageId,
+      route: context?.route.slice(0, ROUTE_CONTEXT_MAX),
+      orgName: org?.name,
+    })
+    return { messageId }
+  },
+})
+
+export const stopStream = mutation({
+  args: { orgId: v.id('organizations'), threadId: v.string() },
+  handler: async (ctx, { orgId, threadId }) => {
+    const { user } = await requireOrgMember(ctx, orgId)
+    const scope = scopeKey(orgId, user._id)
+    await authorizeThread(ctx, threadId, scope)
+    const streams = await listStreams(ctx, components.agent, {
+      threadId,
+      includeStatuses: ['streaming'],
+    })
+    for (const s of streams) {
+      await abortStream(ctx, components.agent, {
+        streamId: s.streamId,
+        reason: 'user_requested',
+      })
+    }
+    return null
+  },
+})
+
 export const streamAsync = internalAction({
-  args: { threadId: v.string(), promptMessageId: v.string() },
-  handler: async (ctx, { threadId, promptMessageId }) => {
+  args: {
+    threadId: v.string(),
+    promptMessageId: v.string(),
+    route: v.optional(v.string()),
+    orgName: v.optional(v.string()),
+  },
+  handler: async (ctx, { threadId, promptMessageId, route, orgName }) => {
     const result = await chatAgent.streamText(
       ctx,
       { threadId },
-      { promptMessageId },
+      { promptMessageId, system: buildInstructions({ route, orgName }) },
       { saveStreamDeltas: { chunking: 'word', throttleMs: 100 } },
     )
     await result.consumeStream()

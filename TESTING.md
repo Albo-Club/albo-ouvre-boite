@@ -100,7 +100,7 @@ Logged in as Alice on `/app/acme/`.
 | SH7  | Theme picker (sidebar footer) → choose Blue / Emerald / Violet | Primary + chart-1 change; survives reload (localStorage)          |
 | SH8  | Org switcher (sidebar header), org **without** a logo         | Initial (first letter) centered in the rounded square; lists orgs; click switches route + persists `lastOrgSlug` |
 | SH9  | NavUser (sidebar footer) → profile / switch org / sign out    | **Round** avatar; without photo, first+last initials (e.g. `BB`); same destinations as before the refactor |
-| SH10 | AI button in header                                           | Opens the existing chat modal (no regression)                     |
+| SH10 | AI button in header (or ⌘J / Ctrl+J)                          | Toggles the AI panel (desktop rounded box / mobile overlay); state persists via the `ai_panel_state` cookie |
 | SH11 | Open a page taller than the viewport (e.g. long Items list)   | The `inset` frame stays fixed to viewport height; scroll happens **inside** the frame, rounded bottom edge always visible |
 | SH12 | Unknown URL (e.g. `/app/acme/nope` or `/nope`)                | Styled 404 card (FR/EN by locale) + back-home button              |
 | SH13 | Dashboard / Items on initial load                             | Animated skeletons (KPI, recent items, table) — no naked "Loading…" text |
@@ -191,18 +191,21 @@ Still logged in as Alice. Prepare a second browser for Bob.
 | SA4 | Last-SA guard: remove own SA flag when sole SA     | Error "cannot_demote_last_superadmin"                             |
 | SA5 | `purgeExcept` (dev cleanup) — dev only             | Keeps only the specified email, deletes everything else           |
 
-## Level 5 — AI chat (8 min)
+## Level 5 — AI panel (10 min)
 
 | #   | Step                                                    | Expected result                                                   |
 | --- | ------------------------------------------------------- | ----------------------------------------------------------------- |
-| C1  | Open the chat slide-over from `/app/acme`               | First thread created automatically                                |
-| C2  | Send a simple message ("ping")                          | Stream visible token by token, no UI blocking                     |
-| C2b | Ask for a formatted response ("bullet list + bold")     | Markdown rendered in the assistant bubble (bullets, bold, inline code) |
-| C3  | Ask the agent "list my items"                           | `listItems` tool called, response contains Acme items             |
-| C4  | "create an item titled Test"                            | `createItem` tool called, item visible in `/app/acme/items` after refresh |
-| C5  | "delete item Test" + confirmation                       | `deleteItem` tool called, item disappears                         |
-| C6  | Spam 30 messages in 1 min                               | `chatSend` rate-limit triggers                                    |
-| C7  | From `/app/beta`, verify Acme threads are NOT listed    | Org isolation confirmed (scope `${orgId}:${userId}`)              |
+| C1  | Open `/app/acme`                                        | AI panel open by default in its rounded box (desktop right column); latest thread resumed, else empty state with suggestions |
+| C1b | Press ⌘J / Ctrl+J (or the header AI button), then reload | Panel toggles; state persists across reload (cookie `ai_panel_state`) |
+| C2  | Send a simple message ("ping")                          | Stream visible token by token; "Thinking…" before first token; no UI blocking |
+| C2b | Ask for a formatted response ("bullet list + bold")     | Markdown rendered via streamdown (bullets, bold, inline code, tables) |
+| C3  | Ask the agent "list my items"                           | `listItems` runs (read, no approval), collapsible tool call, response lists Acme items |
+| C4  | "create an item titled Test"                            | `createItem` shows **Confirm / Reject** buttons; **Confirm** writes it and generation resumes; item visible in `/app/acme/items` |
+| C4b | Repeat, then click **Reject**                           | "Action rejected", nothing written; agent acknowledges            |
+| C5  | While a long answer streams, click **Stop**             | Generation aborts                                                 |
+| C6  | Spam 30 messages in 1 min                               | `chatSend` rate-limit triggers (also gates approvals)             |
+| C7  | New chat (+), rename and delete a conversation          | Title updates; thread + messages removed                          |
+| C8  | From `/app/beta`, verify Acme threads are NOT listed    | Org isolation confirmed (scope `${orgId}:${userId}`)             |
 
 ## Level 6 — Security + deployment (5 min)
 

@@ -1,12 +1,47 @@
 {
   "title": "Assistant IA",
-  "subtitle": "Propulsé par Claude. Limité à cette organisation.",
-  "new": "Nouveau",
+  "new": "Nouvelle conversation",
   "close": "Fermer",
-  "loading": "Chargement…",
-  "emptyState": "Posez n'importe quelle question. Les messages sont diffusés en continu et enregistrés.",
-  "inputPlaceholder": "Posez votre question à l'assistant…",
+  "stop": "Arrêter",
   "send": "Envoyer",
+  "copy": "Copier",
+  "thinking": "Réflexion…",
+  "scrollToBottom": "Aller en bas",
+  "emptyState": "Posez votre question. L'assistant peut agir sur cette organisation (après votre validation).",
+  "inputPlaceholder": "Posez votre question à l'assistant…",
+  "suggestions": {
+    "listItems": "Liste mes éléments",
+    "createItem": "Crée un élément nommé « Roadmap »"
+  },
+  "approval": {
+    "pending": "Cette action nécessite votre validation.",
+    "approve": "Confirmer",
+    "deny": "Refuser",
+    "accepted": "Action confirmée",
+    "denied": "Action refusée"
+  },
+  "tool": {
+    "statePending": "Préparation…",
+    "stateRunning": "Exécution…",
+    "stateApprovalRequested": "Confirmation requise",
+    "stateApprovalResponded": "Répondu",
+    "stateCompleted": "Terminé",
+    "stateDenied": "Refusé",
+    "stateError": "Erreur",
+    "parameters": "Paramètres",
+    "result": "Résultat",
+    "error": "Erreur"
+  },
+  "threads": {
+    "history": "Historique des conversations",
+    "empty": "Aucune conversation",
+    "untitled": "Sans titre",
+    "actions": "Actions de la conversation",
+    "rename": "Renommer",
+    "renameTitle": "Renommer la conversation",
+    "deleteConfirmTitle": "Supprimer cette conversation ?",
+    "deleteConfirmBody": "Cette conversation et ses messages seront définitivement supprimés."
+  },
   "errors": {
     "rate_limited": "Ralentissez — trop de messages",
     "default": "Impossible d'envoyer le message"

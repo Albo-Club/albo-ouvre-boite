@@ -3,6 +3,10 @@
   "title": "Nouveautés",
   "subtitle": "Les dernières améliorations de l'application.",
   "entries": {
+    "ai-panel": {
+      "title": "Un panneau IA enrichi",
+      "body": "L'assistant dispose désormais de son propre panneau (raccourci ⌘J), diffuse des réponses bien mises en forme, et vous demande de Confirmer ou Refuser avant toute création ou modification."
+    },
     "whats-new-panel": {
       "title": "Suivez les nouveautés",
       "body": "Ce panneau liste les dernières améliorations. Une pastille sur le bouton vous signale quand quelque chose de nouveau est arrivé."

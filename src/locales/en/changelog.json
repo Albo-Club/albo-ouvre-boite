@@ -3,6 +3,10 @@
   "title": "What's new",
   "subtitle": "The latest improvements to the app.",
   "entries": {
+    "ai-panel": {
+      "title": "A richer AI panel",
+      "body": "The assistant now lives in its own panel (toggle it with ⌘J), streams nicely formatted answers, and asks you to Confirm or Reject before it creates or changes anything."
+    },
     "whats-new-panel": {
       "title": "Follow what's new",
       "body": "This panel lists the latest improvements. A dot on the button lets you know when something new has landed."
