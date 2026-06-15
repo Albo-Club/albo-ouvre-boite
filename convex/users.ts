@@ -8,6 +8,7 @@ import {
 } from './_generated/server'
 import { authComponent } from './auth'
 import { provisionAppUser, requireAppUser, safeAppUser } from './lib/auth'
+import { getLastOrgSlug } from './lib/userPrefs'
 import { resolveAvatarUrl, resolveLogoUrl } from './lib/storage'
 
 export const me = query({
@@ -57,7 +58,7 @@ export const me = query({
         name: user.name ?? null,
         avatarUrl: await resolveAvatarUrl(ctx, user),
         superAdmin: user.superAdmin,
-        lastOrgSlug: user.lastOrgSlug ?? null,
+        lastOrgSlug: await getLastOrgSlug(ctx, user),
         preferredLanguage: user.preferredLanguage ?? null,
       },
       orgs,
@@ -137,6 +138,12 @@ export const cascadeDelete = internalMutation({
     for (const m of memberships) {
       await ctx.db.delete("organizationMembers", m._id)
     }
+
+    const prefs = await ctx.db
+      .query('userPrefs')
+      .withIndex('by_user', (q) => q.eq('userId', appUser._id))
+      .unique()
+    if (prefs) await ctx.db.delete('userPrefs', prefs._id)
 
     if (appUser.avatarStorageId) {
       try {

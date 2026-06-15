@@ -599,6 +599,40 @@ redirects on `!isAuthenticated` will fire during that gap.
    If you add a new route guard, prefer `useAuthState()` over
    `useConvexAuth()` directly.
 
+## Hot `users` row — a write there invalidates EVERY open query
+
+Every query and mutation in this app resolves the caller through
+`requireAppUser` / `safeAppUser` (`convex/lib/auth.ts`), which reads the
+caller's `users` row. That row is therefore in the **read set of every open
+subscription**. Convex re-runs a query whenever anything in its read set
+changes, so **one write to the `users` row re-executes ALL mounted queries**
+for that user — across every tab.
+
+### The trap we hit (4.8 GB on a 1 GB Free quota)
+
+`lastOrgSlug` used to live on the `users` row, and
+`src/routes/app/$orgSlug/route.tsx` fired `organizations.setLastOrg` from a
+`useEffect` that depended on `users.me`. Two tabs open on two different orgs
+turned that into an infinite cross-tab loop: tab A writes its slug → the
+`users` row changes → `me` re-runs in tab B → B's effect writes *its* slug
+back → A's effect fires again, forever. Each write also re-ran every other
+mounted query (dashboard, lists, members…). A derived project with 2 users
+and ~10 MB of data burned **4.8 GB of Database Bandwidth** this way.
+
+### Two rules to avoid a recurrence
+
+1. **No frequently-written field on `users`.** Per-user mutable state goes to
+   `userPrefs` (`convex/lib/userPrefs.ts`) or its own dedicated table, which
+   only `users.me` reads — a write there invalidates that single cheap query
+   instead of the whole subscription set. `users` stays for stable identity
+   data (email, name, `superAdmin`, …).
+2. **Never fire a mutation from a `useEffect` that depends on a Convex query
+   observing the data being written.** That is the loop above. When a one-shot
+   sync is genuinely needed, guard it with a "write-once per intention"
+   `useRef` (see `lastOrgSyncedRef` in `app/$orgSlug/route.tsx`): persist at
+   most once per visited slug so a `me` update from another tab can't
+   re-trigger the write.
+
 ## release-please was removed (failed on every merge with `other side closed`)
 
 The `release-please.yml` workflow turned the **Release please** check red on

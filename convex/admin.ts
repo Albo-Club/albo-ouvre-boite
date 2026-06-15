@@ -21,6 +21,7 @@ export const purgeExcept = internalMutation({
       'invitations',
       'organizationMembers',
       'organizations',
+      'userPrefs',
     ] as const) {
       const rows = await ctx.db.query(table).collect()
       for (const r of rows) await ctx.db.delete(table, r._id)
@@ -31,7 +32,6 @@ export const purgeExcept = internalMutation({
     for (const u of users) {
       if (u.email.toLowerCase() === target) {
         keptConvexUserId = u._id
-        await ctx.db.patch("users", u._id, { lastOrgSlug: undefined })
       } else {
         await ctx.db.delete("users", u._id)
       }
