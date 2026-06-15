@@ -304,6 +304,30 @@ Safe by default:
   committed config to flip these — pass the flag in your own
   `~/.claude.json` if you ever need it.
 
+## Resend plugin (Claude Code)
+
+`.claude/settings.json` enables the official **Resend** Claude Code plugin
+at project scope (`resend@claude-plugins-official`). It bundles the Resend
+**MCP server** (send/receive email, manage templates, agent inbox) and every
+Resend **skill** (React Email, deliverability best practices), and it
+**auto-updates** through Anthropic's official marketplace — no manual sync,
+the skills stay current on their own.
+
+The MCP server reads `RESEND_API_KEY` from your **shell** environment, so
+add it to your shell profile (never committed):
+
+```bash
+export RESEND_API_KEY=re_...
+```
+
+Run `/reload-plugins` in Claude Code the first time. If the plugin is
+missing, refresh the marketplace once with
+`/plugin marketplace update claude-plugins-official`.
+
+> The shell `RESEND_API_KEY` (dev tooling) is **separate** from the
+> `RESEND_API_KEY` the app uses at runtime, which lives in the Convex env.
+> See `KNOWN_ISSUES.md` § "Resend: two integrations".
+
 ## Common commands
 
 ```bash
