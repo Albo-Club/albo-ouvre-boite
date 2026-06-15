@@ -19,7 +19,10 @@ export async function getLastOrgSlug(
     .query('userPrefs')
     .withIndex('by_user', (q) => q.eq('userId', user._id))
     .unique()
-  return prefs?.lastOrgSlug ?? null
+  // Fall back to the deprecated `users.lastOrgSlug` (see schema) so users
+  // created before the move to `userPrefs` keep their last viewed org until
+  // it gets written here on next navigation.
+  return prefs?.lastOrgSlug ?? user.lastOrgSlug ?? null
 }
 
 export async function setLastOrgSlug(
