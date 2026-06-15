@@ -636,13 +636,15 @@ env var name from **different places** — don't conflate them.
 
 2. **Dev tooling** (the `resend@claude-plugins-official` Claude Code plugin,
    enabled in `.claude/settings.json`). Its bundled MCP server runs
-   `npx -y resend-mcp` and reads `RESEND_API_KEY` from the **developer's shell
-   environment** — not the Convex env, not `.env.local`. Set it in your shell
-   profile (`export RESEND_API_KEY=re_…`).
+   `npx -y resend-mcp` and reads `RESEND_API_KEY` from the environment Claude
+   Code passes it — **not** the Convex env, not `.env.local`. Put it in the
+   **gitignored `.claude/settings.local.json`** `env` block (repo-scoped,
+   never committed); **restart Claude Code** to apply. A shell-profile
+   `export RESEND_API_KEY=re_…` also works.
 
 So a missing/incorrect key produces different symptoms depending on which side:
 app emails failing → check the **Convex** env; the Claude Code Resend tools
-failing → check your **shell** env.
+failing → check `.claude/settings.local.json` (or your shell) and restart.
 
 **Why the plugin's skills aren't in `skills-lock.json`.** The plugin delivers
 its skills *and* MCP as one marketplace bundle that auto-updates at Claude Code

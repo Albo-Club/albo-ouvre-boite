@@ -316,17 +316,19 @@ deliverability) so Claude Code can work with email out of the box, and it
 **auto-updates** through Anthropic's official `claude-plugins-official`
 marketplace — no manual sync, the skills stay current on their own.
 
-The MCP server reads `RESEND_API_KEY` from your **shell** environment, so add
-it to your shell profile (never committed):
+The MCP server reads `RESEND_API_KEY` from the environment Claude Code passes
+it. Put it in the **gitignored** `.claude/settings.local.json` (repo-scoped,
+never committed):
 
-```bash
-export RESEND_API_KEY=re_...
+```json
+{ "env": { "RESEND_API_KEY": "re_..." } }
 ```
 
-Then run `/reload-plugins` in Claude Code (first run only). If the plugin
+Then **restart Claude Code** (or `/reload-plugins`) to apply. If the plugin
 isn't found, refresh once with `/plugin marketplace update claude-plugins-official`.
+A shell-profile `export RESEND_API_KEY=re_…` works too.
 
-> ⚠️ This shell `RESEND_API_KEY` (dev tooling) is **separate** from the
+> ⚠️ This dev-tooling `RESEND_API_KEY` is **separate** from the
 > `RESEND_API_KEY` the app uses at runtime, which lives in the **Convex** env.
 > See `KNOWN_ISSUES.md` § "Resend: two integrations".
 
