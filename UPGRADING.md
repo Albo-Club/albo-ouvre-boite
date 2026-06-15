@@ -44,6 +44,22 @@ Keep your side with `git checkout --ours <path>`, take the template's with
 
 ## Per-version migration notes
 
+### → v0.3.0
+
+**One expected conflict: `skills-lock.json`.** This release reshapes it —
+every skill now carries `trackingRef` + `pinnedRef` (immutable pins). On
+`upgrade-template` you'll get a conflict; keep the template's pinned format
+(`git checkout --theirs skills-lock.json`), then run `pnpm run sync:skills`
+to vendor at the pins. The skill machinery (`scripts/sync-skills.mjs`) and
+`package.json` (`sync:skills:update`) also change — take the template's.
+
+The TanStack Start skill switches source to the official `TanStack/router`
+repo; `pnpm run sync:skills` re-vendors its content automatically.
+
+Resend Claude Code plugin: after merging, put your `RESEND_API_KEY` in the
+gitignored `.claude/settings.local.json` `env` block and restart Claude Code.
+Nothing to do if you don't use the Resend tooling.
+
 ### → v0.2.0
 
 No manual steps required — this release adds the in-app "What's new" panel

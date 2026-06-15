@@ -313,18 +313,20 @@ Resend **skill** (React Email, deliverability best practices), and it
 **auto-updates** through Anthropic's official marketplace — no manual sync,
 the skills stay current on their own.
 
-The MCP server reads `RESEND_API_KEY` from your **shell** environment, so
-add it to your shell profile (never committed):
+The MCP server reads `RESEND_API_KEY` from the environment Claude Code passes
+it. Put it in the **gitignored** `.claude/settings.local.json` (repo-scoped,
+never committed):
 
-```bash
-export RESEND_API_KEY=re_...
+```json
+{ "env": { "RESEND_API_KEY": "re_..." } }
 ```
 
-Run `/reload-plugins` in Claude Code the first time. If the plugin is
+Then **restart Claude Code** (or `/reload-plugins`) to apply. If the plugin is
 missing, refresh the marketplace once with
-`/plugin marketplace update claude-plugins-official`.
+`/plugin marketplace update claude-plugins-official`. A shell-profile
+`export RESEND_API_KEY=re_…` works too.
 
-> The shell `RESEND_API_KEY` (dev tooling) is **separate** from the
+> This dev-tooling `RESEND_API_KEY` is **separate** from the
 > `RESEND_API_KEY` the app uses at runtime, which lives in the Convex env.
 > See `KNOWN_ISSUES.md` § "Resend: two integrations".
 
