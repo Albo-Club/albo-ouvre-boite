@@ -2,6 +2,7 @@
 // user-facing copy lives in the `changelog` i18n namespace, keyed by `id` —
 // add the entry here AND in src/locales/{en,fr}/changelog.json.
 export const CHANGELOG_ENTRIES = [
+  { id: 'invite-no-verification', date: '2026-06-18' },
   { id: 'ai-panel', date: '2026-06-15' },
   { id: 'whats-new-panel', date: '2026-06-10' },
   { id: 'ai-formatting', date: '2026-06-10' },

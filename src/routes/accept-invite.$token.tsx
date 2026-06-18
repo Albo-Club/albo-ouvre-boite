@@ -143,7 +143,7 @@ function AcceptInvitePage() {
   return preview.accountExists ? (
     <SignInToAccept preview={preview} />
   ) : (
-    <SignUpToAccept preview={preview} />
+    <SignUpToAccept preview={preview} token={token} />
   )
 }
 
@@ -374,8 +374,10 @@ function SignInToAccept({
 
 function SignUpToAccept({
   preview,
+  token,
 }: {
   preview: Extract<Preview, { kind: 'ok' }>
+  token: string
 }) {
   const { t } = useTranslation(['auth', 'validation', 'errors'])
   const te = (k: string) => t(`errors:${k}`)
@@ -395,18 +397,39 @@ function SignUpToAccept({
     validators: { onChange: signUpSchema, onSubmit: signUpSchema },
     onSubmit: async ({ value }) => {
       setLoading(true)
-      const { error } = await authClient.signUp.email({
+      const { error: signUpError } = await authClient.signUp.email({
         email: preview.email,
         password: value.password,
         name: value.name,
-      })
-      setLoading(false)
-      if (error) {
-        toast.error(formatAuthError(classifyAuthError(error), 'signup', te))
+        // Token-gated: the signup databaseHook (convex/auth.ts) pre-verifies
+        // the email when this token resolves to a pending invitation for
+        // preview.email, so the invitee skips the verification round-trip.
+        // callbackURL brings them back here if verification is ever required
+        // (e.g. the token went stale between preview and submit). The client
+        // type doesn't model `inviteToken`, but BA forwards it to the hook
+        // via context.body — hence the cast.
+        inviteToken: token,
+        callbackURL: `/accept-invite/${token}`,
+      } as Parameters<typeof authClient.signUp.email>[0])
+      if (signUpError) {
+        setLoading(false)
+        toast.error(
+          formatAuthError(classifyAuthError(signUpError), 'signup', te),
+        )
         return
       }
-      setVerificationSent(true)
-      // After verification click → useConvexAuth flips → auto-accept fires
+      // Email is already verified, so sign in immediately: useConvexAuth flips
+      // and the parent's auto-accept effect fires while we stay on this page.
+      // If the token was not valid the email is unverified → signIn fails →
+      // fall back to the verification screen (callbackURL returns here).
+      const { error: signInError } = await authClient.signIn.email({
+        email: preview.email,
+        password: value.password,
+      })
+      setLoading(false)
+      if (signInError) {
+        setVerificationSent(true)
+      }
     },
   })
 

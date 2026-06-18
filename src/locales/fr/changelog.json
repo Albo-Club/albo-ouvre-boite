@@ -3,6 +3,10 @@
   "title": "Nouveautés",
   "subtitle": "Les dernières améliorations de l'application.",
   "entries": {
+    "invite-no-verification": {
+      "title": "Rejoindre via une invitation est plus rapide",
+      "body": "Lorsque vous créez votre compte depuis un lien d'invitation, plus besoin de confirmer un e-mail : votre invitation prouve déjà votre adresse, vous entrez directement dans l'espace de travail."
+    },
     "ai-panel": {
       "title": "Un panneau IA enrichi",
       "body": "L'assistant dispose désormais de son propre panneau (raccourci ⌘J), diffuse des réponses bien mises en forme, et vous demande de Confirmer ou Refuser avant toute création ou modification."
