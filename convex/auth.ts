@@ -180,6 +180,37 @@ export const createAuth = (ctx: GenericCtx<DataModel>) =>
         enabled: true,
       },
     },
+    databaseHooks: {
+      user: {
+        create: {
+          // Token-gated email pre-verification. When a signup carries an
+          // `inviteToken` that resolves to a still-pending invitation for the
+          // SAME email, the invitation email already proved control of the
+          // address, so we mark it verified and skip the verification
+          // round-trip (otherwise the invitee verifies, lands on /app, and the
+          // accept effect — which only lives on /accept-invite — never fires).
+          // SECURITY: email alone never qualifies. The token must resolve to a
+          // pending, unexpired invitation matching the email, or we leave
+          // `emailVerified` untouched so the normal verification flow applies.
+          before: async (
+            user: { email: string } & Record<string, unknown>,
+            context,
+          ) => {
+            const inviteToken = (
+              context?.body as { inviteToken?: unknown } | undefined
+            )?.inviteToken
+            if (typeof inviteToken !== 'string' || !inviteToken) return
+            const queryCtx = requireRunMutationCtx(ctx)
+            const valid = await queryCtx.runQuery(
+              internal.invitations.validateInviteForSignup,
+              { token: inviteToken, email: user.email },
+            )
+            if (!valid) return
+            return { data: { ...user, emailVerified: true } }
+          },
+        },
+      },
+    },
     user: {
       changeEmail: {
         enabled: true,
