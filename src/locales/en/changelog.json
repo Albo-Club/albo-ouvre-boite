@@ -3,6 +3,10 @@
   "title": "What's new",
   "subtitle": "The latest improvements to the app.",
   "entries": {
+    "invite-no-verification": {
+      "title": "Joining from an invitation is quicker",
+      "body": "When you sign up from an invitation link, there's no extra email to confirm — your invitation already proves your address, so you go straight into the workspace."
+    },
     "ai-panel": {
       "title": "A richer AI panel",
       "body": "The assistant now lives in its own panel (toggle it with ⌘J), streams nicely formatted answers, and asks you to Confirm or Reject before it creates or changes anything."

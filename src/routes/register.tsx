@@ -58,6 +58,13 @@ function RegisterPage() {
     [t],
   )
   const { redirect } = Route.useSearch()
+  const isInviteFlow = redirect?.startsWith('/accept-invite/') ?? false
+  // Extract the invite token from a `/accept-invite/<token>` redirect so the
+  // signup databaseHook (convex/auth.ts) can token-gate email verification.
+  const inviteToken =
+    isInviteFlow && redirect
+      ? redirect.split('/accept-invite/')[1]?.split(/[/?#]/)[0]
+      : undefined
   const [loading, setLoading] = useState(false)
   const [sentTo, setSentTo] = useState<string | null>(null)
   const [resendLoading, setResendLoading] = useState(false)
@@ -67,7 +74,16 @@ function RegisterPage() {
     validators: { onChange: schema, onSubmit: schema },
     onSubmit: async ({ value }) => {
       setLoading(true)
-      const { error } = await authClient.signUp.email(value)
+      const { error } = await authClient.signUp.email({
+        ...value,
+        // Bring the invitee back to the accept page after verification; the
+        // hook pre-verifies (skipping the round-trip) when the token is valid.
+        // `inviteToken` isn't in the client type but BA forwards it to the
+        // user.create hook via context.body (sent through the conditional
+        // spread so a non-invite signup omits it entirely).
+        callbackURL: redirect ?? '/app',
+        ...(inviteToken ? { inviteToken } : {}),
+      })
       setLoading(false)
       if (error) {
         const code = classifyAuthError(error)
@@ -84,8 +100,6 @@ function RegisterPage() {
       setSentTo(value.email)
     },
   })
-
-  const isInviteFlow = redirect?.startsWith('/accept-invite/') ?? false
 
   const onResendVerification = async () => {
     if (!sentTo) return

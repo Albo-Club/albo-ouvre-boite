@@ -70,6 +70,61 @@ For duplicate `users` rows already created in prod, `provisionAppUser` will
 converge them to a single row on the user's next login, but the second BA
 user remains in the database. Manual cleanup via the Convex dashboard.
 
+## Invitation signup — token-gated email pre-verification
+
+### The problem
+
+`emailAndPassword.requireEmailVerification: true` sends every signup through
+a verification email. For an **invited** user that round-trip is both
+redundant and broken: the accept logic lives in a `useEffect` on
+`/accept-invite/$token`, so after clicking the verification link the invitee
+is signed in but lands wherever the callback points — not necessarily back on
+the accept page — and the invitation is never accepted.
+
+### The fix (and why token-gated, NOT email-gated)
+
+`convex/auth.ts` adds `databaseHooks.user.create.before`. It reads
+`inviteToken` from the signup body (`context.body`) and, **only** when that
+token resolves to a still-pending, unexpired invitation **for the same
+email** (via the `internal.invitations.validateInviteForSignup` query →
+`isInviteValidForSignup` in `convex/lib/invitations.ts`), returns
+`{ data: { ...user, emailVerified: true } }`. Otherwise it touches nothing
+and the normal verification flow applies. The front then signs the invitee in
+immediately (`signUp` → `signIn` on `/accept-invite`, and `callbackURL` +
+`inviteToken` forwarded from `/register`).
+
+**A matching email is never sufficient on its own.** Email-gating (pre-verify
+any signup whose address equals some pending invite) was rejected: it would
+let an attacker register `victim@example.com` with their own password and get
+it marked verified, then — with `accountLinking.enabled: true` — have BA link
+that account when the victim later signs in (the takeover hole described in
+"Account linking & verified email"). Token-gating closes this: the 32-byte
+token is delivered **only** to the invitee's mailbox, so possessing it already
+proves mailbox control. Keep the token + email-match check; never relax it to
+email alone.
+
+### Gotchas for the next dev
+
+- **`inviteToken` is not in the Better Auth client type.** It's a custom field
+  the server forwards via `context.body`, not a declared `user.additionalField`
+  (we don't store it). The `/accept-invite` call casts the literal
+  (`as Parameters<typeof authClient.signUp.email>[0]`); `/register` sends it
+  through a conditional spread that needs no cast. If you add it to
+  `additionalFields` it would create a column — don't.
+- **Reading the body needs a run context.** The hook uses
+  `requireRunMutationCtx(ctx).runQuery(...)` (same pattern as the email
+  senders) — `create.before` runs inside the signup mutation, so `runQuery`
+  is available. Do **not** annotate the hook's `context` param; let it infer,
+  or the heavy `databaseHooks` type can trip the TS inference cycle CLAUDE.md
+  flags.
+- **`useRedirectWhenAuthenticated` always goes to `/app`** (ignores
+  `redirect`). The robust invite path is the inline one on `/accept-invite`
+  (signUp → signIn → auto-accept, no navigation). Via `/register`, a
+  token-gated invitee is auto-signed-in and redirected to `/app` rather than
+  auto-accepting; the email-verification path returns to the invite via
+  `callbackURL`. If the `/register` invite path needs to auto-accept too,
+  teach that hook to honour `redirect` (out of scope for the port).
+
 ## Google OAuth (template — opt-in)
 
 Google social login is wired but **off by default** so the repo stays a clean

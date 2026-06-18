@@ -126,7 +126,7 @@ Still logged in as Alice. Prepare a second browser for Bob.
 | --- | ----------------------------------------------------------- | ------------------------------------------------------------------- |
 | M1  | `/app/acme/settings/invitations` → invite `bob@test.local`  | Email sent, listed as pending                                       |
 | M2  | Browser 2 (incognito) → open the invitation link            | `/accept-invite/<token>` accessible unauthenticated                 |
-| M3  | Sign up Bob via the invitation flow                         | Bob created, automatically a member of Acme with "member" role      |
+| M3  | Sign up Bob via the invitation flow                         | Bob created, automatically a member of Acme with "member" role. **No email-verification step**: the invite token pre-verifies the email (token-gated), Bob is signed in and lands on `/app/acme` directly |
 | M4  | Bob visits `/app/acme/items`                                | Sees the list (empty or Alice's items), can create                  |
 | M5  | Alice changes Bob's role → "admin"                          | Persists, Bob sees the updated badge                                |
 | M6  | Bob creates a second org "Beta"                             | Switches to `/app/beta`, Alice is NOT a member                      |
@@ -142,12 +142,14 @@ Still logged in as Alice. Prepare a second browser for Bob.
 | -- | ---------------------------------------------------------- | ------------------------------------------------------------------- |
 | I1 | Invite an email already a member                           | Error "already_member", no duplicate                                |
 | I2 | Invite the same email twice (both pending)                 | Rejected or replaces the invitation, no duplicate                   |
-| I3 | Accept an expired invitation (force `expiresAt` in past)   | Error "invitation_expired", no member added                         |
-| I4 | Accept an already-accepted invitation                      | Error "already_accepted"                                            |
-| I5 | Accept invitation with a different account than the one invited | Rejected ("wrong_account") OR denied per policy                |
+| I3 | Accept an expired invitation (force `expiresAt` in past), not yet a member | Error "expired", no member added                          |
+| I4 | Re-open an invite link already accepted (still a member)   | **No error**: idempotent no-op, re-lands on `/app/<org>` (the accept effect can fire twice / second tab — replayable) |
+| I5 | Accept invitation with a different account than the one invited | `/accept-invite` shows the "wrong account" switch card; a forced backend `accept` for a non-member with a mismatched email throws "email_mismatch" |
 | I6 | Spam 25 invitations in < 1h                                | Rate-limit triggers → "rate_limited" after threshold                |
 | I7 | Revoke a pending invitation                                | Disappears from list, link becomes invalid                          |
 | I8 | Verify `RESEND_TEST_MODE=true` sends no real email         | Convex logs show "skipped (test mode)"                              |
+| I9 | **Token-gated security** — sign up at `/register` with NO valid invite token (normal signup) | Email is **not** pre-verified: verification email sent, `emailVerified` stays false until the link is clicked. A signup whose `inviteToken` is absent/stale/for another email never bypasses verification |
+| I10 | Email-match casing — invite `Bob@Test.local`, accept signed in as `bob@test.local` | Accepted (match is case- and whitespace-insensitive on both sides) |
 
 ## Level 3 — Items CRUD (8 min)
 
