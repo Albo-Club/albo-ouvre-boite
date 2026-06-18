@@ -76,16 +76,15 @@ function RegisterPage() {
       setLoading(true)
       const { error } = await authClient.signUp.email({
         ...value,
-        // Bring the invitee back to the accept page after verification; the
-        // hook pre-verifies (skipping the round-trip) when the token is valid.
+        // `callbackURL` is the fallback for the residual verification path;
         // `inviteToken` isn't in the client type but BA forwards it to the
         // user.create hook via context.body (sent through the conditional
         // spread so a non-invite signup omits it entirely).
         callbackURL: redirect ?? '/app',
         ...(inviteToken ? { inviteToken } : {}),
       })
-      setLoading(false)
       if (error) {
+        setLoading(false)
         const code = classifyAuthError(error)
         // Anti-enumeration: surface the same "Check your inbox" screen
         // whether the email is fresh or already taken. The legitimate owner
@@ -97,6 +96,26 @@ function RegisterPage() {
         toast.error(formatAuthError(code, 'signup', te))
         return
       }
+      if (inviteToken) {
+        // Invited signup: the token-gated hook verified the email, so sign in
+        // to open a session, then hand off to the accept page with a full
+        // navigation — which wins over the authenticated-redirect guard that
+        // would otherwise drop us on /app. The accept page attaches the user
+        // to the org, the same outcome as the inline /accept-invite flow.
+        const { error: signInError } = await authClient.signIn.email({
+          email: value.email,
+          password: value.password,
+        })
+        if (signInError) {
+          // Bypass didn't apply (token stale) → fall back to verification.
+          setLoading(false)
+          setSentTo(value.email)
+          return
+        }
+        window.location.assign(`/accept-invite/${inviteToken}`)
+        return
+      }
+      setLoading(false)
       setSentTo(value.email)
     },
   })

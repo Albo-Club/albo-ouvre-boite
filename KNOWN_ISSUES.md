@@ -117,13 +117,15 @@ email alone.
   is available. Do **not** annotate the hook's `context` param; let it infer,
   or the heavy `databaseHooks` type can trip the TS inference cycle CLAUDE.md
   flags.
-- **`useRedirectWhenAuthenticated` always goes to `/app`** (ignores
-  `redirect`). The robust invite path is the inline one on `/accept-invite`
-  (signUp → signIn → auto-accept, no navigation). Via `/register`, a
-  token-gated invitee is auto-signed-in and redirected to `/app` rather than
-  auto-accepting; the email-verification path returns to the invite via
-  `callbackURL`. If the `/register` invite path needs to auto-accept too,
-  teach that hook to honour `redirect` (out of scope for the port).
+- **`useRedirectWhenAuthenticated` always SPA-navigates to `/app`** (ignores
+  `redirect`). Both invite entry points work around this without touching the
+  shared guard: `/accept-invite` accepts inline (signUp → signIn → auto-accept
+  effect, no navigation), and `/register` in an invite flow does signUp →
+  signIn → `window.location.assign('/accept-invite/<token>')` — a **full**
+  navigation that wins the race against the guard's SPA `navigate`, handing
+  off to the accept page so the invitee is attached to the org instead of
+  landing on `/app`. If the token is stale the signIn fails and we fall back
+  to the verification screen (`callbackURL` returns to the invite).
 
 ## Google OAuth (template — opt-in)
 

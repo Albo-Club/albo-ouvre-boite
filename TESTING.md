@@ -150,6 +150,7 @@ Still logged in as Alice. Prepare a second browser for Bob.
 | I8 | Verify `RESEND_TEST_MODE=true` sends no real email         | Convex logs show "skipped (test mode)"                              |
 | I9 | **Token-gated security** — sign up at `/register` with NO valid invite token (normal signup) | Email is **not** pre-verified: verification email sent, `emailVerified` stays false until the link is clicked. A signup whose `inviteToken` is absent/stale/for another email never bypasses verification |
 | I10 | Email-match casing — invite `Bob@Test.local`, accept signed in as `bob@test.local` | Accepted (match is case- and whitespace-insensitive on both sides) |
+| I11 | Sign up from `/register?redirect=/accept-invite/<token>` (not the inline accept page) | Lands **in the org** (`/app/<org>`), not stuck on `/app`: token-gated signup → signin → full nav to the accept page, which attaches the member. Parity with the inline `/accept-invite` flow |
 
 ## Level 3 — Items CRUD (8 min)
 
