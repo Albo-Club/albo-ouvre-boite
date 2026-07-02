@@ -190,6 +190,14 @@ what the new version changes.
 | `organization-best-practices`             | BA `organization()` plugin             | `better-auth/skills`                       | ✅ official ⚠️ |
 | `create-auth-skill`                       | Auth BA scaffolding                    | `better-auth/skills`                       | ✅ official |
 | `tanstack-start-best-practices`           | SSR, server functions, middleware      | `TanStack/router` (official monorepo)      | ✅ official |
+| `agentmail`                               | Email inboxes for AI agents (AgentMail)| `agentmail-to/agentmail-skills`            | ✅ official |
+
+**`agentmail`**: official AgentMail skill (email-for-AI-agents platform).
+Vendored from `agentmail-to/agentmail-skills` at `agentmail/SKILL.md`. Needs
+`AGENTMAIL_API_KEY` in the environment. The upstream skill links to
+`references/webhooks.md` and `references/websockets.md`, which the sync
+pipeline does **not** vendor (it tracks only `SKILL.md`); read them upstream
+if you need the real-time event patterns.
 
 **⚠️ `organization-best-practices`**: official BA skill, but the
 `organization()` plugin is **disabled** in this project (see `KNOWN_ISSUES.md`).

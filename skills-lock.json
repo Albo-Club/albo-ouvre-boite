@@ -1,6 +1,14 @@
 {
   "version": 1,
   "skills": {
+    "agentmail": {
+      "source": "agentmail-to/agentmail-skills",
+      "sourceType": "github",
+      "skillPath": "agentmail/SKILL.md",
+      "trackingRef": "main",
+      "pinnedRef": "6631a0aac024b6410a9cf31608d7efa4d539f8dd",
+      "computedHash": "97308a68aebc225879776586f00470e737fa964aff5ff53b395d7e3e771ec988"
+    },
     "better-auth-best-practices": {
       "source": "better-auth/skills",
       "sourceType": "github",
