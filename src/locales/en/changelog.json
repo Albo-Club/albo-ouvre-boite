@@ -1,8 +1,14 @@
 {
+  "metaTitle": "What's new — albo",
   "button": "What's new",
   "title": "What's new",
   "subtitle": "The latest improvements to the app.",
+  "seeAll": "See all updates",
   "entries": {
+    "changelog-page": {
+      "title": "A dedicated What's new page",
+      "body": "The latest updates now have their own page. Open the What's new dialog and follow \"See all updates\" to browse the full history."
+    },
     "invite-no-verification": {
       "title": "Joining from an invitation is quicker",
       "body": "When you sign up from an invitation link, there's no extra email to confirm — your invitation already proves your address, so you go straight into the workspace."

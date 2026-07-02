@@ -104,7 +104,8 @@ Logged in as Alice on `/app/acme/`.
 | SH11 | Open a page taller than the viewport (e.g. long Items list)   | The `inset` frame stays fixed to viewport height; scroll happens **inside** the frame, rounded bottom edge always visible |
 | SH12 | Unknown URL (e.g. `/app/acme/nope` or `/nope`)                | Styled 404 card (FR/EN by locale) + back-home button              |
 | SH13 | Dashboard / Items on initial load                             | Animated skeletons (KPI, recent items, table) — no naked "Loading…" text |
-| SH14 | "What's new" button (sidebar footer, badge visible on first visit) | Dialog with dated FR/EN entries; badge disappears after opening and does not return on reload |
+| SH14 | "What's new" button (sidebar footer, badge visible on first visit) | Dialog previews the 3 most recent dated FR/EN entries; badge disappears after opening and does not return on reload |
+| SH15 | "What's new" dialog → "See all updates" (`/app/$orgSlug/changelog`) | Dedicated page lists the full history newest-first, FR/EN by locale; browser tab title reflects the locale |
 
 ## Level 2 — Data table items (5 min)
 
