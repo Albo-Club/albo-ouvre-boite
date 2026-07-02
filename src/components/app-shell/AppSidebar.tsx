@@ -113,7 +113,7 @@ export function AppSidebar({
       <SidebarFooter>
         <SidebarMenu>
           <SidebarMenuItem>
-            <WhatsNew />
+            <WhatsNew currentSlug={currentSlug} />
           </SidebarMenuItem>
           <SidebarMenuItem>
             <ThemePicker />

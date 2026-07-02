@@ -1,8 +1,14 @@
 {
+  "metaTitle": "Nouveautés — albo",
   "button": "Nouveautés",
   "title": "Nouveautés",
   "subtitle": "Les dernières améliorations de l'application.",
+  "seeAll": "Voir toutes les nouveautés",
   "entries": {
+    "changelog-page": {
+      "title": "Une page Nouveautés dédiée",
+      "body": "Les dernières améliorations ont désormais leur propre page. Ouvrez le dialogue Nouveautés puis suivez « Voir toutes les nouveautés » pour parcourir tout l'historique."
+    },
     "invite-no-verification": {
       "title": "Rejoindre via une invitation est plus rapide",
       "body": "Lorsque vous créez votre compte depuis un lien d'invitation, plus besoin de confirmer un e-mail : votre invitation prouve déjà votre adresse, vous entrez directement dans l'espace de travail."
