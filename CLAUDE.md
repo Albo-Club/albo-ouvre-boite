@@ -136,7 +136,8 @@ other developer-facing text. The only exceptions are user-facing copy in
 
 Before forking the template into a prod project, run through `TESTING.md`
 (levels 1 → 6, ~70 min). Level 1 is automated (`pnpm typecheck`,
-`pnpm lint`, `pnpm build`, `pnpm test:smoke`, `pnpm sync:skills:check`);
+`pnpm lint`, `pnpm build`, `pnpm test:smoke`, `pnpm sync:skills:verify`,
+`pnpm sync:skills:check`);
 the rest is manual — a sign-off checklist to validate auth, multi-tenant,
 invitations, items CRUD, uploads, account lifecycle, super-admin, AI chat,
 security.
@@ -162,14 +163,16 @@ which is stale for these libraries.
 Manifest: `skills-lock.json` — each skill pins an immutable commit
 (`pinnedRef`, reproducible) and watches a moving branch (`trackingRef`) to
 notice when upstream advances; `computedHash` is the SHA-256 of the vendored
-content. Drift detected in CI (job `skills-drift` in `.github/workflows/ci.yml`).
+content. Both guarded in CI (`.github/workflows/ci.yml`): job `skills-verify`
+re-hashes the working tree against the lock, job `skills-drift` compares the
+lock against upstream.
 
 Skills that split content out of `SKILL.md` declare their auxiliary files in an
 optional `references` array, with paths relative to the `SKILL.md` directory —
 identical upstream and locally, so the relative Markdown links keep resolving.
 References are folded into `computedHash`, so drift detection covers them.
-**Any new auxiliary file must be added there**: a file vendored by hand is
-invisible to both `sync:skills` and `--check`, and rots silently.
+**Any new auxiliary file must be added there**: a file vendored by hand is seen
+by none of `sync:skills`, `--check` or `--verify`, and rots silently.
 
 A `references` path may only point at a **descendant** of the `SKILL.md`
 directory — never `../`, which writes outside `.agents/skills/<name>/`. To root a
@@ -177,21 +180,41 @@ tree elsewhere upstream, add a second lock entry. Same section of
 `KNOWN_ISSUES.md` explains why, and why `MAX_IN_FLIGHT` in the sync script must
 stay put as the skill list grows.
 
-`--check` answers "has upstream moved?", not "is my working tree intact?" — it
-compares the upstream tip against the lock, and only verifies that vendored
-files *exist* locally. Local edits to `.agents/skills/` are caught by git, not
-by this script.
+**Two distinct questions, two modes — don't conflate them.** `--verify` answers
+"is my working tree intact?" (local re-hash, offline, deterministic); `--check`
+answers "has upstream moved?" (network, and the answer changes without anyone
+touching the repo). `--check` alone is blind to a vendored file edited or left
+stale on disk — it compares the upstream tip to the lock and never reads what
+we actually shipped. See `KNOWN_ISSUES.md` § "`--check` is blind to the working
+tree — hence `--verify`".
 
 - `pnpm run sync:skills` — vendor each skill at its `pinnedRef`
-  (reproducible, no network surprise; idempotent).
+  (reproducible, no network surprise; idempotent). **Self-healing**: rewrites
+  any file that no longer matches `computedHash`, so it repairs a corrupted or
+  stale tree without `--force`.
+- `pnpm run sync:skills:verify` — re-hash the vendored files and compare to the
+  lock; exit 2 if the tree diverged. No network — this is the offline CI gate.
 - `pnpm run sync:skills:check` — compare each `trackingRef` tip against the
   vendored content; exit 2 on drift (upstream moved since the last bump).
 - `pnpm run sync:skills:update` — advance `pinnedRef` to the current
   `trackingRef` tip, re-vendor, rewrite the lock. The deliberate bump — do it
   after reviewing the diff.
 
-Rule: `--check` detects, `--update` bumps. Never `--update` without reading
-what the new version changes.
+Rule: `--verify` guards, `--check` detects, `--update` bumps. Never `--update`
+without reading what the new version changes.
+
+**When the CI job `skills-verify` is red**: the vendored tree no longer matches
+the lock — someone hand-edited `.agents/skills/`, or a file is missing.
+`pnpm run sync:skills` repairs it (no `--force` needed), then re-read the
+`git diff`: if the content reverts to what the lock says, the local edit was
+the mistake. Never patch `skills-lock.json` to match a hand edit.
+
+**When the CI job `skills-drift` is red** (upstream moved): never bypass it, and
+never `--update` blindly. Run `pnpm run sync:skills:check` to name the drifting
+skill(s), read what the new upstream version changes, then `--update` and review
+the diff — a skill update is a prompt-injection surface, so read it rather than
+rubber-stamp it. Check that no project override in `CLAUDE.md` /
+`KNOWN_ISSUES.md` became false.
 
 | Skill                                     | Domain                                 | Upstream source                            | Official?  |
 | ----------------------------------------- | -------------------------------------- | ------------------------------------------ | ---------- |

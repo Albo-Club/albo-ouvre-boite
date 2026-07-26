@@ -24,9 +24,30 @@ jobs:
       - run: pnpm lint
       - run: pnpm build
 
-  # Upstream skill drift (TESTING.md B6). The sync script is dependency-free,
-  # so no pnpm install needed. When this goes red: run `pnpm run sync:skills`,
-  # review the SKILL.md diff, commit. Don't mute the check — see CLAUDE.md.
+  # Two jobs, two distinct questions — keep both:
+  #   skills-verify  "is my tree intact?"    offline, deterministic
+  #   skills-drift   "has upstream moved?"   needs the network
+  # The sync script is dependency-free, so neither needs `pnpm install`.
+
+  # Local integrity (TESTING.md B6): does `.agents/skills` still hold exactly
+  # what `skills-lock.json` says we vendored? Offline, so this job can't go red
+  # on a raw.githubusercontent.com hiccup. When it does go red, a vendored file
+  # was hand-edited or is missing: `pnpm run sync:skills` repairs it (no
+  # `--force` needed), then review the diff — see CLAUDE.md.
+  skills-verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: node scripts/sync-skills.mjs --verify
+
+  # Upstream skill drift (TESTING.md B6b). Kept in CI here because this repo
+  # has no weekly sync cron to catch drift otherwise — it was deliberately
+  # removed (see KNOWN_ISSUES.md § "sync-skills.yml (cron + auto-PR) was
+  # removed"). When this goes red: run `pnpm run sync:skills:update`, review
+  # the SKILL.md diff, commit. Don't mute the check — see CLAUDE.md.
   skills-drift:
     runs-on: ubuntu-latest
     steps:
