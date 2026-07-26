@@ -335,10 +335,11 @@ missing, refresh the marketplace once with
 ```bash
 pnpm dev                          # vite + convex dev (concurrently)
 pnpm typecheck                    # tsc --noEmit
-pnpm run sync:skills              # pull latest SKILL.md files
-pnpm run sync:skills:check        # exit 2 if any drifted
+pnpm run sync:skills              # pull latest SKILL.md files (self-healing)
+pnpm run sync:skills:verify       # exit 2 if the vendored tree diverged (offline)
+pnpm run sync:skills:check        # exit 2 if any drifted from upstream
 pnpm run init <name>              # personalize template
-pnpm run upgrade-template         # merge upstream template changes
+pnpm run upgrade-template         # merge upstream template changes (see PORTING.md)
 pnpm exec convex env list         # inspect Convex env vars
 pnpm exec convex run admin:purgeExcept '{"keepEmail":"you@yourco.com"}'
 ```
