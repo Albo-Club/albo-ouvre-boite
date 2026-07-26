@@ -776,7 +776,7 @@ per family: `.agents/skills/<name>/`. Two consequences:
   parent, so `./middleware/SKILL.md` and `../server-functions/SKILL.md` work.
   But upstream also links *across* packages
   (`../../../../router-core/skills/router-core/auth-and-guards/SKILL.md`), and
-  that prefix doesn't exist locally — 18 such links currently dangle. We do
+  that prefix doesn't exist locally — 17 such links currently dangle. We do
   **not** rewrite them at vendor time: `computedHash` is computed on the fetched
   bytes, so patching links on write would make the working tree permanently
   disagree with the hash, and every `--check` would look like drift. The mapping
