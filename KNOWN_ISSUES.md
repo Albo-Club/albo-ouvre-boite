@@ -256,6 +256,59 @@ across non-auth routes that pre-date Phase 0/1 and want a separate
 cleanup PR. The new Phase 1 files (`hibp.ts`, `auth-errors.ts`,
 `password-input.tsx`, `password-strength.tsx`) lint clean.
 
+## A return-URL search param needs the URL parser, not a regex
+
+`/login` takes `?redirect=` and, after a successful `signIn.email`, calls
+`window.location.replace(redirect)`. The param was typed `z.string().optional()`,
+so `/login?redirect=https://evil.com` was an **open redirect**: the victim signs
+in on our real domain with real credentials and gets handed to the attacker at
+the exact moment they have proven they trust the page. Better Auth was no help
+here — `signIn.email` never receives a `callbackURL`, so BA's `trustedOrigins`
+check (`convex/auth.ts`) never runs. Only the redirects *we* navigate to
+ourselves are exposed.
+
+Fixed by `src/lib/safe-redirect.ts`, applied in `/login` and `/register`.
+
+**The trap, and why the obvious fix is wrong.** The tempting predicate is
+"starts with `/` but not `//`":
+
+```ts
+const isInternalPath = (v: string) => /^\/(?![/\\])/.test(v)   // ← BYPASSABLE
+```
+
+It passes `/\t/evil.com` (slash, TAB, slash). Per the WHATWG URL spec browsers
+**strip** ASCII tab, LF and CR while parsing, so that string becomes
+`//evil.com` — protocol-relative, off-site — after passing a check that read the
+raw bytes. Demonstrated:
+
+```
+new URL('/\t/evil.com', 'https://ourapp.com').origin   // → 'https://evil.com'
+```
+
+So validate by resolving against a throwaway origin and requiring the result to
+stay on it. That delegates normalisation to the same parser the navigation will
+use, instead of trying to out-guess it:
+
+```ts
+new URL(value, PROBE_ORIGIN).origin === PROBE_ORIGIN && value.startsWith('/')
+```
+
+`startsWith('/')` is still needed — a bare `app` resolves onto the probe origin
+but is not a rooted path. An encoded slash (`/%2f%2fevil.com`) is *kept* and is
+safe: browsers resolve it as a path on the current origin, never as a new host.
+
+Two design notes:
+
+- The Zod field ends in `.catch(undefined)`, so a hostile value collapses to
+  "no redirect" and the page renders normally. Throwing would surface an error
+  screen that advertises the attempt.
+- **Nothing in this app produces `?redirect=`.** Every navigation to `/login`
+  and `/register` is bare, and the invitation email links straight to
+  `${siteUrl}/accept-invite/${token}`. The param is externally supplied and only
+  ever *propagated* between the login↔register cross-links. So the guard cannot
+  regress a legitimate flow — but it also means the return-URL is not preserved
+  when the `/app` guard bounces you to `/login` (a UX gap, not a security one).
+
 ## Production deploy is wired into the Vercel build
 
 `vercel.json` runs `npx convex deploy --cmd 'pnpm build'`, so every

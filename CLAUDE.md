@@ -427,6 +427,16 @@ export const remove = mutation({
 - ❌ Surfacing an auth error via raw copy. Classify with `classifyAuthError`,
   then `formatAuthError(code, ctx, t)` where `t` resolves the `errors`
   namespace (pass `(k) => t(\`errors:${k}\`)`).
+- ❌ A return-URL search param typed as bare `z.string()`, or validated with a
+  hand-rolled regex. Any value that reaches `window.location.*`, `<a href>` or
+  a `router.navigate` must go through `internalRedirectSearch` from
+  `~/lib/safe-redirect`, which resolves it with the URL parser. A regex like
+  `/^\/(?![/\\])/` looks right and is bypassable: browsers strip ASCII
+  tab/newline, so `/\t/evil.com` becomes `//evil.com` after the check passes.
+  Better Auth's `trustedOrigins` only covers params *it* receives
+  (`callbackURL`, `errorCallbackURL`, `redirectTo`) — never a redirect we
+  navigate to ourselves. See `KNOWN_ISSUES.md` § "A return-URL search param
+  needs the URL parser".
 
 ## Security
 

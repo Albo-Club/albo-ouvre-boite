@@ -10,6 +10,7 @@ import { getI18n } from '~/lib/i18n'
 import { getLocale } from '~/lib/locale'
 import { classifyAuthError, formatAuthError } from '~/lib/auth-errors'
 import { useRedirectWhenAuthenticated } from '~/lib/auth-state'
+import { internalRedirectSearch } from '~/lib/safe-redirect'
 import { Alert, AlertDescription } from '~/components/ui/alert'
 import { Button } from '~/components/ui/button'
 import { Input } from '~/components/ui/input'
@@ -26,7 +27,10 @@ import {
 import { CardContent, CardFooter } from '~/components/ui/card'
 
 const searchSchema = z.object({
-  redirect: z.string().optional(),
+  // Internal paths only — this one is handed to `window.location.replace()`
+  // after a successful sign-in, so an absolute URL here would be an open
+  // redirect. See `~/lib/safe-redirect`.
+  redirect: internalRedirectSearch,
   // Better Auth appends ?error=... when a social sign-in fails via
   // `errorCallbackURL`. We surface it as a toast on mount.
   error: z.string().optional(),

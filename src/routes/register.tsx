@@ -11,6 +11,7 @@ import { getLocale } from '~/lib/locale'
 import { classifyAuthError, formatAuthError } from '~/lib/auth-errors'
 import { useRedirectWhenAuthenticated } from '~/lib/auth-state'
 import { isPasswordPwned } from '~/lib/hibp'
+import { internalRedirectSearch } from '~/lib/safe-redirect'
 import { Button } from '~/components/ui/button'
 import { Input } from '~/components/ui/input'
 import { Spinner } from '~/components/ui/spinner'
@@ -29,7 +30,9 @@ import {
 import { CardContent, CardFooter } from '~/components/ui/card'
 
 const searchSchema = z.object({
-  redirect: z.string().optional(),
+  // Internal paths only — same guard as `/login`, so a crafted link can't turn
+  // the invite flow into an off-site hand-off. See `~/lib/safe-redirect`.
+  redirect: internalRedirectSearch,
 })
 
 export const Route = createFileRoute('/register')({
