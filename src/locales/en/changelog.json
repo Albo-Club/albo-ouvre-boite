@@ -5,6 +5,10 @@
   "subtitle": "The latest improvements to the app.",
   "seeAll": "See all updates",
   "entries": {
+    "security-hardening": {
+      "title": "Security hardening",
+      "body": "We tightened how sign-in redirects and the emails we send you are handled. There's nothing to do on your side — day to day, you shouldn't notice any difference."
+    },
     "changelog-page": {
       "title": "A dedicated What's new page",
       "body": "The latest updates now have their own page. Open the What's new dialog and follow \"See all updates\" to browse the full history."
