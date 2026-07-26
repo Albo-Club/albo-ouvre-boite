@@ -89,6 +89,20 @@ function plainText(parts: Array<string>): string {
   return parts.filter(Boolean).join('\n\n')
 }
 
+// User-supplied values (display names, org names, emails) must be escaped
+// before interpolation into the HTML branch — otherwise a self-set name like
+// `x</strong><a href="https://evil">…</a>` injects markup into a
+// DKIM-authenticated email (phishing vector). Plain-text branches and
+// subjects are not HTML and use the raw values.
+function esc(value: string): string {
+  return value
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;')
+}
+
 function pick<T>(locale: EmailLocale, copy: Record<EmailLocale, T>): T {
   return copy[locale] ?? copy.en
 }
@@ -110,14 +124,16 @@ export function invitationEmail({
   orgName: string
   acceptUrl: string
 }) {
+  const safeInviter = esc(inviterName)
+  const safeOrg = esc(orgName)
   const c = pick(locale, {
     en: {
       subject: `You're invited to ${orgName} on ${APP_NAME}`,
-      heading: `Join ${orgName}`,
-      intro: `<strong>${inviterName}</strong> invited you to join <strong>${orgName}</strong>.`,
+      heading: `Join ${safeOrg}`,
+      intro: `<strong>${safeInviter}</strong> invited you to join <strong>${safeOrg}</strong>.`,
       followup: `Click the button below to accept. This link expires in 7 days.`,
       footer: `If you didn't expect this invitation, you can safely ignore this email.`,
-      preheader: `${inviterName} invited you to join ${orgName}.`,
+      preheader: `${safeInviter} invited you to join ${safeOrg}.`,
       cta: 'Accept invitation',
       text: [
         `${inviterName} invited you to join ${orgName} on ${APP_NAME}.`,
@@ -129,11 +145,11 @@ export function invitationEmail({
     },
     fr: {
       subject: `Vous êtes invité à rejoindre ${orgName} sur ${APP_NAME}`,
-      heading: `Rejoindre ${orgName}`,
-      intro: `<strong>${inviterName}</strong> vous a invité à rejoindre <strong>${orgName}</strong>.`,
+      heading: `Rejoindre ${safeOrg}`,
+      intro: `<strong>${safeInviter}</strong> vous a invité à rejoindre <strong>${safeOrg}</strong>.`,
       followup: `Cliquez sur le bouton ci-dessous pour accepter. Ce lien expire dans 7 jours.`,
       footer: `Si vous n'attendiez pas cette invitation, vous pouvez ignorer cet e-mail.`,
-      preheader: `${inviterName} vous a invité à rejoindre ${orgName}.`,
+      preheader: `${safeInviter} vous a invité à rejoindre ${safeOrg}.`,
       cta: 'Accepter l’invitation',
       text: [
         `${inviterName} vous a invité à rejoindre ${orgName} sur ${APP_NAME}.`,
@@ -169,14 +185,15 @@ export function changeEmailVerificationEmail({
   // Sent to the CURRENT address. Acts as approval gate: a hijacked session
   // can request the change, but only the legitimate owner of the current
   // inbox can authorize it.
+  const safeNewEmail = esc(newEmail)
   const c = pick(locale, {
     en: {
       subject: `Approve email change on ${APP_NAME}`,
       heading: `Approve email change`,
-      intro: `Someone requested to change your ${APP_NAME} account email to <strong>${newEmail}</strong>.`,
+      intro: `Someone requested to change your ${APP_NAME} account email to <strong>${safeNewEmail}</strong>.`,
       followup: `If this was you, click below to approve. <strong>If not, ignore this email</strong> — your current address stays unchanged and the request is dropped.`,
       footer: `Your account email is updated only after you approve here.`,
-      preheader: `Approve change to ${newEmail}.`,
+      preheader: `Approve change to ${safeNewEmail}.`,
       cta: 'Approve email change',
       text: [
         `Approve email change on ${APP_NAME}.`,
@@ -189,10 +206,10 @@ export function changeEmailVerificationEmail({
     fr: {
       subject: `Approuver le changement d'e-mail sur ${APP_NAME}`,
       heading: `Approuver le changement d'e-mail`,
-      intro: `Quelqu'un a demandé à changer l'e-mail de votre compte ${APP_NAME} pour <strong>${newEmail}</strong>.`,
+      intro: `Quelqu'un a demandé à changer l'e-mail de votre compte ${APP_NAME} pour <strong>${safeNewEmail}</strong>.`,
       followup: `Si c'était vous, cliquez ci-dessous pour approuver. <strong>Sinon, ignorez cet e-mail</strong> — votre adresse actuelle reste inchangée et la demande est annulée.`,
       footer: `L'e-mail de votre compte n'est mis à jour qu'après votre approbation ici.`,
-      preheader: `Approuver le changement vers ${newEmail}.`,
+      preheader: `Approuver le changement vers ${safeNewEmail}.`,
       cta: 'Approuver le changement',
       text: [
         `Approuver le changement d'e-mail sur ${APP_NAME}.`,
@@ -225,12 +242,13 @@ export function deleteAccountVerificationEmail({
   url: string
   name?: string | null
 }) {
+  const safeName = name ? esc(name) : name
   const c = pick(locale, {
     en: {
       subject: `Confirm account deletion on ${APP_NAME}`,
       heading: `Confirm account deletion`,
-      intro: name
-        ? `${name}, you asked to delete your ${APP_NAME} account.`
+      intro: safeName
+        ? `${safeName}, you asked to delete your ${APP_NAME} account.`
         : `You asked to delete your ${APP_NAME} account.`,
       followup: `This will permanently remove your profile, your organization memberships, and your access. <strong>This cannot be undone.</strong>`,
       footer: `If you didn't request this, ignore this email and nothing happens.`,
@@ -249,8 +267,8 @@ export function deleteAccountVerificationEmail({
     fr: {
       subject: `Confirmer la suppression du compte sur ${APP_NAME}`,
       heading: `Confirmer la suppression du compte`,
-      intro: name
-        ? `${name}, vous avez demandé à supprimer votre compte ${APP_NAME}.`
+      intro: safeName
+        ? `${safeName}, vous avez demandé à supprimer votre compte ${APP_NAME}.`
         : `Vous avez demandé à supprimer votre compte ${APP_NAME}.`,
       followup: `Cela supprimera définitivement votre profil, vos adhésions aux organisations et votre accès. <strong>Cette action est irréversible.</strong>`,
       footer: `Si vous n'êtes pas à l'origine de cette demande, ignorez cet e-mail et rien ne se passera.`,
@@ -390,14 +408,15 @@ export function passwordChangedEmail({
   resetUrl: string
 }) {
   // Post-event notification — fired AFTER the password is already changed.
+  const safeEmail = esc(email)
   const c = pick(locale, {
     en: {
       subject: `Your ${APP_NAME} password was changed`,
       heading: `Password changed`,
-      intro: `The password for <strong>${email}</strong> was just changed on ${APP_NAME}.`,
+      intro: `The password for <strong>${safeEmail}</strong> was just changed on ${APP_NAME}.`,
       followup: `If you made this change, no action is needed. <strong>If you didn't, your account may be compromised</strong> — reset your password now and review your active sessions.`,
       footer: `For your safety, all other sessions were signed out automatically.`,
-      preheader: `Password changed for ${email}.`,
+      preheader: `Password changed for ${safeEmail}.`,
       cta: 'Reset password',
       text: [
         `Your ${APP_NAME} password was just changed.`,
@@ -408,10 +427,10 @@ export function passwordChangedEmail({
     fr: {
       subject: `Votre mot de passe ${APP_NAME} a été modifié`,
       heading: `Mot de passe modifié`,
-      intro: `Le mot de passe de <strong>${email}</strong> vient d'être modifié sur ${APP_NAME}.`,
+      intro: `Le mot de passe de <strong>${safeEmail}</strong> vient d'être modifié sur ${APP_NAME}.`,
       followup: `Si vous êtes à l'origine de ce changement, aucune action n'est requise. <strong>Sinon, votre compte est peut-être compromis</strong> — réinitialisez votre mot de passe maintenant et vérifiez vos sessions actives.`,
       footer: `Pour votre sécurité, toutes les autres sessions ont été déconnectées automatiquement.`,
-      preheader: `Mot de passe modifié pour ${email}.`,
+      preheader: `Mot de passe modifié pour ${safeEmail}.`,
       cta: 'Réinitialiser le mot de passe',
       text: [
         `Votre mot de passe ${APP_NAME} vient d'être modifié.`,
@@ -504,9 +523,9 @@ export function newUserSignupNotificationEmail({
   const subject = `[${APP_NAME}] New signup: ${email}${tag}`
   const heading = isFirst ? 'First user signed up' : 'New user signed up'
   const paragraphs = [
-    `<strong>Email:</strong> ${email}`,
-    `<strong>Name:</strong> ${displayName}`,
-    `<strong>Better Auth id:</strong> <code>${betterAuthId}</code>`,
+    `<strong>Email:</strong> ${esc(email)}`,
+    `<strong>Name:</strong> ${esc(displayName)}`,
+    `<strong>Better Auth id:</strong> <code>${esc(betterAuthId)}</code>`,
   ]
   const text = [
     heading,
@@ -517,7 +536,7 @@ export function newUserSignupNotificationEmail({
   ]
   const html = layout({
     locale: 'en',
-    preheader: `New signup: ${email}`,
+    preheader: `New signup: ${esc(email)}`,
     heading,
     paragraphs,
     footer: `${APP_NAME} — automated dev notification.`,

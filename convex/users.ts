@@ -117,6 +117,37 @@ export const localeForEmail = internalQuery({
 })
 
 /**
+ * Internal — called from Better Auth's `user.update.after` hook to keep the
+ * Convex `users` row in sync when Better Auth mutates the account (notably an
+ * email change via `changeEmail`). Without this, `users.email` goes stale and
+ * the email-fallback dedup in `provisionAppUser` would re-point a victim's row
+ * to any future signup reusing the freed old address — an account-takeover
+ * path. Keyed on `betterAuthId` (stable), never on the email. Idempotent.
+ */
+export const syncBetterAuthUser = internalMutation({
+  args: {
+    betterAuthId: v.string(),
+    email: v.string(),
+    name: v.optional(v.string()),
+  },
+  handler: async (ctx, { betterAuthId, email, name }) => {
+    const appUser = await ctx.db
+      .query('users')
+      .withIndex('by_betterAuthId', (q) => q.eq('betterAuthId', betterAuthId))
+      .unique()
+    if (!appUser) return null
+
+    const patch: { email?: string; name?: string } = {}
+    if (email && email !== appUser.email) patch.email = email
+    if (name !== undefined && name !== appUser.name) patch.name = name
+    if (Object.keys(patch).length > 0) {
+      await ctx.db.patch('users', appUser._id, patch)
+    }
+    return null
+  },
+})
+
+/**
  * Internal — called from Better Auth's `beforeDelete` hook to cascade-delete
  * all Convex-side data for a user being removed. Idempotent.
  */

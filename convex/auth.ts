@@ -209,6 +209,25 @@ export const createAuth = (ctx: GenericCtx<DataModel>) =>
             return { data: { ...user, emailVerified: true } }
           },
         },
+        update: {
+          // Keep the Convex `users` row in sync when Better Auth mutates the
+          // account — above all on `changeEmail`. A stale `users.email` would
+          // let the email-fallback dedup in `provisionAppUser` re-point this
+          // row to a future signup that reuses the freed old address (account
+          // takeover). Keyed on the stable BA id, never on the email.
+          after: async (user: {
+            id: string
+            email: string
+            name?: string | null
+          }) => {
+            const mutCtx = requireRunMutationCtx(ctx)
+            await mutCtx.runMutation(internal.users.syncBetterAuthUser, {
+              betterAuthId: user.id,
+              email: user.email,
+              name: user.name ?? undefined,
+            })
+          },
+        },
       },
     },
     user: {
