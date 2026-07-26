@@ -94,7 +94,10 @@ function LoginPage() {
         return
       }
       setUnverifiedEmail(null)
-      if (redirect) window.location.replace(redirect)
+      // Only follow same-origin relative paths: `//host` and `/\host` are
+      // treated as protocol-relative URLs by browsers (open redirect).
+      if (redirect && /^\/(?![/\\])/.test(redirect))
+        window.location.replace(redirect)
       else navigate({ to: '/app' })
     },
   })
