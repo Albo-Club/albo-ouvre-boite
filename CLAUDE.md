@@ -459,4 +459,8 @@ export const remove = mutation({
 - Before commit: `pnpm typecheck` must pass + Convex log must show `ready`.
 - Shipped something users can see? Add an in-app changelog entry: metadata
   in `src/lib/changelog.ts`, copy (en + fr) in
-  `src/locales/{en,fr}/changelog.json`.
+  `src/locales/{en,fr}/changelog.json`. The gate is user-visible, not
+  per-PR — skills, CI, tooling and docs PRs get no entry. Security fixes are
+  the one thing worth an entry despite being invisible in normal use; word it
+  as the reassurance ("we hardened X"), never as a map of the vectors, since
+  projects forked from here may still be unpatched.

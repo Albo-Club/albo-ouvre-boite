@@ -5,6 +5,10 @@
   "subtitle": "Les dernières améliorations de l'application.",
   "seeAll": "Voir toutes les nouveautés",
   "entries": {
+    "security-hardening": {
+      "title": "Sécurité renforcée",
+      "body": "Nous avons renforcé le traitement des redirections de connexion et des e-mails que nous vous envoyons. Rien à faire de votre côté : au quotidien, vous ne devriez voir aucune différence."
+    },
     "changelog-page": {
       "title": "Une page Nouveautés dédiée",
       "body": "Les dernières améliorations ont désormais leur propre page. Ouvrez le dialogue Nouveautés puis suivez « Voir toutes les nouveautés » pour parcourir tout l'historique."
