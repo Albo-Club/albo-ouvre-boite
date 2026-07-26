@@ -96,6 +96,10 @@ Docs are for the *why* and the *trap*.
 - `CLAUDE.md` — repeatable behavioral rules for future agents. Never a
   changelog of completed work.
 - `AGENTS.md` — pointer to the agent-skill workflow. Static, rarely changes.
+- `PORTING.md` — how a fix landed here reaches the projects forked from this
+  template: what `upgrade-template` conflicts on, how to verify a derived
+  project, and ready-to-paste prompts. Add a prompt here when you ship
+  something downstream needs and `upgrade-template` won't carry cleanly.
 
 If you're about to add the same info to two of these files, you're doing it
 wrong — link, don't duplicate.
