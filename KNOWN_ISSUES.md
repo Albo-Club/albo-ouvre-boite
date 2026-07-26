@@ -755,9 +755,15 @@ setup:
 
 Replacement: the `skills-drift` job in `ci.yml` runs
 `node scripts/sync-skills.mjs --check` on every push/PR (the script is
-dependency-free — no `pnpm install`). Red job → `pnpm run sync:skills`,
+dependency-free — no `pnpm install`). Red job → `pnpm run sync:skills:update`,
 review the diff, commit. Drift surfaces exactly when someone is coding,
 which is the only time fresh skills matter.
+
+Because that cron is gone, `skills-drift` is the **only** thing watching
+upstream here, so it stays in CI even though it needs the network. A derived
+project that *keeps* a weekly sync cron can drop `skills-drift` from CI and rely
+on `skills-verify` alone, for a 100 % offline CI — that's what Albo OS did. Do
+not port that change back here without restoring a cron first.
 
 ## Vendored skills: cross-family links, and why `..` is banned in `references`
 
@@ -800,6 +806,46 @@ Fixed in `scripts/sync-skills.mjs` with an 8-slot semaphore around `fetch`
 ever was (0.3–0.5 s vs 1.3–7.8 s), because ≤8 sockets get reused instead of
 thrashing. If you add many more skills, raise the skill count freely — do not
 raise `MAX_IN_FLIGHT`.
+
+The `skills-drift` CI job still carries this network exposure, by design (no
+cron here — previous section). The `skills-verify` job doesn't: it is a pure
+local re-hash and issues zero requests, so tree-integrity failures are never
+confounded with a GitHub hiccup.
+
+## `--check` is blind to the working tree — hence `--verify`
+
+`--check` and the default mode both compared **the lock's hash to upstream**,
+never **the lock to the disk**: `isVendored()` only tested that the files
+*exist*. So a vendored file hand-edited, truncated or simply left stale was
+invisible from both sides. Reproduced on this repo:
+
+```
+$ node scripts/sync-skills.mjs --check          # green
+$ echo "CORRUPTION" >> .agents/skills/convex/SKILL.md
+$ node scripts/sync-skills.mjs --check          # STILL green, exit 0
+$ node scripts/sync-skills.mjs                  # "Skills up to date." — no repair
+```
+
+Note the exact shape of the hole: **deleting** a file *was* caught (the
+existence test), **modifying** its content was not. That's what let three Convex
+`references/` files rot after their manual backfill, `migrations-component.md`
+being 54 lines behind. Nothing could ring.
+
+Two modes, two questions, not interchangeable:
+
+| Mode       | Question                  | Network |
+| ---------- | ------------------------- | ------- |
+| `--verify` | is my tree intact?        | no      |
+| `--check`  | has upstream moved?       | yes     |
+
+Both run in CI here (`skills-verify`, `skills-drift`). `--verify` is the cheap
+deterministic gate; `--check` stays because this repo has no sync cron to catch
+upstream drift otherwise.
+
+The default mode is now **self-healing** too: it rewrites any file that no
+longer matches `computedHash`, so a plain `pnpm run sync:skills` repairs a
+corrupted tree. `--force` is no longer needed for that (it remains useful to
+re-download everything unconditionally).
 
 ## Streamdown (AI panel) — `@source` Tailwind v4, plugins removed
 

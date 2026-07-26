@@ -24,10 +24,11 @@ Prerequisites:
 | B3 | Build         | `pnpm build`             | Bundle written to `.output/`  |
 | B4 | Smoke E2E     | `pnpm test:smoke`        | All scenarios pass            |
 | B5 | Prod cookies  | `pnpm test:cookies`      | `albo.session_token` has Secure+HttpOnly+SameSite=Lax+Max-Age≈604800 |
-| B6 | Skills up-to-date | `pnpm sync:skills:check` | `0 skills drifted`        |
+| B6 | Skills intact | `pnpm sync:skills:verify` | `Vendored skills match skills-lock.json.` (exit 0) — offline, covers the `SKILL.md` files **and** their `references` |
+| B6b | Skills up-to-date | `pnpm sync:skills:check` | `Skills up to date with upstream.` (exit 0) — network |
 
-B2–B3 and B6 also run in CI on every PR (`.github/workflows/ci.yml`,
-B6 via the `skills-drift` job).
+B2–B3, B6 and B6b also run in CI on every PR (`.github/workflows/ci.yml`,
+B6 via the `skills-verify` job, B6b via `skills-drift`).
 B4–B5 remain local: they require a provisioned Convex deployment.
 
 ## Level 2 — Auth (6 min)

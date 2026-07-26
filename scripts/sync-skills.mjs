@@ -24,9 +24,23 @@
 //   .agents/skills/<name>/<reference>        (auxiliary files, same layout)
 //   .claude/skills/<name> -> ../../.agents/skills/<name>   (symlink)
 //
+// Two different questions, two different modes — don't conflate them:
+//   --check  "has upstream moved?"      → needs the network, answer changes
+//                                          without anyone touching the repo.
+//   --verify "is my tree intact?"       → pure local re-hash, deterministic,
+//                                          offline.
+// `--check` alone is blind to a vendored file edited, truncated or left stale
+// on disk: it compares the upstream tip to the lock and never reads what we
+// actually shipped. That blind spot let three Convex reference files rot
+// unnoticed (see KNOWN_ISSUES.md).
+//
 // Modes:
 //   (default)   vendor each skill at its pinnedRef (reproducible, no network
-//               surprise). Use after a fresh clone or to repair the tree.
+//               surprise). Self-healing: a local file that no longer matches
+//               `computedHash` is rewritten, so a corrupted tree repairs
+//               itself without --force.
+//   --verify    re-hash the vendored files and compare to `computedHash`.
+//               No network, no GitHub API — safe in CI and offline.
 //   --check     compare each trackingRef tip against the pinned content. Drift
 //               means a newer upstream exists — a deliberate bump is due.
 //               Content-only (no GitHub API), safe to run on every session.
@@ -36,13 +50,15 @@
 //
 // Run:
 //   pnpm run sync:skills
+//   pnpm run sync:skills:verify
 //   pnpm run sync:skills:check
 //   pnpm run sync:skills:update
 //
 // Exit codes:
 //   0   nothing to do, or successful sync/update
 //   1   network or filesystem error
-//   2   skill drift detected and not synced (when run with --check)
+//   2   drift detected and not synced (--check) or local tree corrupt
+//       (--verify)
 
 import { createHash } from 'node:crypto'
 import { existsSync } from 'node:fs'
@@ -58,6 +74,7 @@ const CLAUDE_DIR = resolve(ROOT, '.claude/skills')
 
 const force = process.argv.includes('--force')
 const checkOnly = process.argv.includes('--check')
+const verifyOnly = process.argv.includes('--verify')
 const update = process.argv.includes('--update')
 
 const GH_TOKEN = process.env.GITHUB_TOKEN || process.env.GH_TOKEN
@@ -160,6 +177,52 @@ function isVendored(name, info) {
   )
 }
 
+// Mirror of fetchSkillAt against the working tree: same file order, same
+// framing, so the digest is comparable to `computedHash` byte for byte.
+async function hashLocal(name, info) {
+  const files = []
+  for (const rel of relPaths(info)) {
+    const path = resolve(AGENTS_DIR, name, rel)
+    if (!existsSync(path)) return { missing: rel }
+    files.push({ rel, content: await readFile(path, 'utf8') })
+  }
+  return { hash: combinedHash(files) }
+}
+
+// Offline integrity gate: does .agents/skills still hold exactly what the lock
+// says we vendored? Catches hand edits, truncated files and stale copies that
+// --check cannot see. No network, so it never flakes a PR.
+async function runVerify(lock) {
+  let broken = 0
+  for (const [name, info] of Object.entries(lock.skills)) {
+    if (info.sourceType !== 'github') continue
+
+    const local = await hashLocal(name, info)
+    if (local.missing) {
+      console.log(
+        `~ ${name}: ${local.missing} missing — run \`pnpm run sync:skills\``,
+      )
+      broken += 1
+      continue
+    }
+    if (local.hash !== info.computedHash) {
+      console.log(
+        `~ ${name}: local content differs from skills-lock.json — run \`pnpm run sync:skills\``,
+      )
+      broken += 1
+    }
+  }
+
+  if (broken > 0) {
+    console.log(
+      `${broken} skill${broken > 1 ? 's' : ''} differ from skills-lock.json.`,
+    )
+  } else {
+    console.log('Vendored skills match skills-lock.json.')
+  }
+  process.exit(broken > 0 ? 2 : 0)
+}
+
 async function runCheck(lock) {
   let drift = 0
   await Promise.all(
@@ -217,8 +280,12 @@ async function runSync(lock) {
       continue
     }
 
+    // Rewrite when the pin moved OR when what's on disk no longer matches the
+    // lock — the second case is what makes a plain `sync:skills` self-healing
+    // (a missing file leaves `local.hash` undefined, which also mismatches).
+    const local = await hashLocal(name, info)
     const needsWrite =
-      force || at.hash !== info.computedHash || !isVendored(name, info)
+      force || at.hash !== info.computedHash || local.hash !== info.computedHash
     if (!needsWrite) continue
 
     await vendor(name, info, at.files, at.hash)
@@ -238,7 +305,9 @@ async function runSync(lock) {
 
 async function main() {
   const lock = JSON.parse(await readFile(LOCK_PATH, 'utf8'))
-  if (checkOnly) {
+  if (verifyOnly) {
+    await runVerify(lock)
+  } else if (checkOnly) {
     await runCheck(lock)
   } else {
     await runSync(lock)
