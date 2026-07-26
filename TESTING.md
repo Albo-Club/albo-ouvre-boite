@@ -44,7 +44,7 @@ Test with a fresh user "Alice" (`alice@test.local`).
 | A1  | `/register` → submit, onboarding org "Acme"            | Redirects to `/app/acme`, user created, `superAdmin: true` (first user). If `DEV_NOTIFY_EMAIL` is set, a "[albo] New signup: …" email arrives in that inbox (1× per new user, not on re-login). |
 | A2  | Sign out → re-sign in correct                          | Redirects to `/app/acme` (last org via `lastOrgSlug`)                              |
 | A3  | Sign in with wrong password                            | Inline destructive `<Alert>` above the form (not a toast). No session.            |
-| A4  | `/app/acme` unauthenticated                            | Redirects to `/login?redirect=…`                                                  |
+| A4  | `/app/acme` unauthenticated                            | Redirects to `/login` (bare — the app never generates `?redirect=`, so the return URL is **not** preserved; see `KNOWN_ISSUES.md` § "A return-URL search param needs the URL parser") |
 | A5  | `/app/me` → change password                            | Success toast **+ "Password changed" email** (anti-takeover) + other sessions invalidated |
 | A6  | Magic link for registered + unregistered email         | Identical privacy-respecting toast. No `users` row created for unknown email.     |
 | A7  | Forgot → reset chain (email → token → new password)    | Sign-in with new password works. All pre-reset sessions invalidated.              |
@@ -64,6 +64,8 @@ Test with a fresh user "Alice" (`alice@test.local`).
 | A21 | **Google sign-in** — with credentials + redirect URI in Google Console (`${SITE_URL}/api/auth/callback/google`) | Button visible. New user → redirects to `/app`, `users` row created. Email matching an existing password account → **no** duplicate `users` row (email dedup). |
 | A22 | Google OAuth failure (cancelled / error)               | Returns to `/login?error=…` → toast "Couldn't sign in with that provider".        |
 | A22b | **Google in prod** — after `pnpm run setup:prod` (Google creds present in dev) | `convex env list --prod` contains `GOOGLE_CLIENT_ID`; prod redirect URI added to the same Google client; button visible on prod domain, sign-in works. |
+| A24 | **Open redirect** — sign in from `/login?redirect=https://evil.com`, then from `/login?redirect=/%09/evil.com` (tab-smuggling) | Both land on `/app`, **never** off-site. The hostile param is dropped silently — normal login page, no error screen. Repeat with `//evil.com` and `/\evil.com`. |
+| A25 | **Return URL preserved** — sign in from `/login?redirect=/app/acme/items` | Lands on `/app/acme/items` (internal paths still work — the guard rejects origins, not paths). |
 
 > **A23+ (known gaps)**: no "Password changed" email on the
 > `/forgot-password → /reset-password` flow, nor NewDeviceEmail — see
