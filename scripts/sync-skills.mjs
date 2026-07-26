@@ -87,8 +87,28 @@ function combinedHash(files) {
   return h.digest('hex')
 }
 
+// Every skill is fetched in parallel, and a skill with `references` multiplies
+// its file count. Past ~30 simultaneous TLS handshakes raw.githubusercontent
+// stops answering and undici burns its full 10s connect timeout — which blows
+// the SessionStart hook budget and flakes CI. Cap in-flight requests instead of
+// capping how many skills we may vendor.
+const MAX_IN_FLIGHT = 8
+const waiting = []
+let inFlight = 0
+
+async function withSlot(fn) {
+  if (inFlight >= MAX_IN_FLIGHT) await new Promise((r) => waiting.push(r))
+  inFlight += 1
+  try {
+    return await fn()
+  } finally {
+    inFlight -= 1
+    waiting.shift()?.()
+  }
+}
+
 async function fetchText(source, ref, path) {
-  const res = await fetch(rawUrl(source, ref, path))
+  const res = await withSlot(() => fetch(rawUrl(source, ref, path)))
   if (!res.ok) return { error: `${res.status} ${rawUrl(source, ref, path)}` }
   return { content: await res.text() }
 }
