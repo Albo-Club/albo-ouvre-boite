@@ -759,6 +759,48 @@ dependency-free — no `pnpm install`). Red job → `pnpm run sync:skills`,
 review the diff, commit. Drift surfaces exactly when someone is coding,
 which is the only time fresh skills matter.
 
+## Vendored skills: cross-family links, and why `..` is banned in `references`
+
+Upstream repos increasingly ship *trees* of skills (TanStack/router:
+`packages/<pkg>/skills/<skill>/[<sub>/]SKILL.md`). We vendor flat, one lock key
+per family: `.agents/skills/<name>/`. Two consequences:
+
+- **Sibling links inside a family resolve, links climbing out of it don't.**
+  A sub-skill vendored as a `reference` keeps its position relative to its
+  parent, so `./middleware/SKILL.md` and `../server-functions/SKILL.md` work.
+  But upstream also links *across* packages
+  (`../../../../router-core/skills/router-core/auth-and-guards/SKILL.md`), and
+  that prefix doesn't exist locally — 18 such links currently dangle. We do
+  **not** rewrite them at vendor time: `computedHash` is computed on the fetched
+  bytes, so patching links on write would make the working tree permanently
+  disagree with the hash, and every `--check` would look like drift. The mapping
+  lives in `CLAUDE.md` § Skills instead.
+- **A `references` entry must never start with `..`.** It looks like it works —
+  `raw.githubusercontent.com` normalises the path and returns 200 — but
+  `vendor()` resolves the same string against `.agents/skills/<name>/` and
+  writes **outside** the skill directory. That's why
+  `compositions/router-query`, a *sibling* of `react-router` upstream, is its own
+  lock entry (`tanstack-router-query`) rather than a `../` reference.
+
+Rule of thumb: one lock entry per upstream directory you want to root a tree at;
+`references` may only point at descendants of that directory.
+
+## `sync:skills --check` needs its in-flight fetches capped
+
+`runCheck` fans out over every skill at once, and each skill with `references`
+multiplies its own file count. Vendoring the TanStack tree took the check from
+~30 to ~53 files and it started failing consistently: past roughly 30 parallel
+TLS handshakes `raw.githubusercontent.com` stops answering, undici burns its
+full 10 s connect timeout, and the script dies with `TypeError: fetch failed`.
+That breaks two things at once — the `SessionStart` hook in `.claude/settings.json`
+has a 10 s budget, and the `skills-drift` CI job goes red for no real reason.
+
+Fixed in `scripts/sync-skills.mjs` with an 8-slot semaphore around `fetch`
+(`MAX_IN_FLIGHT`). Counter-intuitively this made the check ~4× *faster* than it
+ever was (0.3–0.5 s vs 1.3–7.8 s), because ≤8 sockets get reused instead of
+thrashing. If you add many more skills, raise the skill count freely — do not
+raise `MAX_IN_FLIGHT`.
+
 ## Streamdown (AI panel) — `@source` Tailwind v4, plugins removed
 
 The AI panel renders assistant markdown with `streamdown` (via

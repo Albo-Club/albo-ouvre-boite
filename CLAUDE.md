@@ -171,6 +171,12 @@ References are folded into `computedHash`, so drift detection covers them.
 **Any new auxiliary file must be added there**: a file vendored by hand is
 invisible to both `sync:skills` and `--check`, and rots silently.
 
+A `references` path may only point at a **descendant** of the `SKILL.md`
+directory — never `../`, which writes outside `.agents/skills/<name>/`. To root a
+tree elsewhere upstream, add a second lock entry. Same section of
+`KNOWN_ISSUES.md` explains why, and why `MAX_IN_FLIGHT` in the sync script must
+stay put as the skill list grows.
+
 `--check` answers "has upstream moved?", not "is my working tree intact?" — it
 compares the upstream tip against the lock, and only verifies that vendored
 files *exist* locally. Local edits to `.agents/skills/` are caught by git, not
@@ -201,7 +207,11 @@ what the new version changes.
 | `two-factor-authentication-best-practices`| 2FA / TOTP / backup codes              | `better-auth/skills`                       | ✅ official |
 | `organization-best-practices`             | BA `organization()` plugin             | `better-auth/skills`                       | ✅ official ⚠️ |
 | `create-auth-skill`                       | Auth BA scaffolding                    | `better-auth/skills`                       | ✅ official |
-| `tanstack-start-best-practices`           | SSR, server functions, middleware      | `TanStack/router` (official monorepo)      | ✅ official |
+| `tanstack-start-core`                     | **Start entry point** + server functions, middleware, server auth, execution model, server routes, deployment | `TanStack/router` (official monorepo) | ✅ official |
+| `tanstack-react-start`                    | React bindings for Start + server components| `TanStack/router` (official monorepo) | ✅ official |
+| `tanstack-router-core`                    | **Router entry point** + data loading, guards, SSR, 404/errors, search/path params, navigation, code splitting, type safety | `TanStack/router` (official monorepo) | ✅ official |
+| `tanstack-react-router`                   | React hooks/components of the router   | `TanStack/router` (official monorepo)      | ✅ official |
+| `tanstack-router-query`                   | Router ↔ TanStack Query integration    | `TanStack/router` (official monorepo)      | ✅ official |
 | `agentmail`                               | Email inboxes for AI agents (AgentMail)| `agentmail-to/agentmail-skills`            | ✅ official |
 
 **`agentmail`**: official AgentMail skill (email-for-AI-agents platform).
@@ -216,11 +226,27 @@ task rather than working from `SKILL.md` alone.
 Read it to understand the concepts; don't apply the BA code as-is —
 our orgs/members live in the custom Convex schema.
 
-**TanStack Start (`TanStack/router`)**: official source since June 2026
-(`packages/react-start/skills/react-start/SKILL.md`), versioned with the
-`@tanstack/react-start` releases in the monorepo. If a behavior change is
-unclear, fall back to the `context7` MCP (`mcp__…__query-docs`) for
-`/tanstack/start`.
+**TanStack (`TanStack/router`)**: official source, versioned with the
+`@tanstack/react-start` / `@tanstack/react-router` releases in the monorepo
+(`packages/*/skills/*/SKILL.md`). If a behavior change is unclear, fall back to
+the `context7` MCP (`mcp__…__query-docs`) for `/tanstack/start`.
+
+**Start with `tanstack-start-core` or `tanstack-router-core`.** Those two are
+*routers*: each opens on a sub-skill table + decision tree, and the real content
+lives in descendant directories reached from there
+(`tanstack-start-core/server-functions/SKILL.md`,
+`tanstack-router-core/data-loading/SKILL.md`, …). Sub-skills are vendored as
+`references`, so their sibling links resolve locally — but Claude Code only
+registers the 5 top-level skills, so a sub-skill is *read through its parent's
+table*, never picked from the skill list.
+
+Upstream links that climb out of a skill (`../../../<pkg>/skills/<skill>/…`)
+**dangle by design**: we vendor flat (`.agents/skills/<name>/`), upstream nests
+under `packages/<pkg>/skills/`. Translate with `<skill>[/<sub>]` →
+`tanstack-<skill>[/<sub>]` (so `start-client-core/skills/start-core/middleware`
+→ `tanstack-start-core/middleware`); the one irregular case is
+`react-router/skills/compositions/router-query` → `tanstack-router-query`. See
+`KNOWN_ISSUES.md` § "Vendored skills: cross-family links".
 
 **shadcn/ui**: no agent skill yet. Conventions live in `components.json`
 (alias `@/components`, neutral theme, radius 0.5rem, oklch tokens in

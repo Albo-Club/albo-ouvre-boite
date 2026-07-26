@@ -135,13 +135,80 @@
       "pinnedRef": "17dfe3a1da1c3982de723098ba1015d67f35694c",
       "computedHash": "93873f0af97ff7556a0cfed358c535f03a8f347bd07b94a3d7769a401cf014a3"
     },
-    "tanstack-start-best-practices": {
+    "tanstack-react-router": {
+      "source": "TanStack/router",
+      "sourceType": "github",
+      "skillPath": "packages/react-router/skills/react-router/SKILL.md",
+      "trackingRef": "main",
+      "pinnedRef": "fc83c0383f956c3ca02e5e027666c917d7e8b07a",
+      "computedHash": "11630eb25260059674129329f451d9be3110a045ce10fb1adcd33c9bf513b59d"
+    },
+    "tanstack-react-start": {
       "source": "TanStack/router",
       "sourceType": "github",
       "skillPath": "packages/react-start/skills/react-start/SKILL.md",
+      "references": [
+        "server-components/SKILL.md",
+        "server-components/docs/architecture.md",
+        "server-components/docs/caching-refresh-ssr.md",
+        "server-components/docs/composite-components.md",
+        "server-components/docs/current-api-notes.md",
+        "server-components/docs/debugging-review.md",
+        "server-components/docs/sources.md",
+        "server-components/examples/01-renderable-route-loader.tsx",
+        "server-components/examples/02-composite-slots.tsx",
+        "server-components/examples/03-query-owned-rsc.tsx",
+        "server-components/examples/04-selective-ssr-data-only.tsx",
+        "server-components/examples/05-ssr-false-browser-loader.tsx",
+        "server-components/examples/06-low-level-flight-api-route.tsx"
+      ],
       "trackingRef": "main",
       "pinnedRef": "fc83c0383f956c3ca02e5e027666c917d7e8b07a",
-      "computedHash": "516b6777246ba41125fd6ab40b2ca2b41809e59b8e8638fdce67086cfdf4bebb"
+      "computedHash": "df3e0894beb1ac95f9e6c6dc710dd4b94762693e019b3400831e5242e2e7e516"
+    },
+    "tanstack-router-core": {
+      "source": "TanStack/router",
+      "sourceType": "github",
+      "skillPath": "packages/router-core/skills/router-core/SKILL.md",
+      "references": [
+        "auth-and-guards/SKILL.md",
+        "code-splitting/SKILL.md",
+        "data-loading/SKILL.md",
+        "navigation/SKILL.md",
+        "not-found-and-errors/SKILL.md",
+        "path-params/SKILL.md",
+        "search-params/SKILL.md",
+        "search-params/references/validation-patterns.md",
+        "ssr/SKILL.md",
+        "type-safety/SKILL.md"
+      ],
+      "trackingRef": "main",
+      "pinnedRef": "fc83c0383f956c3ca02e5e027666c917d7e8b07a",
+      "computedHash": "c0a921fcde654069c4dddb74ef867a9ddbc7524c313112e293b3cfdf46ca2265"
+    },
+    "tanstack-router-query": {
+      "source": "TanStack/router",
+      "sourceType": "github",
+      "skillPath": "packages/react-router/skills/compositions/router-query/SKILL.md",
+      "trackingRef": "main",
+      "pinnedRef": "fc83c0383f956c3ca02e5e027666c917d7e8b07a",
+      "computedHash": "f50b66fa9d56f1e19f3d864c1577d77416fb36adca2fcf9ecbcb20865f363516"
+    },
+    "tanstack-start-core": {
+      "source": "TanStack/router",
+      "sourceType": "github",
+      "skillPath": "packages/start-client-core/skills/start-core/SKILL.md",
+      "references": [
+        "auth-server-primitives/SKILL.md",
+        "deployment/SKILL.md",
+        "execution-model/SKILL.md",
+        "middleware/SKILL.md",
+        "server-functions/SKILL.md",
+        "server-routes/SKILL.md"
+      ],
+      "trackingRef": "main",
+      "pinnedRef": "fc83c0383f956c3ca02e5e027666c917d7e8b07a",
+      "computedHash": "7587ad1213e9d62d10594bb65cd5a863e90f98d81b048083ca2bbfc5767406bd"
     },
     "two-factor-authentication-best-practices": {
       "source": "better-auth/skills",
