@@ -164,6 +164,18 @@ Manifest: `skills-lock.json` — each skill pins an immutable commit
 notice when upstream advances; `computedHash` is the SHA-256 of the vendored
 content. Drift detected in CI (job `skills-drift` in `.github/workflows/ci.yml`).
 
+Skills that split content out of `SKILL.md` declare their auxiliary files in an
+optional `references` array, with paths relative to the `SKILL.md` directory —
+identical upstream and locally, so the relative Markdown links keep resolving.
+References are folded into `computedHash`, so drift detection covers them.
+**Any new auxiliary file must be added there**: a file vendored by hand is
+invisible to both `sync:skills` and `--check`, and rots silently.
+
+`--check` answers "has upstream moved?", not "is my working tree intact?" — it
+compares the upstream tip against the lock, and only verifies that vendored
+files *exist* locally. Local edits to `.agents/skills/` are caught by git, not
+by this script.
+
 - `pnpm run sync:skills` — vendor each skill at its `pinnedRef`
   (reproducible, no network surprise; idempotent).
 - `pnpm run sync:skills:check` — compare each `trackingRef` tip against the
@@ -194,10 +206,10 @@ what the new version changes.
 
 **`agentmail`**: official AgentMail skill (email-for-AI-agents platform).
 Vendored from `agentmail-to/agentmail-skills` at `agentmail/SKILL.md`. Needs
-`AGENTMAIL_API_KEY` in the environment. The upstream skill links to
-`references/webhooks.md` and `references/websockets.md`, which the sync
-pipeline does **not** vendor (it tracks only `SKILL.md`); read them upstream
-if you need the real-time event patterns.
+`AGENTMAIL_API_KEY` in the environment. `SKILL.md` is a router: the actual
+patterns live in the six vendored `references/` files (TypeScript, Python,
+admin/DNS, webhooks, websockets, deliverability) — read the one matching your
+task rather than working from `SKILL.md` alone.
 
 **⚠️ `organization-best-practices`**: official BA skill, but the
 `organization()` plugin is **disabled** in this project (see `KNOWN_ISSUES.md`).

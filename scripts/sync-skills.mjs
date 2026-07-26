@@ -5,13 +5,23 @@
 // moving branch (`trackingRef`). This decouples *what we vendored* (a fixed
 // SHA, reproducible) from *how we notice upstream moved* (the branch tip):
 //
-//   { source, sourceType, skillPath, trackingRef, pinnedRef, computedHash }
+//   { source, sourceType, skillPath, trackingRef, pinnedRef, computedHash,
+//     references? }
 //
 // We fetch raw content from github.com/<source>/<ref>/<skillPath>, hash it with
 // SHA-256, and reconcile.
 //
+// `references` is an optional list of auxiliary files a skill links to
+// (upstream increasingly splits examples out of SKILL.md). Paths are relative
+// to the directory holding SKILL.md, both upstream and locally — so the
+// relative Markdown links inside SKILL.md resolve unchanged after vendoring.
+// They are folded into `computedHash`, so drift detection covers them too;
+// with no `references` the hash stays plain SHA-256 of SKILL.md (legacy hashes
+// remain valid).
+//
 // Folder layout produced:
 //   .agents/skills/<name>/SKILL.md           (canonical content @ pinnedRef)
+//   .agents/skills/<name>/<reference>        (auxiliary files, same layout)
 //   .claude/skills/<name> -> ../../.agents/skills/<name>   (symlink)
 //
 // Modes:
@@ -57,14 +67,43 @@ function rawUrl(source, ref, skillPath) {
   return `https://raw.githubusercontent.com/${source}/${ref}/${skillPath}`
 }
 
-async function fetchHashAt(source, ref, skillPath) {
-  const res = await fetch(rawUrl(source, ref, skillPath))
-  if (!res.ok) {
-    return { error: `${res.status} ${rawUrl(source, ref, skillPath)}` }
-  }
-  const content = await res.text()
-  const hash = createHash('sha256').update(content).digest('hex')
-  return { content, hash }
+// Reference paths are relative to the directory holding SKILL.md upstream.
+function upstreamPath(skillPath, rel) {
+  const slash = skillPath.lastIndexOf('/')
+  return slash === -1 ? rel : `${skillPath.slice(0, slash + 1)}${rel}`
+}
+
+// The files a skill owns locally, relative to .agents/skills/<name>/.
+function relPaths(info) {
+  return ['SKILL.md', ...[...(info.references ?? [])].sort()]
+}
+
+// Hash SKILL.md bare, then each reference framed by its path. With no
+// references this is byte-identical to the historical sha256(content), so
+// existing lock entries keep their hash.
+function combinedHash(files) {
+  const h = createHash('sha256').update(files[0].content)
+  for (const f of files.slice(1)) h.update(`\0${f.rel}\0`).update(f.content)
+  return h.digest('hex')
+}
+
+async function fetchText(source, ref, path) {
+  const res = await fetch(rawUrl(source, ref, path))
+  if (!res.ok) return { error: `${res.status} ${rawUrl(source, ref, path)}` }
+  return { content: await res.text() }
+}
+
+async function fetchSkillAt(source, ref, info) {
+  const files = await Promise.all(
+    relPaths(info).map(async (rel) => {
+      const path =
+        rel === 'SKILL.md' ? info.skillPath : upstreamPath(info.skillPath, rel)
+      return { rel, ...(await fetchText(source, ref, path)) }
+    }),
+  )
+  const failed = files.find((f) => f.error)
+  if (failed) return { error: failed.error }
+  return { files, hash: combinedHash(files) }
 }
 
 // Resolve a branch/tag to an immutable commit SHA via the GitHub API.
@@ -79,10 +118,13 @@ async function resolveTip(source, trackingRef) {
   return (await res.text()).trim()
 }
 
-async function vendor(name, info, content, hash) {
+async function vendor(name, info, files, hash) {
   const dir = resolve(AGENTS_DIR, name)
-  await mkdir(dir, { recursive: true })
-  await writeFile(resolve(dir, 'SKILL.md'), content)
+  for (const f of files) {
+    const target = resolve(dir, f.rel)
+    await mkdir(dirname(target), { recursive: true })
+    await writeFile(target, f.content)
+  }
 
   const linkPath = resolve(CLAUDE_DIR, name)
   if (!existsSync(linkPath)) {
@@ -92,24 +134,25 @@ async function vendor(name, info, content, hash) {
   info.computedHash = hash
 }
 
+function isVendored(name, info) {
+  return relPaths(info).every((rel) =>
+    existsSync(resolve(AGENTS_DIR, name, rel)),
+  )
+}
+
 async function runCheck(lock) {
   let drift = 0
   await Promise.all(
     Object.entries(lock.skills)
       .filter(([, info]) => info.sourceType === 'github')
       .map(async ([name, info]) => {
-        const filePath = resolve(AGENTS_DIR, name, 'SKILL.md')
-        const tip = await fetchHashAt(
-          info.source,
-          info.trackingRef,
-          info.skillPath,
-        )
+        const tip = await fetchSkillAt(info.source, info.trackingRef, info)
         if (tip.error) {
           console.error(`✗ ${name}: ${tip.error}`)
           process.exitCode = 1
           return
         }
-        if (!existsSync(filePath)) {
+        if (!isVendored(name, info)) {
           console.log(
             `~ ${name}: missing locally — run \`pnpm run sync:skills\``,
           )
@@ -147,19 +190,18 @@ async function runSync(lock) {
       }
     }
 
-    const at = await fetchHashAt(info.source, info.pinnedRef, info.skillPath)
+    const at = await fetchSkillAt(info.source, info.pinnedRef, info)
     if (at.error) {
       console.error(`✗ ${name}: ${at.error}`)
       process.exitCode = 1
       continue
     }
 
-    const filePath = resolve(AGENTS_DIR, name, 'SKILL.md')
     const needsWrite =
-      force || at.hash !== info.computedHash || !existsSync(filePath)
+      force || at.hash !== info.computedHash || !isVendored(name, info)
     if (!needsWrite) continue
 
-    await vendor(name, info, at.content, at.hash)
+    await vendor(name, info, at.files, at.hash)
     changed += 1
     console.log(`✓ ${name} @ ${short(info.pinnedRef)}`)
   }
