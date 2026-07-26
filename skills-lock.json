@@ -140,8 +140,8 @@
       "sourceType": "github",
       "skillPath": "packages/react-router/skills/react-router/SKILL.md",
       "trackingRef": "main",
-      "pinnedRef": "fc83c0383f956c3ca02e5e027666c917d7e8b07a",
-      "computedHash": "11630eb25260059674129329f451d9be3110a045ce10fb1adcd33c9bf513b59d"
+      "pinnedRef": "179d9b9b5eec50dc7833b4e2ef91b735d34bbc07",
+      "computedHash": "af020c483610efd70133a24aefd4ab7b12a50683f92e46fa50a8b92b147876f5"
     },
     "tanstack-react-start": {
       "source": "TanStack/router",
@@ -163,8 +163,8 @@
         "server-components/examples/06-low-level-flight-api-route.tsx"
       ],
       "trackingRef": "main",
-      "pinnedRef": "fc83c0383f956c3ca02e5e027666c917d7e8b07a",
-      "computedHash": "df3e0894beb1ac95f9e6c6dc710dd4b94762693e019b3400831e5242e2e7e516"
+      "pinnedRef": "179d9b9b5eec50dc7833b4e2ef91b735d34bbc07",
+      "computedHash": "73fc17cc4497b3e21b3d6c6d8dead26bb1e0b601c72c5568a60b775c6063010e"
     },
     "tanstack-router-core": {
       "source": "TanStack/router",
@@ -183,16 +183,16 @@
         "type-safety/SKILL.md"
       ],
       "trackingRef": "main",
-      "pinnedRef": "fc83c0383f956c3ca02e5e027666c917d7e8b07a",
-      "computedHash": "c0a921fcde654069c4dddb74ef867a9ddbc7524c313112e293b3cfdf46ca2265"
+      "pinnedRef": "179d9b9b5eec50dc7833b4e2ef91b735d34bbc07",
+      "computedHash": "cadc4171c3854b335d365284780033fa6b37e5166bfda3da240a883e18ec7477"
     },
     "tanstack-router-query": {
       "source": "TanStack/router",
       "sourceType": "github",
       "skillPath": "packages/react-router/skills/compositions/router-query/SKILL.md",
       "trackingRef": "main",
-      "pinnedRef": "fc83c0383f956c3ca02e5e027666c917d7e8b07a",
-      "computedHash": "f50b66fa9d56f1e19f3d864c1577d77416fb36adca2fcf9ecbcb20865f363516"
+      "pinnedRef": "179d9b9b5eec50dc7833b4e2ef91b735d34bbc07",
+      "computedHash": "9e45f2d1130cc51a2f01a9250d285de9d35dc787b80eb2a5ad02585c6791e7f9"
     },
     "tanstack-start-core": {
       "source": "TanStack/router",
@@ -207,8 +207,8 @@
         "server-routes/SKILL.md"
       ],
       "trackingRef": "main",
-      "pinnedRef": "fc83c0383f956c3ca02e5e027666c917d7e8b07a",
-      "computedHash": "7587ad1213e9d62d10594bb65cd5a863e90f98d81b048083ca2bbfc5767406bd"
+      "pinnedRef": "179d9b9b5eec50dc7833b4e2ef91b735d34bbc07",
+      "computedHash": "57116f0c57e2a687b9e3f0f5071f5cb86c3d5f86cf13b5845267be54de1de514"
     },
     "two-factor-authentication-best-practices": {
       "source": "better-auth/skills",
