@@ -25,6 +25,12 @@
         "better-call"
       ],
       "enabled": false
+    },
+    {
+      "description": "pnpm: 10.x bumps keep the pin fresh and are welcome. The major is capped by Vercel, which supports pnpm 6-10 only; pnpm 11 also needs the config migration in KNOWN_ISSUES.md. Re-enable when Vercel lists 11.",
+      "matchPackageNames": ["pnpm"],
+      "matchUpdateTypes": ["major"],
+      "enabled": false
     }
   ]
 }
