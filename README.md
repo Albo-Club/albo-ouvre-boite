@@ -23,8 +23,11 @@ sidebar wired in, transactional emails, rate-limiting, and CI/CD on day one.
 
 **Prerequisites**
 
-- **Node 20+** (LTS recommended)
-- **pnpm** — enable it once via Corepack (bundled with Node): `corepack enable`
+- **Node 22+** (LTS recommended) — enforced by `engines` in `package.json`
+- **pnpm** — enable it once via Corepack (bundled with Node): `corepack enable`.
+  Do **not** install pnpm globally: the version is pinned by `packageManager`
+  in `package.json`, and Corepack fetches exactly that one. A different pnpm
+  major breaks every script — see `KNOWN_ISSUES.md`.
 - **git**
 
 **1. Get the code**

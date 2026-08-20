@@ -183,6 +183,99 @@ most valuable outcome of the whole exercise.
 - Drop the `--check` job without having verified a cron exists (step 2).
 ```
 
+## Prompt — port the pnpm version pin
+
+`upgrade-template` will not carry this cleanly: `package.json` is the most
+conflict-prone file in any derived project, and the fix is three coordinated
+edits across `package.json`, `.github/workflows/ci.yml` and the docs. A derived
+project that skips it keeps working right up until someone's Corepack resolves
+pnpm 11 — then every `pnpm run *` dies at once, with an error that blames
+esbuild.
+
+```
+This project was forked from the albo-ouvre-boite template. The template pinned
+its package manager after pnpm 11 broke every npm script. Port that fix here.
+
+## The defect
+
+pnpm 11 removed two config locations without a hard error:
+  - `pnpm.overrides` in package.json is ignored (one [WARN] line, then it
+    carries on with the pins silently lifted)
+  - `onlyBuiltDependencies` was replaced by `allowBuilds`; unapproved builds
+    now exit 1 instead of warning, and pnpm runs a dep check before every
+    script — so typecheck, lint, build and dev all die before running.
+
+Nothing pins the pnpm version, so Corepack hands out whatever is newest.
+
+## Step 1 — diagnose BEFORE coding, and report what you find
+
+Run these and paste the output. Do not skip: this repo may already be pinned,
+or may legitimately differ from the template.
+
+  node -e "const p=require('./package.json');console.log('packageManager:',p.packageManager??'ABSENT');console.log('engines:',JSON.stringify(p.engines??'ABSENT'));console.log('overrides:',JSON.stringify(p.pnpm?.overrides??'ABSENT'))"
+  pnpm --version
+  grep -nA3 'pnpm/action-setup' .github/workflows/ci.yml
+  git status --short pnpm-lock.yaml pnpm-workspace.yaml
+
+Report: is `pnpm-lock.yaml` dirty? If yes, does its diff delete an `overrides:`
+block? That is the pnpm 11 rewrite, and it means the pins are already lifted in
+whatever is installed locally.
+
+## Step 2 — the decision that depends on THIS repo; do not guess it
+
+Which pnpm major to pin. Do not assume 10 because the template says 10.
+  - Check where this project deploys. Vercel supports pnpm 6-10 only
+    (vercel.com/docs/package-managers); pnpm 11 needs the experimental
+    ENABLE_EXPERIMENTAL_COREPACK=1 project env var. Other hosts differ.
+  - Pin the newest major your host supports natively. Get the exact version
+    from `npm view pnpm dist-tags`.
+  - If and only if you land on 11: also move `pnpm.overrides` into
+    `overrides:` in pnpm-workspace.yaml and swap `onlyBuiltDependencies` for
+    `allowBuilds: {<pkg>: true}`. On 10 or below, leave both exactly where
+    they are — pnpm 9 cannot read pnpm-workspace.yaml settings.
+
+State your choice and why before editing.
+
+## Step 3 — implement
+
+  - `corepack use pnpm@<chosen version>` — writes `packageManager` WITH its
+    sha512 integrity hash. Never hand-write that string.
+  - Add `engines`: `{"node": ">=22", "pnpm": "<major>.x"}` — this is the guard
+    for anyone running with Corepack disabled.
+  - In ci.yml, DELETE the `with: version:` block under `pnpm/action-setup@v4`.
+    The action reads `packageManager`. Leaving a version there recreates the
+    exact split-brain you are fixing.
+  - `git checkout pnpm-lock.yaml pnpm-workspace.yaml` if step 1 showed them
+    dirty from a pnpm 11 install.
+
+## Step 4 — prove it, do not assert it
+
+  pnpm --version                      # must print the pinned version
+  CI=true pnpm install --frozen-lockfile
+  git status --short                  # pnpm-lock.yaml MUST be unmodified
+  pnpm typecheck && pnpm lint && pnpm build
+
+Then confirm the pins actually came back — list the overridden packages under
+node_modules/.pnpm/ and check the versions match `pnpm.overrides`. If one
+drifted, the override is not applying and the fix is incomplete.
+
+Finally, prove the guard bites:
+
+  corepack pnpm@<a different major> install --frozen-lockfile
+
+must fail with "This project is configured to use <pinned>". If it installs,
+the pin is decorative.
+
+## Do NOT
+
+- Bump the overridden packages "while you're in there". Check whether this repo
+  has a renovate rule disabling them and respect it.
+- Add `node-linker` or `package-import-method` to .npmrc. The defaults use APFS
+  copy-on-write clones; overriding them multiplies disk use per worktree.
+- Set `--frozen-lockfile=false` in a deploy config to make a red build go
+  green. That hides the drift instead of fixing it.
+```
+
 ## Writing the next one
 
 The prompt above is the shape to copy. What makes it work is not the file list —

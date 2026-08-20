@@ -348,7 +348,12 @@ The shell guard in `package.json` → `build:vercel` requires **both**
 
 ## pnpm.overrides
 
-### `@tanstack/react-router: 1.168.26` + `@tanstack/router-core: 1.169.2`
+These live in the `pnpm.overrides` field of `package.json`, and **must stay
+there** — see "pnpm 11 silently drops them" below. Renovate is configured to
+leave all four alone (`renovate.json`, rule "Pinned overrides"), so they only
+ever move by hand.
+
+### `@tanstack/react-router: 1.170.11` + `@tanstack/router-core: 1.171.9`
 
 Two router-core versions coexisting (one pulled by `react-router`, one by
 `start-client-core`) prevented `server.handlers` from being type-augmented
@@ -357,17 +362,105 @@ on `createFileRoute`. Pinning both to compatible versions resolves it.
 **Unblock when**: TanStack publishes a release where `react-router` and
 `react-start` agree on a single `router-core` version.
 
-### `@tanstack/react-start: 1.167.65`
+### `@tanstack/react-start: 1.168.20`
 
 Pinned in lockstep with the router pin above.
 
 ### `better-call: 1.3.4`
 
-`better-call@1.3.5` ships without `openapi.mjs` and `validator.mjs`,
-breaking Better Auth's runtime imports. Pinned to the last working release.
+`better-call@1.3.5` originally shipped without `openapi.mjs` and
+`validator.mjs`, breaking Better Auth's runtime imports. Pinned to the last
+working release.
 
-**Unblock when**: a `better-call` release re-includes the missing files
-(or Better Auth bumps past the regression).
+**Status (2026-08-20)**: the upstream regression is fixed — the 1.3.5 tarball
+now contains `openapi.{mjs,cjs}` and `validator.{mjs,cjs}`. The unblock
+condition is therefore met, but the pin is still in place: lift it
+deliberately, in its own PR, with a `pnpm build` to confirm. Do not treat a
+version drifting off this pin on its own as "the pin was lifted" — that is
+the pnpm 11 bug below, not a decision.
+
+## pnpm 11 silently drops `pnpm.overrides` and `onlyBuiltDependencies`
+
+**The pin in `package.json` (`packageManager: pnpm@10.34.5+sha512...`) is load
+bearing. Do not remove it, and do not "modernise" it to pnpm 11 casually.**
+
+pnpm 11 made two breaking config moves. Both fail *silently* or with an error
+that names the wrong culprit:
+
+1. **`pnpm.overrides` in `package.json` is no longer read.** pnpm 11 emits a
+   single `[WARN]` line and carries on. Observed effect: `better-call` drifted
+   1.3.4 → 1.3.5 and the `@tanstack/router-core` override was replaced by the
+   loose peer range `>=1.114.7` — i.e. every pin documented above quietly
+   stopped applying, while `renovate.json` still believed it was guarding them.
+2. **`onlyBuiltDependencies` was removed** in favour of `allowBuilds` (a
+   name → boolean map). pnpm 11 writes a placeholder into `pnpm-workspace.yaml`
+   (`esbuild: set this to true or false`), which is not a boolean, so builds
+   stay unapproved — and pnpm 11 **exits 1** where pnpm 10 only warned. Since
+   pnpm runs a dependency check before every script, `pnpm typecheck`,
+   `pnpm lint`, `pnpm build` and `pnpm dev` all die with
+   `ERR_PNPM_IGNORED_BUILDS` before running a single byte of project code.
+
+Third-order effect: a pnpm 11 install rewrites `pnpm-lock.yaml` (~428 lines,
+`overrides:` block dropped). Commit that and CI fails with
+`ERR_PNPM_LOCKFILE_CONFIG_MISMATCH`; regenerate it under pnpm 10 and the next
+local install rewrites it again. Permanent ping-pong, and the diff is large
+enough to hide a real change.
+
+**Why we stay on pnpm 10 rather than migrating.** Migrating is technically
+clean — moving `overrides` into `pnpm-workspace.yaml` and using `allowBuilds`
+produces a byte-identical lockfile, verified. We don't, because of the
+deployment target:
+
+- **Vercel supports pnpm 6–10, not 11** (`vercel.com/docs/package-managers`).
+  pnpm 11 would only run there via Corepack, which Vercel gates behind the
+  experimental `ENABLE_EXPERIMENTAL_COREPACK=1` project env var — a per-project
+  manual step that every project forked from this template would have to
+  repeat, or silently regress.
+- **`overrides` must stay in `package.json`.** Settings in
+  `pnpm-workspace.yaml` are a pnpm 10+ feature. Vercel maps our
+  `lockfileVersion: 9.0` to "pnpm 9 or 10", so if it lands on 9, overrides
+  declared in the workspace file are ignored **in production only**. Keeping
+  them in `package.json` is understood by 9, 10 and (with the pin) is never
+  reached by 11.
+
+**How the pin is enforced**, three layers deep:
+
+- `packageManager` + the sha512 integrity hash — Corepack downloads exactly
+  this build. Written with `corepack use pnpm@<version>`, never by hand.
+- `engines.pnpm: "10.x"` — catches anyone running pnpm with Corepack disabled.
+- CI passes no `version:` to `pnpm/action-setup@v4`, so it reads
+  `packageManager` too. **Never re-pin a version there** — that is what let
+  local and CI diverge in the first place.
+
+Belt and braces confirmed: invoking pnpm 11 anyway now hard-fails with
+`This project is configured to use 10.34.5 of pnpm. Your current pnpm is
+v11.22.0` instead of quietly mangling the lockfile.
+
+**Unblock when**: Vercel lists pnpm 11 in its supported versions table. Then,
+in one deliberate PR: bump `packageManager`, move `pnpm.overrides` →
+`overrides:` in `pnpm-workspace.yaml`, replace `onlyBuiltDependencies` with
+`allowBuilds: {esbuild: true, unrs-resolver: true}`, and confirm
+`pnpm install --frozen-lockfile` leaves the lockfile untouched.
+
+## `node_modules` is not as big as `du` says
+
+`du -sh node_modules` reports ~617 MB. Deleting it frees **~25 MB**, and
+reinstalling costs ~25 MB and 3 seconds. Both directions measured with `df`.
+
+pnpm's default `package-import-method=auto` uses APFS `clonefile()`, so every
+file is a copy-on-write clone of the shared store (`~/Library/pnpm/store/v11`,
+~922 MB, paid once per machine). `du` walks each file and adds up allocated
+blocks with no idea they are shared, so it counts the same physical extents
+once per worktree. Verified at the block level: the same file in two Conductor
+worktrees reports an identical `F_LOG2PHYS` device offset with `nlink=1` —
+distinct inodes, one set of blocks. 99.9 % of sampled bytes are shared.
+
+Consequence: 11 worktrees cost ~275 MB, not ~6.8 GB. **Do not** "optimise"
+this by setting `node-linker=hoisted`, pointing `package-import-method` at
+`copy`, or hand-rolling a shared `node_modules` — each of those turns clones
+back into real bytes. The one thing that would break it is moving the pnpm
+store off the workspace volume: `clonefile()` cannot cross volumes, and the
+275 MB would become 6.8 GB overnight.
 
 ## Zod v4 required for Better Auth 1.6.10
 
@@ -516,6 +609,22 @@ Two things must both be true:
 
 **Symptom**: `curl -I https://<your-domain>/` returns `HTTP/2 404` with
 `server: Vercel` and a static-looking `cache-control: public, max-age=...`.
+
+**About that `--frozen-lockfile=false`** — it is a known weakness, kept
+deliberately, not an oversight. CI installs frozen; Vercel does not, so a
+drifted lockfile fails loudly in CI but installs silently in production.
+Flipping it to `--frozen-lockfile` is the correct end state, but it is only
+safe once Vercel's pnpm version is deterministic: Vercel maps our
+`lockfileVersion: 9.0` to "pnpm 9 **or** 10" and ignores `packageManager`
+unless Corepack is enabled. Frozen + an unpredictable pnpm major = red deploys
+on a green commit.
+
+**To close it** (needs dashboard access, cannot be done from the repo alone):
+set `ENABLE_EXPERIMENTAL_COREPACK=1` in the Vercel project's environment
+variables, redeploy, confirm in the build log that pnpm matches
+`packageManager` — then change `installCommand` to
+`pnpm install --frozen-lockfile` in the same PR. Do not do the second half
+without the first.
 
 ## Trade-offs vs PROJECT_BRIEF.md
 

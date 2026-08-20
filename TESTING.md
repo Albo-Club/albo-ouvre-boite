@@ -19,6 +19,7 @@ Prerequisites:
 
 | #  | Step          | Command                  | Expected result               |
 | -- | ------------- | ------------------------ | ----------------------------- |
+| B0 | Toolchain pin | `pnpm --version`         | Matches `packageManager` in `package.json` exactly. Run this **first**: on a mismatch B1–B3 fail with `ERR_PNPM_IGNORED_BUILDS`, which blames esbuild rather than the pnpm version |
 | B1 | Typecheck     | `pnpm typecheck`         | Exit 0, no errors             |
 | B2 | Lint          | `pnpm lint`              | Exit 0, 0 warnings            |
 | B3 | Build         | `pnpm build`             | Bundle written to `.output/`  |
@@ -28,7 +29,9 @@ Prerequisites:
 | B6b | Skills up-to-date | `pnpm sync:skills:check` | `Skills up to date with upstream.` (exit 0) — network |
 
 B2–B3, B6 and B6b also run in CI on every PR (`.github/workflows/ci.yml`,
-B6 via the `skills-verify` job, B6b via `skills-drift`).
+B6 via the `skills-verify` job, B6b via `skills-drift`). CI covers B0
+implicitly: `pnpm/action-setup@v4` is given no `version:`, so it installs the
+`packageManager` version and cannot drift from local.
 B4–B5 remain local: they require a provisioned Convex deployment.
 
 ## Level 2 — Auth (6 min)
