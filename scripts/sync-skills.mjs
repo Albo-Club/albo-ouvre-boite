@@ -225,6 +225,7 @@ async function runVerify(lock) {
 
 async function runCheck(lock) {
   let drift = 0
+  let unreachable = 0
   await Promise.all(
     Object.entries(lock.skills)
       .filter(([, info]) => info.sourceType === 'github')
@@ -232,7 +233,7 @@ async function runCheck(lock) {
         const tip = await fetchSkillAt(info.source, info.trackingRef, info)
         if (tip.error) {
           console.error(`✗ ${name}: ${tip.error}`)
-          process.exitCode = 1
+          unreachable += 1
           return
         }
         if (!isVendored(name, info)) {
@@ -251,12 +252,24 @@ async function runCheck(lock) {
       }),
   )
 
+  // An unreachable skill is NOT "no drift" — it is a skill we failed to check.
+  // A 404 means upstream deleted or moved it (worse than drift, not better); a
+  // network blip means we know nothing. Counting it separately matters because
+  // `process.exit()` overrides `process.exitCode`, so setting the latter inside
+  // the loop was silently discarded here: with drift === 0 the job printed
+  // "Skills up to date with upstream." and exited 0 on a tree it never checked.
+  if (unreachable > 0) {
+    console.log(
+      `${unreachable} skill${unreachable > 1 ? 's' : ''} could not be checked against upstream.`,
+    )
+  }
   if (drift > 0) {
     console.log(`${drift} skill${drift > 1 ? 's' : ''} drifted from upstream.`)
-  } else {
+  }
+  if (drift === 0 && unreachable === 0) {
     console.log('Skills up to date with upstream.')
   }
-  process.exit(drift > 0 ? 2 : 0)
+  process.exit(drift > 0 || unreachable > 0 ? 2 : 0)
 }
 
 async function runSync(lock) {
