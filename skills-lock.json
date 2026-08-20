@@ -33,14 +33,6 @@
       "pinnedRef": "17dfe3a1da1c3982de723098ba1015d67f35694c",
       "computedHash": "042f01c76b63b436c71797c8a1b84470c5b6e0c7cd2400aa0928f733da96facf"
     },
-    "convex": {
-      "source": "get-convex/agent-skills",
-      "sourceType": "github",
-      "skillPath": "skills/convex/SKILL.md",
-      "trackingRef": "main",
-      "pinnedRef": "ec1e6baae7d86c7843c22938c75979c016f5c6e9",
-      "computedHash": "d0fc889b645ea292dc301968c2113e624c119381ebd82bfe628b6ca1585c6129"
-    },
     "convex-create-component": {
       "source": "get-convex/agent-skills",
       "sourceType": "github",
@@ -54,54 +46,6 @@
       "trackingRef": "main",
       "pinnedRef": "ec1e6baae7d86c7843c22938c75979c016f5c6e9",
       "computedHash": "56706fe3fd2de30c98fe7858b2df58467634cfe21086baeaa539b339faff3e68"
-    },
-    "convex-migration-helper": {
-      "source": "get-convex/agent-skills",
-      "sourceType": "github",
-      "skillPath": "skills/convex-migration-helper/SKILL.md",
-      "references": [
-        "references/migration-patterns.md",
-        "references/migrations-component.md"
-      ],
-      "trackingRef": "main",
-      "pinnedRef": "ec1e6baae7d86c7843c22938c75979c016f5c6e9",
-      "computedHash": "720b3626731c820aade6358ed82d93713a6a8f185c60fc9b769f33b1fab63783"
-    },
-    "convex-performance-audit": {
-      "source": "get-convex/agent-skills",
-      "sourceType": "github",
-      "skillPath": "skills/convex-performance-audit/SKILL.md",
-      "references": [
-        "references/function-budget.md",
-        "references/hot-path-rules.md",
-        "references/occ-conflicts.md",
-        "references/subscription-cost.md"
-      ],
-      "trackingRef": "main",
-      "pinnedRef": "ec1e6baae7d86c7843c22938c75979c016f5c6e9",
-      "computedHash": "2899fbaa1e775221041b685cb7d73f17d9b362a77ec4df5b0714022ad6f5b1a4"
-    },
-    "convex-quickstart": {
-      "source": "get-convex/agent-skills",
-      "sourceType": "github",
-      "skillPath": "skills/convex-quickstart/SKILL.md",
-      "trackingRef": "main",
-      "pinnedRef": "ec1e6baae7d86c7843c22938c75979c016f5c6e9",
-      "computedHash": "3cdc8fc0c306f662f35c559654798023b505de558b4e212a575babc574436b59"
-    },
-    "convex-setup-auth": {
-      "source": "get-convex/agent-skills",
-      "sourceType": "github",
-      "skillPath": "skills/convex-setup-auth/SKILL.md",
-      "references": [
-        "references/auth0.md",
-        "references/clerk.md",
-        "references/convex-auth.md",
-        "references/workos-authkit.md"
-      ],
-      "trackingRef": "main",
-      "pinnedRef": "ec1e6baae7d86c7843c22938c75979c016f5c6e9",
-      "computedHash": "26671fb69e8d8ccabfd4198e43ceba61072c1742dd5884c461a941a7117cfe8b"
     },
     "create-auth-skill": {
       "source": "better-auth/skills",
