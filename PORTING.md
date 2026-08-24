@@ -295,9 +295,9 @@ routine catch-up, not with it.
 ```text
 Port the Better Auth security bump from the albo-ouvre-boite template into this
 repo. It shipped upstream in `Albo-Club/albo-ouvre-boite` (public) at commit
-<SHA>, on branch `better-auth-1.6.30-security-bump`.
+00278e7 (PR #61).
 
-    gh api repos/Albo-Club/albo-ouvre-boite/commits/<SHA> \
+    gh api repos/Albo-Club/albo-ouvre-boite/commits/00278e7 \
       --jq '.files[] | "\(.filename)"'
 
 ## The defect
