@@ -5,6 +5,10 @@
   "subtitle": "The latest improvements to the app.",
   "seeAll": "See all updates",
   "entries": {
+    "signin-hardening": {
+      "title": "A safer sign-in",
+      "body": "We updated the component that handles signing in, and tightened how sign-in links are matched to your account. Nothing to do on your side — your existing account and sessions are unaffected."
+    },
     "security-hardening": {
       "title": "Security hardening",
       "body": "We tightened how sign-in redirects and the emails we send you are handled. There's nothing to do on your side — day to day, you shouldn't notice any difference."

@@ -282,6 +282,123 @@ the pin is decorative.
   green. That hides the drift instead of fixing it.
 ```
 
+## Prompt — port the Better Auth security bump (GHSA-qq9h-g4jm-xgf3)
+
+This one is **urgent and unusual**: every project forked from the template
+before 2026-08-24 is running a `better-auth` with a *high*-severity account
+takeover advisory, and `upgrade-template` will drop it right into the most
+conflict-prone file there is. A derived project that resolves the
+`package.json` conflict "its own way" stays vulnerable and gets no warning —
+`tsc`, `lint` and `build` are all green either way. Send this before the
+routine catch-up, not with it.
+
+```text
+Port the Better Auth security bump from the albo-ouvre-boite template into this
+repo. It shipped upstream in `Albo-Club/albo-ouvre-boite` (public) at commit
+<SHA>, on branch `better-auth-1.6.30-security-bump`.
+
+    gh api repos/Albo-Club/albo-ouvre-boite/commits/<SHA> \
+      --jq '.files[] | "\(.filename)"'
+
+## The defect
+
+GHSA-qq9h-g4jm-xgf3 — high severity, "Account takeover via pre-account
+hijacking on magic-link and email-OTP sign-in". Vulnerable `>= 1.1.3, < 1.6.22`,
+fixed in 1.6.22.
+
+The fix is mechanically blocked, which is why this is a prompt and not a
+one-line bump: `@convex-dev/better-auth` breaks typing from better-auth 1.6.18+
+(`useSession().data` collapses to `never`, TS2322 on the `authClient` prop of
+`ConvexBetterAuthProvider`). Adapter 0.12.2 is the one version that tolerates a
+patched better-auth. Upstream tracking: get-convex/better-auth#420 (open).
+
+## Step 1 — diagnose BEFORE coding, and report what you find
+
+Run these and paste the output. This repo may already be patched, may be on a
+different adapter, or may not load a vulnerable plugin at all.
+
+  node -e "const p=require('./package.json');const d={...p.dependencies,...p.devDependencies};console.log('better-auth:',d['better-auth']??'ABSENT');console.log('adapter:',d['@convex-dev/better-auth']??'ABSENT');console.log('overrides:',JSON.stringify(p.pnpm?.overrides??'ABSENT'))"
+  pnpm why better-auth 2>/dev/null | grep -oE 'better-auth [0-9]+\.[0-9]+\.[0-9]+' | sort -u
+  grep -rnE "magicLink|emailOTP" convex/auth.ts
+
+The middle command is the one that matters: the RESOLVED version in the
+lockfile is what ships, not the range in package.json. Report every distinct
+version it prints — a transitive copy below 1.6.22 still counts.
+
+## Step 2 — the decision that depends on THIS repo; do not guess it
+
+Two things to settle before editing.
+
+  (a) Which better-auth to land on. The window is >=1.6.22 <1.7.0: the floor is
+      the advisory, the ceiling is the adapter peer (>=1.6.9 <1.7.0), and 1.7.x
+      additionally drops the `better-auth/plugins#mcp` export. The template
+      ships `~1.6.30`. Take the newest 1.6.x, not blindly 1.6.30 — check
+      `npm view better-auth versions --json`.
+
+  (b) Whether this repo overrides `better-call`. The template pins it to 1.3.4
+      while better-auth 1.6.30 wants 1.4.0 exactly — two minors back, and it
+      still works. If YOUR repo has that override, keep it for now and verify
+      at runtime (step 4); if it has none, do not add one.
+
+If step 1 showed this repo loads NEITHER magicLink nor emailOTP, say so — the
+advisory does not bite, and the bump becomes routine rather than urgent. Bump
+anyway, but drop the urgency framing in your report.
+
+State both choices and why before editing.
+
+## Step 3 — implement
+
+  - `"@convex-dev/better-auth": "0.12.2"` — EXACT, no range operator. On a 0.x,
+    ^0.12.2 and ~0.12.2 BOTH read >=0.12.2 <0.13.0, so neither blocks 0.12.3+,
+    and 0.12.4/0.12.5 reintroduce the TS2322. Only the bare version holds.
+  - `"better-auth": "~<chosen 1.6.x>"` — TILDE, not caret. ^ would resolve to
+    1.7.x, outside the adapter peer.
+  - Add Renovate rules if this repo uses Renovate: disable
+    `@convex-dev/better-auth` entirely, and disable only minor/major for
+    `better-auth`. Leave 1.6.x PATCHES enabled — that channel is how the next
+    security fix arrives, and closing it is how the template ended up shipping
+    a vulnerable 1.6.14 in the first place.
+
+## Step 4 — prove it, do not assert it
+
+Type-checking is NOT sufficient here: it cannot see a version, and it cannot
+see better-call breaking at runtime. Do all four.
+
+  rm -rf node_modules && pnpm install     # cold, not a rebuild — see below
+  pnpm why better-auth | grep -oE 'better-auth [0-9]+\.[0-9]+\.[0-9]+' | sort -u
+  pnpm lint && pnpm build
+  pnpm test:smoke                          # needs `pnpm dev` in another terminal
+
+The install MUST be cold. A warm node_modules can satisfy an import from a
+leftover copy, so the build passes locally while CI fails — that has already
+produced one falsely-announced green on this stack. If the build dies on a
+missing `destr`, the culprit is a broken unstorage prerelease: pin it with
+`"pnpm": {"overrides": {"unstorage": "2.0.0-alpha.7"}}`.
+
+Then exercise the advisory's own surface, which the smoke test does not cover:
+
+  curl -s -o /dev/null -w "%{http_code} -> %{redirect_url}\n" \
+    "http://localhost:3000/api/auth/magic-link/verify?token=deadbeef"
+
+Expect a 302 to `?error=INVALID_TOKEN`, not a 404 (plugin not wired) or a 500.
+If this repo overrides better-call, also POST to
+`/api/auth/sign-in/magic-link` with an `Origin: http://localhost:3000` header
+and read the Convex log: the stack trace names every package version in the
+chain, which is the only direct evidence the overridden better-call actually
+interoperates.
+
+## Do NOT
+
+- Relax the adapter to a range "because pinning feels wrong". Re-read step 3;
+  on a 0.x the range operators do not do what you think.
+- Bump the adapter to 0.12.3 to get "closer to latest". It type-checks, but it
+  slows convex-test down until 2-4 tests out of 120 time out at random.
+- Bump better-auth to 1.7.x. Outside the adapter peer.
+- Announce green from `tsc` alone, or from a build on a warm node_modules.
+- Write the advisory's mechanism into any user-facing changelog. Other forks
+  are still unpatched; word it as reassurance, not as a map.
+```
+
 ## Writing the next one
 
 The prompt above is the shape to copy. What makes it work is not the file list —
