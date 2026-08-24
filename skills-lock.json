@@ -161,6 +161,19 @@
       "trackingRef": "main",
       "pinnedRef": "17dfe3a1da1c3982de723098ba1015d67f35694c",
       "computedHash": "90f344853d1793ae541f7d73cd8f06dce4a9201d8d4b83aa875d4bb7bc48c617"
+    },
+    "web-design-guidelines": {
+      "source": "vercel-labs/web-interface-guidelines",
+      "sourceType": "github",
+      "skillPath": "AGENTS.md",
+      "frontmatter": {
+        "name": "web-design-guidelines",
+        "description": "Web Interface Guidelines from Vercel — MUST/SHOULD/NEVER rules for keyboard and focus behaviour, hit targets, forms, animation, layout, content and accessibility, performance, dark mode and hydration. Use when building or reviewing any UI component, page or interaction, and when asked to audit accessibility, focus states, touch targets, motion or perceived performance. Pairs with frontend-design, which covers aesthetic direction rather than interface correctness.",
+        "license": "MIT"
+      },
+      "trackingRef": "main",
+      "pinnedRef": "e3d624baaf29dc1fc645aff3e38f03e564d2d6b1",
+      "computedHash": "cc844425b881a666c4cf783d5a153bc88760c37f7977119c0e8b2941fcbc606c"
     }
   }
 }

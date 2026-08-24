@@ -184,6 +184,15 @@ tree elsewhere upstream, add a second lock entry. Same section of
 `KNOWN_ISSUES.md` explains why, and why `MAX_IN_FLIGHT` in the sync script must
 stay put as the skill list grows.
 
+An upstream that publishes its rules as a plain `AGENTS.md` rather than a real
+skill declares an optional `frontmatter` map, prepended to `SKILL.md` at vendor
+time (the Agent Skills spec makes `name` + `description` mandatory, and `name`
+must equal the directory name). It is applied **before** hashing, so editing it
+registers as drift exactly like an upstream change. Reach for it only when
+upstream ships no `SKILL.md` — never to "fix" a description you disagree with,
+which belongs in an override here. See `KNOWN_ISSUES.md` § "`web-design-guidelines`
+vendors `AGENTS.md`".
+
 **Two distinct questions, two modes — don't conflate them.** `--verify` answers
 "is my working tree intact?" (local re-hash, offline, deterministic); `--check`
 answers "has upstream moved?" (network, and the answer changes without anyone
@@ -195,9 +204,11 @@ tree — hence `--verify`".
 - `pnpm run sync:skills` — vendor each skill at its `pinnedRef`
   (reproducible, no network surprise; idempotent). **Self-healing**: rewrites
   any file that no longer matches `computedHash`, so it repairs a corrupted or
-  stale tree without `--force`.
+  stale tree without `--force`, and unlinks any `.claude/skills/` symlink whose
+  lock entry is gone.
 - `pnpm run sync:skills:verify` — re-hash the vendored files and compare to the
-  lock; exit 2 if the tree diverged. No network — this is the offline CI gate.
+  lock, and report orphaned symlinks; exit 2 if the tree diverged. No network —
+  this is the offline CI gate.
 - `pnpm run sync:skills:check` — compare each `trackingRef` tip against the
   vendored content; exit 2 on drift (upstream moved since the last bump).
 - `pnpm run sync:skills:update` — advance `pinnedRef` to the current
@@ -208,10 +219,17 @@ Rule: `--verify` guards, `--check` detects, `--update` bumps. Never `--update`
 without reading what the new version changes.
 
 **When the CI job `skills-verify` is red**: the vendored tree no longer matches
-the lock — someone hand-edited `.agents/skills/`, or a file is missing.
-`pnpm run sync:skills` repairs it (no `--force` needed), then re-read the
+the lock — someone hand-edited `.agents/skills/`, a file is missing, or a
+`.claude/skills/` symlink outlived the lock entry that owned it.
+`pnpm run sync:skills` repairs all three (no `--force` needed), then re-read the
 `git diff`: if the content reverts to what the lock says, the local edit was
 the mistake. Never patch `skills-lock.json` to match a hand edit.
+
+**Removing a skill is two deletions, not one.** Drop the lock entry *and* run
+`pnpm run sync:skills` so the symlink goes with it — committing the lock alone
+leaves Claude Code advertising a skill whose `SKILL.md` no longer exists. See
+`KNOWN_ISSUES.md` § "Third hole, same family: a pruned skill left its
+symlink behind".
 
 **When the CI job `skills-drift` is red** (upstream moved): never bypass it, and
 never `--update` blindly. Run `pnpm run sync:skills:check` to name the drifting
@@ -235,6 +253,8 @@ rubber-stamp it. Check that no project override in `CLAUDE.md` /
 | `tanstack-react-router`                   | React hooks/components of the router   | `TanStack/router` (official monorepo)      | ✅ official |
 | `tanstack-router-query`                   | Router ↔ TanStack Query integration    | `TanStack/router` (official monorepo)      | ✅ official |
 | `agentmail`                               | Email inboxes for AI agents (AgentMail)| `agentmail-to/agentmail-skills`            | ✅ official |
+| `frontend-design`                         | Aesthetic direction for new UI         | `anthropics/skills`                        | ✅ official |
+| `web-design-guidelines`                   | Interface correctness rules (a11y, focus, forms, motion, perf) | `vercel-labs/web-interface-guidelines` | ✅ official |
 
 **`agentmail`**: official AgentMail skill (email-for-AI-agents platform).
 Vendored from `agentmail-to/agentmail-skills` at `agentmail/SKILL.md`. Needs
@@ -242,6 +262,18 @@ Vendored from `agentmail-to/agentmail-skills` at `agentmail/SKILL.md`. Needs
 patterns live in the six vendored `references/` files (TypeScript, Python,
 admin/DNS, webhooks, websockets, deliverability) — read the one matching your
 task rather than working from `SKILL.md` alone.
+
+**The two design skills are a pair, not a choice.** `frontend-design`
+(Anthropic) is *generative* — palette, typefaces, layout concept, the one
+signature element, and how to avoid the templated look. `web-design-guidelines`
+(Vercel) is *corrective* — MUST/SHOULD/NEVER rules for keyboard and focus
+behaviour, hit targets, forms, motion, layout, performance, dark mode and
+hydration. A new surface wants both: the first to decide what it looks like,
+the second to check it before the PR. Neither knows this project's tokens —
+colours and radii still come from `src/styles/brand.css`, never a hardcoded
+`className` (see Anti-patterns). Much of the Vercel rule set is already
+satisfied by `src/components/ui/` (shadcn builds on Radix); it earns its keep on
+hand-rolled interactive markup, which is where the a11y gaps actually appear.
 
 **⚠️ `organization-best-practices`**: official BA skill, but the
 `organization()` plugin is **disabled** in this project (see `KNOWN_ISSUES.md`).

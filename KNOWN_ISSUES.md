@@ -1117,6 +1117,85 @@ longer matches `computedHash`, so a plain `pnpm run sync:skills` repairs a
 corrupted tree. `--force` is no longer needed for that (it remains useful to
 re-download everything unconditionally).
 
+### Third hole, same family: a pruned skill left its symlink behind
+
+Both gates iterated `lock.skills`. So they could only ever ask questions *about
+entries that exist* — a skill **removed** from the lock fell out of their field
+of view entirely, taking its `.claude/skills/<name>` symlink with it.
+
+That is exactly what PR #59 did: it pruned five Convex skills from
+`skills-lock.json` and deleted `.agents/skills/convex*`, but nothing removed the
+five symlinks, and they are tracked files — so they were *committed dangling*:
+
+```
+$ find .claude/skills -type l ! -exec test -e {} \; -print
+.claude/skills/convex-setup-auth
+.claude/skills/convex-migration-helper
+.claude/skills/convex
+.claude/skills/convex-quickstart
+.claude/skills/convex-performance-audit
+```
+
+Claude Code walks `.claude/skills/`, not the lock, so it kept advertising five
+skills whose `SKILL.md` was gone. `--verify` said "Vendored skills match", CI
+was green, and the PR that caused it was the *skill-pruning* PR — the one place
+you would expect someone to look.
+
+`orphanLinks()` now closes it: `--verify` reports any `.claude/skills/` symlink
+with no lock entry, and a plain `sync:skills` unlinks it. Two safety belts keep
+it narrow — it only considers **symlinks** (a real directory is left alone) and
+only those resolving **inside `.agents/skills/`**, so a hand-placed skill or a
+link to somewhere else is never deleted. Pruning has its own counter, so a run
+that only removes orphans does not rewrite `skills-lock.json`.
+
+**The rule this leaves you with**: removing a skill is *two* deletions. Drop the
+lock entry, then run `pnpm run sync:skills` and commit the symlink deletion in
+the same PR.
+
+## `web-design-guidelines` vendors `AGENTS.md`, not the SKILL.md you'll find on GitHub
+
+Search GitHub for `web-design-guidelines/SKILL.md` and you get 100+ hits. They
+are all copies of the same community wrapper, and vendoring one would be a
+mistake. The wrapper's entire body is an instruction to fetch the real rules at
+runtime:
+
+```
+https://raw.githubusercontent.com/vercel-labs/web-interface-guidelines/main/command.md
+```
+
+Pin that and you pin 1.2 kB of "go read a URL". The 7.7 kB that actually steers
+the model is never hashed, never reviewed, and changes under you — so
+`sync:skills:check` reports "up to date" forever while the content it is
+supposed to guard drifts freely. It also turns every invocation into a network
+call and an unreviewed prompt-injection surface, which is precisely what the
+pin-and-hash pipeline exists to prevent.
+
+We vendor the canonical `vercel-labs/web-interface-guidelines` instead. Two
+files there could serve:
+
+| Upstream file | Shape | Verdict |
+| ------------- | ----- | ------- |
+| `command.md`  | slash-command frontmatter + `$ARGUMENTS` + an output format | ✗ already has frontmatter (prepending ours yields two blocks), and `$ARGUMENTS` is meaningless outside a slash command |
+| `AGENTS.md`   | the rules alone, MUST/SHOULD/NEVER, no frontmatter | ✓ |
+
+`AGENTS.md` has no frontmatter at all, which the spec requires (`name` +
+`description`, `name` matching the directory). Hence the `frontmatter` map in
+the lock entry — see `CLAUDE.md`. It is prepended before hashing, so `--check`
+and `--verify` still digest identical bytes and an edit to the block shows up as
+drift.
+
+Consequences worth knowing:
+
+- **Upstream may add frontmatter to `AGENTS.md` one day.** That would produce
+  two blocks and a broken skill. `skills-drift` fires first (the content
+  changed), so read the diff before `--update` — that is the check, not an
+  accident.
+- **`name` must keep matching the directory**, i.e. the lock key. Rename one and
+  you must rename both.
+- The upstream project calls this **"Web Interface Guidelines"**; we keep the
+  directory name `web-design-guidelines` because that is what the ecosystem's
+  copies are called and what people search for.
+
 ## Streamdown (AI panel) — `@source` Tailwind v4, plugins removed
 
 The AI panel renders assistant markdown with `streamdown` (via

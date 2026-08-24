@@ -6,7 +6,7 @@
 // SHA, reproducible) from *how we notice upstream moved* (the branch tip):
 //
 //   { source, sourceType, skillPath, trackingRef, pinnedRef, computedHash,
-//     references? }
+//     references?, frontmatter? }
 //
 // We fetch raw content from github.com/<source>/<ref>/<skillPath>, hash it with
 // SHA-256, and reconcile.
@@ -18,6 +18,11 @@
 // They are folded into `computedHash`, so drift detection covers them too;
 // with no `references` the hash stays plain SHA-256 of SKILL.md (legacy hashes
 // remain valid).
+//
+// `frontmatter` is an optional YAML block prepended to SKILL.md at vendor
+// time, for upstreams that publish rules without skill frontmatter (the Agent
+// Skills spec requires `name` + `description`). It is applied before hashing,
+// so drift detection covers it too.
 //
 // Folder layout produced:
 //   .agents/skills/<name>/SKILL.md           (canonical content @ pinnedRef)
@@ -38,9 +43,11 @@
 //   (default)   vendor each skill at its pinnedRef (reproducible, no network
 //               surprise). Self-healing: a local file that no longer matches
 //               `computedHash` is rewritten, so a corrupted tree repairs
-//               itself without --force.
-//   --verify    re-hash the vendored files and compare to `computedHash`.
-//               No network, no GitHub API — safe in CI and offline.
+//               itself without --force, and a .claude/skills symlink whose
+//               lock entry is gone is pruned.
+//   --verify    re-hash the vendored files and compare to `computedHash`, and
+//               report orphaned symlinks. No network, no GitHub API — safe in
+//               CI and offline.
 //   --check     compare each trackingRef tip against the pinned content. Drift
 //               means a newer upstream exists — a deliberate bump is due.
 //               Content-only (no GitHub API), safe to run on every session.
@@ -62,7 +69,15 @@
 
 import { createHash } from 'node:crypto'
 import { existsSync } from 'node:fs'
-import { mkdir, readFile, symlink, writeFile } from 'node:fs/promises'
+import {
+  mkdir,
+  readFile,
+  readdir,
+  readlink,
+  symlink,
+  unlink,
+  writeFile,
+} from 'node:fs/promises'
 import { dirname, relative, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
@@ -130,12 +145,29 @@ async function fetchText(source, ref, path) {
   return { content: await res.text() }
 }
 
+// Some upstreams publish their rules as a plain AGENTS.md or slash-command
+// file with no skill frontmatter, while the Agent Skills spec makes `name` and
+// `description` mandatory. Such an entry declares a `frontmatter` map in the
+// lock and we prepend it here, on the *fetched* bytes and before hashing — so
+// `--check` (upstream) and `--verify` (working tree) keep digesting the same
+// content, and editing the block in the lock registers as drift like any other
+// change. Values are emitted verbatim: keep them YAML-safe plain scalars.
+function applyFrontmatter(info, content) {
+  if (!info.frontmatter) return content
+  const head = Object.entries(info.frontmatter)
+    .map(([k, v]) => `${k}: ${v}`)
+    .join('\n')
+  return `---\n${head}\n---\n\n${content}`
+}
+
 async function fetchSkillAt(source, ref, info) {
   const files = await Promise.all(
     relPaths(info).map(async (rel) => {
-      const path =
-        rel === 'SKILL.md' ? info.skillPath : upstreamPath(info.skillPath, rel)
-      return { rel, ...(await fetchText(source, ref, path)) }
+      const isSkill = rel === 'SKILL.md'
+      const path = isSkill ? info.skillPath : upstreamPath(info.skillPath, rel)
+      const got = await fetchText(source, ref, path)
+      if (got.error || !isSkill) return { rel, ...got }
+      return { rel, content: applyFrontmatter(info, got.content) }
     }),
   )
   const failed = files.find((f) => f.error)
@@ -169,6 +201,24 @@ async function vendor(name, info, files, hash) {
     await symlink(relative(CLAUDE_DIR, dir), linkPath, 'dir')
   }
   info.computedHash = hash
+}
+
+// Symlinks in .claude/skills that no lock entry owns any more. Dropping a
+// skill from the lock used to leave its symlink behind — Claude Code kept
+// listing a skill whose SKILL.md was gone, and nothing caught it because both
+// gates only ever walked the lock. We only touch links that point inside
+// .agents/skills, so a hand-placed skill or a link elsewhere is never removed.
+async function orphanLinks(lock) {
+  if (!existsSync(CLAUDE_DIR)) return []
+  const entries = await readdir(CLAUDE_DIR, { withFileTypes: true })
+  const orphans = []
+  for (const e of entries) {
+    if (!e.isSymbolicLink() || Object.hasOwn(lock.skills, e.name)) continue
+    const link = resolve(CLAUDE_DIR, e.name)
+    const target = resolve(CLAUDE_DIR, await readlink(link))
+    if (target.startsWith(`${AGENTS_DIR}/`)) orphans.push(e.name)
+  }
+  return orphans
 }
 
 function isVendored(name, info) {
@@ -211,6 +261,13 @@ async function runVerify(lock) {
       )
       broken += 1
     }
+  }
+
+  for (const name of await orphanLinks(lock)) {
+    console.log(
+      `~ ${name}: .claude/skills link with no lock entry — run \`pnpm run sync:skills\``,
+    )
+    broken += 1
   }
 
   if (broken > 0) {
@@ -306,12 +363,21 @@ async function runSync(lock) {
     console.log(`✓ ${name} @ ${short(info.pinnedRef)}`)
   }
 
+  // Pruning is not a lock change, so it gets its own counter — a run that only
+  // removes orphans must not rewrite skills-lock.json.
+  let pruned = 0
+  for (const name of await orphanLinks(lock)) {
+    await unlink(resolve(CLAUDE_DIR, name))
+    pruned += 1
+    console.log(`− ${name} (no lock entry)`)
+  }
+
   if (changed > 0) {
     await writeFile(LOCK_PATH, JSON.stringify(lock, null, 2) + '\n')
     console.log(
       `Updated skills-lock.json (${changed} skill${changed > 1 ? 's' : ''})`,
     )
-  } else {
+  } else if (pruned === 0) {
     console.log('Skills up to date.')
   }
 }
