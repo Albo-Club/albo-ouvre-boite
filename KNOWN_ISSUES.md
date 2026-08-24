@@ -379,6 +379,11 @@ deliberately, in its own PR, with a `pnpm build` to confirm. Do not treat a
 version drifting off this pin on its own as "the pin was lifted" — that is
 the pnpm 11 bug below, not a decision.
 
+**Update (2026-08-24)**: the Better Auth bump to 1.6.30 widened the gap this
+pin holds open — Better Auth now wants `better-call@1.4.0` exactly, so we are
+forcing it two minors back instead of one patch. Still green end to end, but
+see § "Better Auth is boxed into `>=1.6.22 <1.7.0`" before touching either.
+
 ## pnpm 11 silently drops `pnpm.overrides` and `onlyBuiltDependencies`
 
 **The pin in `package.json` (`packageManager: pnpm@10.34.5+sha512...`) is load
@@ -547,14 +552,109 @@ Do not re-vendor from `get-convex/agent-skills` — it will hand you a 1 KB
 stub. Either use the Convex MCP against the live deployment, or write the
 procedure into this repo as **our own** content that we own and update.
 
+## Better Auth is boxed into `>=1.6.22 <1.7.0`
+
+Two lines in `package.json` look over-specified and are not. Don't "tidy"
+either operator:
+
+```json
+"@convex-dev/better-auth": "0.12.2",   // exact — NOT a range
+"better-auth": "~1.6.30",              // tilde — NOT a caret
+```
+
+### The floor: GHSA-qq9h-g4jm-xgf3
+
+High severity, *"Account takeover via pre-account hijacking on magic-link and
+email-OTP sign-in"*. Vulnerable `>= 1.1.3, < 1.6.22`; fixed in **1.6.22**.
+`convex/auth.ts` loads `magicLink()`, so this repo sits squarely in the blast
+radius — and because it is a template, every project forked from it is born
+with whatever the lockfile carries. That is why this floor is a lockfile
+concern, not just a range concern: check `pnpm-lock.yaml`, not only
+`package.json`. (The advisory lists a second range, `>=1.7.0-beta.0
+<1.7.0-beta.10`; irrelevant here, the ceiling below excludes all of 1.7.)
+
+### The ceiling: the adapter's peer, plus a dropped export
+
+`@convex-dev/better-auth@0.12.2` declares `better-auth: ">=1.6.9 <1.7.0"`, and
+1.7.x additionally drops the `better-auth/plugins#mcp` export. Hence `~1.6.30`
+— patches inside 1.6.x, never 1.7.x. `^1.6.30` would resolve straight to
+1.7.1, which is the current `latest` on npm.
+
+### Why the adapter is pinned exact, and `~` wouldn't help
+
+**On a `0.x`, `^0.12.2` and `~0.12.2` mean the same thing** — both read
+`>=0.12.2 <0.13.0`, so neither blocks 0.12.3+. Only the bare `0.12.2` holds.
+
+It has to hold, because the adapter breaks against newer Better Auth. From
+better-auth **1.6.18**, `useSession().data` collapses to `never` and you get a
+**TS2322 on the `authClient` prop of `ConvexBetterAuthProvider`**. Upstream
+cause: 1.6.18+ gives its return types a *name* (`ReactAuthClient`) where they
+used to be anonymous structural types, and the adapter's `AuthClient` — built
+on `Omit<BetterAuthClientPlugin, …>` — no longer unifies with it.
+
+### The bisect (adapter × better-auth)
+
+| adapter    | better-auth | result                                                                                                             |
+| ---------- | ----------- | ------------------------------------------------------------------------------------------------------------------ |
+| 0.12.2     | 1.6.16      | tsc OK, tests OK                                                                                                     |
+| **0.12.2** | **1.6.30**  | **tsc OK, tests OK — the way out, and what we ship**                                                                 |
+| 0.12.3     | 1.6.30      | tsc OK, but slows `convex-test` down: 2–4 tests out of 120 blow the 5 s timeout, a different set each run. Rejected. |
+| 0.12.4     | 1.6.30      | TS2322                                                                                                               |
+| 0.12.5     | 1.6.30      | TS2322                                                                                                               |
+
+The `tests OK` / `convex-test` column comes from **albo-os**, a downstream
+project that has a `convex-test` suite. This template ships none — don't go
+looking for those 120 tests here. Locally the gates are `pnpm lint`,
+`pnpm build` and `pnpm test:smoke`.
+
+### `better-call` rides along — and the gap widened
+
+`pnpm.overrides` forces `better-call: 1.3.4` (see § "pnpm.overrides" above),
+while Better Auth pins it *exactly* — and that exact version moved with the
+bump:
+
+| better-auth      | wants `better-call` | we force                    |
+| ---------------- | ------------------- | --------------------------- |
+| 1.6.14 (before)  | 1.3.5               | 1.3.4 — one patch back      |
+| 1.6.30 (now)     | **1.4.0**           | 1.3.4 — **two minors back** |
+
+Verified green anyway on 2026-08-24: cold `pnpm install`, `pnpm lint`,
+`pnpm build`, `pnpm test:smoke` (21/21), and the export maps of 1.3.4 and
+1.4.0 are identical (`.`, `./node`, `./error`, `./client`). Runtime proof: a
+`POST /api/auth/sign-in/magic-link` traverses
+`better-auth@1.6.30` → `@better-auth/core@1.6.30` → `better-call@1.3.4` →
+`@convex-dev/better-auth@0.12.2` and reaches our own `sendMagicLink`.
+
+So the override survives the bump — but the gap is wider than it was, and it
+is **the first thing to suspect if Better Auth starts failing at runtime while
+the types stay clean**. Lifting the pin is already sanctioned in
+§ "pnpm.overrides"; do it in its own PR.
+
+### Renovate guards the window, asymmetrically
+
+In `renovate.json`: `@convex-dev/better-auth` is disabled outright (any bump
+breaks it), whereas `better-auth` blocks only `minor`/`major` — **1.6.x patches
+stay enabled on purpose**. That channel is how the next security fix arrives,
+and closing it is exactly how this repo ended up shipping a vulnerable 1.6.14.
+Don't "simplify" the two rules into one disabled rule.
+
+### Unblock condition
+
+**[get-convex/better-auth#420](https://github.com/get-convex/better-auth/issues/420)**
+(open). When it lands, adapter 0.12.4+ should type-check against better-auth
+1.6.18+. Only then relax the exact pin — and re-run the bisect above rather
+than trusting the table, since the `convex-test` slowdown on 0.12.3 was a
+separate defect from the TS2322.
+
 ## Zod v4 required for Better Auth 1.6.10
 
 Better Auth's `better-call` subdependency uses `.meta()` on Zod schemas,
 which is **v4-only**. The install warning is the only signal — runtime
 errors otherwise look like opaque schema failures.
 
-We ship `zod ^4.4.3`. If you must downgrade, also pin `better-auth` to a
-release that supports zod v3.
+We ship `zod ^4.4.3`. Downgrading `better-auth` to a zod-v3-era release is
+**not** an option any more: GHSA-qq9h-g4jm-xgf3 puts a hard floor at 1.6.22 —
+see § "Better Auth is boxed into `>=1.6.22 <1.7.0`".
 
 ## Resend test-mode trap
 
