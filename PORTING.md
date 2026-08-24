@@ -29,13 +29,19 @@ Never merge the template's `skills-lock.json` or `.agents/skills/**` into a
 derived project. Those belong to that project; let it run its own
 `sync:skills:update`.
 
+The corollary is that `scripts/sync-skills.mjs` **does** port while the skill
+set does not. So a derived project inherits capabilities like the `frontmatter`
+map and orphan-symlink pruning, but never the entries that use them — to pick up
+a skill this template added (`web-design-guidelines`, say), copy that one lock
+entry across by hand and run `pnpm run sync:skills`.
+
 ## Verifying a derived project (no agent needed)
 
 Three questions, in order. Run from the derived project's root.
 
 ```bash
-# 1. Is the tooling present? Both must print a definition.
-grep -n 'async function hashLocal\|async function runVerify' scripts/sync-skills.mjs
+# 1. Is the tooling present? All must print a definition.
+grep -n 'async function hashLocal\|async function runVerify\|async function orphanLinks' scripts/sync-skills.mjs
 grep -n 'sync:skills:verify' package.json
 
 # 2. Is it actually wired into CI? (the one people forget)

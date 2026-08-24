@@ -25,7 +25,7 @@ Prerequisites:
 | B3 | Build         | `pnpm build`             | Bundle written to `.output/`  |
 | B4 | Smoke E2E     | `pnpm test:smoke`        | All scenarios pass            |
 | B5 | Prod cookies  | `pnpm test:cookies`      | `albo.session_token` has Secure+HttpOnly+SameSite=Lax+Max-Age≈604800 |
-| B6 | Skills intact | `pnpm sync:skills:verify` | `Vendored skills match skills-lock.json.` (exit 0) — offline, covers the `SKILL.md` files **and** their `references` |
+| B6 | Skills intact | `pnpm sync:skills:verify` | `Vendored skills match skills-lock.json.` (exit 0) — offline, covers the `SKILL.md` files **and** their `references`, plus `.claude/skills/` symlinks with no lock entry (`~ <name>: .claude/skills link with no lock entry`, exit 2 — repair with `pnpm sync:skills`) |
 | B6b | Skills up-to-date | `pnpm sync:skills:check` | `Skills up to date with upstream.` (exit 0) — network. Two distinct failures, both exit 2: `~ N skills drifted` (upstream changed) and `✗ … N skills could not be checked` (404 or network — the skill is tracked by nothing) |
 
 B2–B3, B6 and B6b also run in CI on every PR (`.github/workflows/ci.yml`,
