@@ -366,23 +366,26 @@ on `createFileRoute`. Pinning both to compatible versions resolves it.
 
 Pinned in lockstep with the router pin above.
 
-### `better-call: 1.3.4`
+### `better-call: 1.3.4` — LIFTED 2026-08-24, kept as the cautionary tale
 
 `better-call@1.3.5` originally shipped without `openapi.mjs` and
-`validator.mjs`, breaking Better Auth's runtime imports. Pinned to the last
-working release.
+`validator.mjs`, breaking Better Auth's runtime imports, so it was pinned to
+the last working release. Upstream fixed that in the 1.3.5 tarball, and the
+pin was **removed on 2026-08-24**. `better-call` now resolves to whatever
+Better Auth asks for (1.4.0 today) — there is no override left to maintain.
 
-**Status (2026-08-20)**: the upstream regression is fixed — the 1.3.5 tarball
-now contains `openapi.{mjs,cjs}` and `validator.{mjs,cjs}`. The unblock
-condition is therefore met, but the pin is still in place: lift it
-deliberately, in its own PR, with a `pnpm build` to confirm. Do not treat a
-version drifting off this pin on its own as "the pin was lifted" — that is
-the pnpm 11 bug below, not a decision.
+Why it is still written down: this pin outlived its reason by four days of
+documented "unblock condition met, lift it deliberately", and in the meantime
+the Better Auth bump to 1.6.30 quietly widened it from one patch back to two
+minors back. **A pin with an expired unblock condition is not neutral — it
+drifts from a small lie into a big one while nobody is looking.** When you add
+an override, write its exit condition next to it, and re-read that condition
+every time you touch the package it constrains.
 
-**Update (2026-08-24)**: the Better Auth bump to 1.6.30 widened the gap this
-pin holds open — Better Auth now wants `better-call@1.4.0` exactly, so we are
-forcing it two minors back instead of one patch. Still green end to end, but
-see § "Better Auth is boxed into `>=1.6.22 <1.7.0`" before touching either.
+Removal was verified, not assumed: cold `pnpm install` resolves a single
+`better-call@1.4.0`, then `pnpm lint`, `pnpm build` and `pnpm test:smoke`
+(21/21) all pass, and a live `POST /api/auth/sign-in/magic-link` reaches
+`sendMagicLink` through it.
 
 ## pnpm 11 silently drops `pnpm.overrides` and `onlyBuiltDependencies`
 
@@ -575,10 +578,23 @@ concern, not just a range concern: check `pnpm-lock.yaml`, not only
 
 ### The ceiling: the adapter's peer, plus a dropped export
 
-`@convex-dev/better-auth@0.12.2` declares `better-auth: ">=1.6.9 <1.7.0"`, and
-1.7.x additionally drops the `better-auth/plugins#mcp` export. Hence `~1.6.30`
+Every published adapter version — 0.12.2 through 0.12.5 — declares
+`better-auth: ">=1.6.9 <1.7.0"` (0.12.3+ raise the floor to 1.6.11, never the
+ceiling). **No adapter release supports better-auth 1.7 yet.** Hence `~1.6.30`
 — patches inside 1.6.x, never 1.7.x. `^1.6.30` would resolve straight to
-1.7.1, which is the current `latest` on npm.
+1.7.1, the current `latest` on npm.
+
+The ceiling is not merely a declared peer, it bites. Measured on 2026-08-24
+with 1.7.1 + adapter 0.12.2: **`tsc` passes clean, then `vite build` dies**
+
+```
+"./plugins/oidc-provider" is not exported ... from better-auth
+```
+
+The import is the **adapter's**, not ours — grepping this repo for it finds
+nothing, and there is no local workaround. Note which gate caught it: type
+checking was green on a build that cannot run. When you next evaluate a bump
+here, `tsc` alone is not evidence.
 
 ### Why the adapter is pinned exact, and `~` wouldn't help
 
@@ -607,28 +623,13 @@ project that has a `convex-test` suite. This template ships none — don't go
 looking for those 120 tests here. Locally the gates are `pnpm lint`,
 `pnpm build` and `pnpm test:smoke`.
 
-### `better-call` rides along — and the gap widened
+### `better-call` is no longer overridden
 
-`pnpm.overrides` forces `better-call: 1.3.4` (see § "pnpm.overrides" above),
-while Better Auth pins it *exactly* — and that exact version moved with the
-bump:
-
-| better-auth      | wants `better-call` | we force                    |
-| ---------------- | ------------------- | --------------------------- |
-| 1.6.14 (before)  | 1.3.5               | 1.3.4 — one patch back      |
-| 1.6.30 (now)     | **1.4.0**           | 1.3.4 — **two minors back** |
-
-Verified green anyway on 2026-08-24: cold `pnpm install`, `pnpm lint`,
-`pnpm build`, `pnpm test:smoke` (21/21), and the export maps of 1.3.4 and
-1.4.0 are identical (`.`, `./node`, `./error`, `./client`). Runtime proof: a
-`POST /api/auth/sign-in/magic-link` traverses
-`better-auth@1.6.30` → `@better-auth/core@1.6.30` → `better-call@1.3.4` →
-`@convex-dev/better-auth@0.12.2` and reaches our own `sendMagicLink`.
-
-So the override survives the bump — but the gap is wider than it was, and it
-is **the first thing to suspect if Better Auth starts failing at runtime while
-the types stay clean**. Lifting the pin is already sanctioned in
-§ "pnpm.overrides"; do it in its own PR.
+Better Auth pins `better-call` *exactly* (1.4.0 for 1.6.30), and this repo used
+to force it back to 1.3.4. That override was **removed on 2026-08-24** — see
+§ "pnpm.overrides" for why it existed and what it taught. `better-call` now
+follows Better Auth with nothing in between, which is one less thing to reason
+about when a bump goes wrong.
 
 ### Renovate guards the window, asymmetrically
 

@@ -330,15 +330,18 @@ version it prints — a transitive copy below 1.6.22 still counts.
 Two things to settle before editing.
 
   (a) Which better-auth to land on. The window is >=1.6.22 <1.7.0: the floor is
-      the advisory, the ceiling is the adapter peer (>=1.6.9 <1.7.0), and 1.7.x
-      additionally drops the `better-auth/plugins#mcp` export. The template
-      ships `~1.6.30`. Take the newest 1.6.x, not blindly 1.6.30 — check
-      `npm view better-auth versions --json`.
+      the advisory, the ceiling is the adapter peer (>=1.6.9 <1.7.0) — and NO
+      published adapter version supports 1.7 yet. Verified: 1.7.1 + adapter
+      0.12.2 type-checks clean, then the build dies on
+      "./plugins/oidc-provider is not exported", an import the ADAPTER makes.
+      The template ships `~1.6.30`. Take the newest 1.6.x, not blindly 1.6.30 —
+      check `npm view better-auth versions --json`.
 
-  (b) Whether this repo overrides `better-call`. The template pins it to 1.3.4
-      while better-auth 1.6.30 wants 1.4.0 exactly — two minors back, and it
-      still works. If YOUR repo has that override, keep it for now and verify
-      at runtime (step 4); if it has none, do not add one.
+  (b) Whether this repo overrides `better-call`. The template used to pin it to
+      1.3.4 and REMOVED that override on 2026-08-24 — better-auth pins the
+      version it wants (1.4.0), and letting it do so is one less thing between
+      you and a working auth stack. If YOUR repo still has the override, check
+      whether its reason has expired too; if it has none, do not add one.
 
 If step 1 showed this repo loads NEITHER magicLink nor emailOTP, say so — the
 advisory does not bite, and the bump becomes routine rather than urgent. Bump

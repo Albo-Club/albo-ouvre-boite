@@ -21,8 +21,7 @@
       "matchPackageNames": [
         "@tanstack/react-router",
         "@tanstack/react-start",
-        "@tanstack/router-core",
-        "better-call"
+        "@tanstack/router-core"
       ],
       "enabled": false
     },
