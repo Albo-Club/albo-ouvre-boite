@@ -11,11 +11,21 @@
 // runs reuse it. The merge is `--no-commit --no-ff` so you can inspect, resolve
 // conflicts, and commit yourself.
 //
-// Snapshots created via GitHub's "Use this template" share no git history with
-// the template, so a plain merge would fail with "refusing to merge unrelated
-// histories". On first run we graft the ancestry: merge the release tag from
-// `.template-version` with `-s ours` (tree untouched, only the parent link is
-// recorded), after which every merge is a clean 3-way.
+// Projects scaffolded with `pnpm run init --reset-git`, and snapshots created
+// via GitHub's "Use this template", share no git history with the template, so
+// a plain merge would fail with "refusing to merge unrelated histories". On
+// first run we graft the ancestry: merge the template commit the project came
+// from with `-s ours` (tree untouched, only the parent link is recorded),
+// after which every merge is a clean 3-way.
+//
+// That graft point has to be the commit whose tree the project actually holds.
+// Two sources, in order:
+//   1. `.template-ref` — the exact SHA, written by init.mjs at clone time.
+//   2. `.template-version` — the release tag, which is only as fresh as the
+//      last `pnpm run release`. Grafting on a tag that trails main claims the
+//      project's tree equals an older tree, so the merge re-proposes every
+//      commit in between and each one conflicts with the rebrand.
+// The tag is the fallback for snapshots that predate `.template-ref`.
 
 import { execSync } from 'node:child_process'
 import { readFileSync } from 'node:fs'
@@ -68,13 +78,47 @@ function hasMergeBase() {
   }
 }
 
+// The template commit init.mjs recorded at clone time, if it is usable.
+// Usable means reachable from template/main: a fork, a rewritten history or a
+// hand-edited file would otherwise graft onto a commit whose tree we can say
+// nothing about, which is worse than the stale tag.
+function recordedRef() {
+  let ref
+  try {
+    ref = readFileSync('.template-ref', 'utf8').trim()
+  } catch {
+    return null
+  }
+  if (!/^[0-9a-f]{7,40}$/.test(ref)) {
+    console.log(`.template-ref does not hold a commit SHA — ignoring it.`)
+    return null
+  }
+  try {
+    shOut(`git merge-base --is-ancestor ${ref} template/main`)
+  } catch {
+    console.log(
+      `.template-ref (${ref.slice(0, 7)}) is not an ancestor of template/main ` +
+        '— falling back to .template-version.',
+    )
+    return null
+  }
+  return ref
+}
+
+// Where to graft: the recorded commit when we have one, the release tag
+// otherwise. Requires template/main to be fetched already.
+function graftPoint() {
+  return recordedRef() ?? snapshotVersion()
+}
+
 function snapshotVersion() {
   let version
   try {
     version = readFileSync('.template-version', 'utf8').trim()
   } catch {
     console.error(
-      'No shared history with the template and no .template-version file.\n' +
+      'No shared history with the template and no .template-ref or\n' +
+        '.template-version file.\n' +
         'This snapshot predates template versioning. Graft the ancestry\n' +
         'manually against the template commit your project was created from:\n' +
         '  git merge -s ours --allow-unrelated-histories <commit>\n' +
@@ -96,11 +140,11 @@ function snapshotVersion() {
   return version
 }
 
-function graftAncestry(version) {
-  console.log(`Grafting template ancestry at ${version} (tree untouched)…`)
+function graftAncestry(point) {
+  console.log(`Grafting template ancestry at ${point} (tree untouched)…`)
   sh(
     `git merge -s ours --allow-unrelated-histories ` +
-      `-m "chore: graft template ancestry (${version})" ${version}`,
+      `-m "chore: graft template ancestry (${point})" ${point}`,
   )
 }
 
@@ -115,8 +159,9 @@ function main() {
 
   if (diffOnly) {
     // Without a merge base, HEAD..template/main would list the template's
-    // entire history — diff from the snapshot's release tag instead.
-    const base = related ? 'HEAD' : snapshotVersion()
+    // entire history — diff from the graft point the real run would use, so
+    // the preview matches what the merge will actually bring in.
+    const base = related ? 'HEAD' : graftPoint()
     if (!related) {
       console.log(
         `No shared history yet — showing changes since ${base}. The first ` +
@@ -129,7 +174,7 @@ function main() {
     return
   }
 
-  if (!related) graftAncestry(snapshotVersion())
+  if (!related) graftAncestry(graftPoint())
 
   console.log('Merging template/main (no-commit, no-fast-forward)…')
   try {

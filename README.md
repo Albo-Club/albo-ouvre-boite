@@ -99,6 +99,8 @@ If you'd rather rebrand without touching Convex, `pnpm run init my-project
 ## Project layout
 
 ```
+convex.json            Convex CLI config — keeps its `ai-files` step from
+                       reinstalling the pruned Convex skills (KNOWN_ISSUES.md)
 convex/                Convex backend
   auth.ts              Better Auth config (email + magic link)
   schema.ts            users · organizations · members · invitations · items
@@ -134,7 +136,7 @@ src/
     sentry.ts          Front-end Sentry init (no-op if VITE_SENTRY_DSN unset)
 scripts/
   sync-skills.mjs      Pull SKILL.md files from upstream GitHub
-  init.mjs             Rebrand the template
+  init.mjs             Rebrand the template + record .template-ref
   upgrade-template.mjs Pull non-conflicting updates from upstream
 ```
 
@@ -371,10 +373,12 @@ This repo is the **source** template. Three things keep derived projects clean:
 3. **Tag releases with `pnpm run release vX.Y.Z`.** Write the release notes
    in `CHANGELOG.md` first (and migration steps in `UPGRADING.md` if any),
    then run the script: it syncs `.template-version`, commits, tags, and
-   tells you what to push. The tag is what lets "Use this template" snapshots
-   (no shared git history) graft ancestry on their first
-   `pnpm run upgrade-template` — without a pushed tag, that first upgrade
-   fails downstream.
+   tells you what to push. The tag is the *fallback* graft point for
+   snapshots with no shared git history and no `.template-ref` — a derived
+   project normally grafts on the exact SHA `init.mjs` recorded at clone time,
+   so a tag that trails `main` no longer floods the first upgrade with
+   conflicts (see [UPGRADING.md](UPGRADING.md)). Still tag regularly: the tag
+   is what tells downstream which `CHANGELOG.md` sections apply to them.
 
 ## See also
 

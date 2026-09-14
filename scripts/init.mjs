@@ -10,6 +10,8 @@
 //    newly-added file never gets missed by a stale list.
 //  - Renders a clean product README from README.product.md (dropping the
 //    "this is a template" framing) and de-templatizes CLAUDE.md.
+//  - Records the exact template commit in `.template-ref` so the first
+//    `pnpm run upgrade-template` grafts onto what was actually cloned.
 //  - Asserts ZERO residual brand token remains, failing loudly otherwise.
 //  - Optionally resets git history to a single "chore: scaffold" commit
 //    (only if --reset-git is passed).
@@ -107,6 +109,36 @@ async function renderProductReadme(slug) {
   return true
 }
 
+// Pin the exact template commit this project was derived from.
+//
+// `.template-version` records a release *tag*, which is only as fresh as the
+// last `pnpm run release` — clone main a month after v0.3.0 and the tag is 28
+// commits behind the tree you actually have. `upgrade-template` grafts on that
+// tag, so it then re-proposes commits the project already contains, and every
+// one of them conflicts with the rebrand. Recording the SHA is what makes the
+// graft point match the tree; the tag stays the fallback (see UPGRADING.md).
+//
+// Written once and never rewritten: after `--reset-git`, HEAD is this
+// project's own scaffold commit, which means nothing upstream. Guarded on a
+// remote pointing at the starter too, so a GitHub "Use this template"
+// snapshot — whose HEAD is not a template commit either — records nothing and
+// keeps the tag path.
+async function recordTemplateRef() {
+  const path = resolve(ROOT, '.template-ref')
+  if (existsSync(path)) return false
+  let sha
+  try {
+    const remotes = execSync('git remote -v', { cwd: ROOT, encoding: 'utf8' })
+    if (!remotes.includes('albo-ouvre-boite')) return false
+    sha = execSync('git rev-parse HEAD', { cwd: ROOT, encoding: 'utf8' }).trim()
+  } catch {
+    return false // no git dir, or an unborn HEAD — the tag fallback covers it
+  }
+  await writeFile(path, `${sha}\n`)
+  console.log(`✓ .template-ref (${sha.slice(0, 7)})`)
+  return true
+}
+
 // Drop the "before deriving the template" framing from CLAUDE.md so a derived
 // project doesn't read like the starter.
 async function detemplatizeClaudeMd() {
@@ -163,6 +195,9 @@ export async function rebrand(name) {
     throw new Error('Project name must produce a 3-40 char kebab slug.')
   }
   const display = toDisplay(slug)
+
+  // Before anything else: `--reset-git` later destroys the history this reads.
+  await recordTemplateRef()
 
   let touched = 0
   for (const rel of trackedFiles()) {
