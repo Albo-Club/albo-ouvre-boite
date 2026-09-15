@@ -6,7 +6,9 @@ forking it into a production SaaS. Allow ~70 min end-to-end.
 Prerequisites:
 
 - `pnpm install`
-- `pnpm exec convex dev` run once (provisions the deployment)
+- `pnpm exec convex dev` run once (provisions the deployment, and installs /
+  refreshes `convex/_generated/ai/guidelines.md`; `convex.json` keeps it from
+  also installing Convex agent skills — see B7)
 - Convex environment variables set:
   - `BETTER_AUTH_SECRET`
   - `SITE_URL` (`http://localhost:3000` locally)
@@ -27,6 +29,7 @@ Prerequisites:
 | B5 | Prod cookies  | `pnpm test:cookies`      | `albo.session_token` has Secure+HttpOnly+SameSite=Lax+Max-Age≈604800 |
 | B6 | Skills intact | `pnpm sync:skills:verify` | `Vendored skills match skills-lock.json.` (exit 0) — offline, covers the `SKILL.md` files **and** their `references`, plus `.claude/skills/` symlinks with no lock entry (`~ <name>: .claude/skills link with no lock entry`, exit 2 — repair with `pnpm sync:skills`) |
 | B6b | Skills up-to-date | `pnpm sync:skills:check` | `Skills up to date with upstream.` (exit 0) — network. Two distinct failures, both exit 2: `~ N skills drifted` (upstream changed) and `✗ … N skills could not be checked` (404 or network — the skill is tracked by nothing) |
+| B7 | Convex skills stay out | `ls .agents/skills \| grep '^convex-'` | Exactly `convex-create-component`. Run it **after** the `convex dev` in the prerequisites: the CLI's `ai-files` step adds 32 `convex-*` skills unless `convex.json` sets `aiFiles.skills.agents: []`, and they fail B6. See `KNOWN_ISSUES.md` |
 
 B2–B3, B6 and B6b also run in CI on every PR (`.github/workflows/ci.yml`,
 B6 via the `skills-verify` job, B6b via `skills-drift`). CI covers B0

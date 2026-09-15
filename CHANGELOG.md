@@ -5,6 +5,42 @@ commit. Downstream projects: read the sections between your version and the
 latest **before** running `pnpm run upgrade-template` — migration steps live
 in [UPGRADING.md](UPGRADING.md).
 
+## v0.4.0 — 2026-09-14
+
+Three fixes found by deriving a real project from the template and walking the
+documented flow (`git clone` → `pnpm run init` → `pnpm run setup`).
+
+### Fixed
+
+- **`upgrade-template` grafted onto a stale tag.** The graft point came from
+  `.template-version`, a release *tag*, so a project cloned from `main` after
+  the last release was told its tree equalled an older tree — and the first
+  upgrade re-proposed every commit in between, each conflicting with the
+  rebrand. `scripts/init.mjs` now records the exact template SHA in
+  `.template-ref`, and `scripts/upgrade-template.mjs` grafts on that when it is
+  an ancestor of `template/main`, falling back to the tag otherwise. Measured
+  on a project derived from `main` at 28 commits past v0.3.0: 5 conflicts
+  before, `Already up to date.` after. **Downstream:** projects created between
+  v0.3.0 and v0.4.0 predate `.template-ref` and need a one-off manual graft —
+  see UPGRADING.md.
+- **`pnpm run setup` reinstalled the pruned Convex skills and broke CI.** The
+  Convex CLI's `ai-files` step adds 32 `convex-*` skills, their
+  `.claude/skills/` symlinks and lock entries with no `trackingRef` /
+  `pinnedRef` — enough to fail `sync-skills --verify` and turn the
+  `skills-verify` job red on a tree nobody edited. It also silently overwrote
+  the one Convex skill we kept. A new committed `convex.json` sets
+  `aiFiles.skills.agents: []`, which is the narrowest cut available:
+  `installSkills()` returns early while `guidelines.md` keeps installing and
+  refreshing. `ai-files disable` would have taken the guidelines down with it.
+  See `KNOWN_ISSUES.md`.
+- **`skills-drift` was red on `main`.** Ten skills had moved upstream (Better
+  Auth ×5, TanStack Router ×3, `frontend-design`, `convex-create-component`);
+  pins bumped and content re-vendored. Better Auth renamed its CLI to
+  `npx auth@latest`; TanStack's error-boundary examples now type `error` as
+  `unknown`. One upstream example lands with a real bug — documented in
+  `KNOWN_ISSUES.md` rather than hand-patched, since editing a vendored file is
+  what `--verify` exists to catch.
+
 ## v0.3.0 — 2026-06-15
 
 ### Added

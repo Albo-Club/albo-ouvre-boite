@@ -22,15 +22,15 @@
       "sourceType": "github",
       "skillPath": "better-auth/best-practices/SKILL.md",
       "trackingRef": "main",
-      "pinnedRef": "17dfe3a1da1c3982de723098ba1015d67f35694c",
-      "computedHash": "6d41db1678dbda3a625403b0544d1ae1c4be34499e0cc252e4a83d16753df0bd"
+      "pinnedRef": "20c9e88a5c007461a703f1c213572b073196113e",
+      "computedHash": "a5337f186300d187fea2c8f7af339e091afdd130d36c070d0a2dcb8ca04dd413"
     },
     "better-auth-security-best-practices": {
       "source": "better-auth/skills",
       "sourceType": "github",
       "skillPath": "security/SKILL.md",
       "trackingRef": "main",
-      "pinnedRef": "17dfe3a1da1c3982de723098ba1015d67f35694c",
+      "pinnedRef": "20c9e88a5c007461a703f1c213572b073196113e",
       "computedHash": "042f01c76b63b436c71797c8a1b84470c5b6e0c7cd2400aa0928f733da96facf"
     },
     "convex-create-component": {
@@ -44,48 +44,48 @@
         "references/packaged-components.md"
       ],
       "trackingRef": "main",
-      "pinnedRef": "ec1e6baae7d86c7843c22938c75979c016f5c6e9",
-      "computedHash": "56706fe3fd2de30c98fe7858b2df58467634cfe21086baeaa539b339faff3e68"
+      "pinnedRef": "0aa10576821c6928f6a0f498c087af4ee231536e",
+      "computedHash": "384ff94842bd6041e78aff2cd1563eef8f1384a56bf9b1bfc3ee572357a17253"
     },
     "create-auth-skill": {
       "source": "better-auth/skills",
       "sourceType": "github",
       "skillPath": "better-auth/create-auth/SKILL.md",
       "trackingRef": "main",
-      "pinnedRef": "17dfe3a1da1c3982de723098ba1015d67f35694c",
-      "computedHash": "55ea33dc76fe7f19f5933cc256fa8a9004ab9bc6b13a91f6cd9172898d43446c"
+      "pinnedRef": "20c9e88a5c007461a703f1c213572b073196113e",
+      "computedHash": "e3f24141de734690c803c577cc30f19aa0b7a6e408def0d0de7f8e1b6780c5fc"
     },
     "email-and-password-best-practices": {
       "source": "better-auth/skills",
       "sourceType": "github",
       "skillPath": "better-auth/emailAndPassword/SKILL.md",
       "trackingRef": "main",
-      "pinnedRef": "17dfe3a1da1c3982de723098ba1015d67f35694c",
-      "computedHash": "ef9b2d86e9e0ef89f1e8fd62ec86df212a370d4c8f6ebe43936e6f225c94cb63"
+      "pinnedRef": "20c9e88a5c007461a703f1c213572b073196113e",
+      "computedHash": "70591495def0161b5adec5c697dd7740b75e80b16526654beff51f5611098e0a"
     },
     "frontend-design": {
       "source": "anthropics/skills",
       "sourceType": "github",
       "skillPath": "skills/frontend-design/SKILL.md",
       "trackingRef": "main",
-      "pinnedRef": "b29e7cf65e5cb78a5ac33d582270551bc74a14eb",
-      "computedHash": "1608ea77fbb6fc30d13a97d12cfa8ebf31358d40f0dd97beed24829d6b3f45dd"
+      "pinnedRef": "34040c9c568585f6929bedeaad110ad08f079624",
+      "computedHash": "d91970639e9f5c37682ac7ab60094d35f1c7c1f38d731bd56396563aee10c1d3"
     },
     "organization-best-practices": {
       "source": "better-auth/skills",
       "sourceType": "github",
       "skillPath": "better-auth/organization/SKILL.md",
       "trackingRef": "main",
-      "pinnedRef": "17dfe3a1da1c3982de723098ba1015d67f35694c",
-      "computedHash": "93873f0af97ff7556a0cfed358c535f03a8f347bd07b94a3d7769a401cf014a3"
+      "pinnedRef": "20c9e88a5c007461a703f1c213572b073196113e",
+      "computedHash": "d0450769aab02fbddfddca5c17257dca451233ac8ae7c6b395fa6a3bad104d27"
     },
     "tanstack-react-router": {
       "source": "TanStack/router",
       "sourceType": "github",
       "skillPath": "packages/react-router/skills/react-router/SKILL.md",
       "trackingRef": "main",
-      "pinnedRef": "179d9b9b5eec50dc7833b4e2ef91b735d34bbc07",
-      "computedHash": "af020c483610efd70133a24aefd4ab7b12a50683f92e46fa50a8b92b147876f5"
+      "pinnedRef": "e561fa1d7118e3d29267cc3b6ce1130d6581f387",
+      "computedHash": "9a08a0e3e647b59213577c846f1516f3070f4759738f1ed3d68afd25fad28d82"
     },
     "tanstack-react-start": {
       "source": "TanStack/router",
@@ -107,7 +107,7 @@
         "server-components/examples/06-low-level-flight-api-route.tsx"
       ],
       "trackingRef": "main",
-      "pinnedRef": "179d9b9b5eec50dc7833b4e2ef91b735d34bbc07",
+      "pinnedRef": "e561fa1d7118e3d29267cc3b6ce1130d6581f387",
       "computedHash": "73fc17cc4497b3e21b3d6c6d8dead26bb1e0b601c72c5568a60b775c6063010e"
     },
     "tanstack-router-core": {
@@ -127,16 +127,16 @@
         "type-safety/SKILL.md"
       ],
       "trackingRef": "main",
-      "pinnedRef": "179d9b9b5eec50dc7833b4e2ef91b735d34bbc07",
-      "computedHash": "cadc4171c3854b335d365284780033fa6b37e5166bfda3da240a883e18ec7477"
+      "pinnedRef": "e561fa1d7118e3d29267cc3b6ce1130d6581f387",
+      "computedHash": "ba3dc3d59471d665a7d0361e77055004948204b73e31841e5eed2328c58ac441"
     },
     "tanstack-router-query": {
       "source": "TanStack/router",
       "sourceType": "github",
       "skillPath": "packages/react-router/skills/compositions/router-query/SKILL.md",
       "trackingRef": "main",
-      "pinnedRef": "179d9b9b5eec50dc7833b4e2ef91b735d34bbc07",
-      "computedHash": "9e45f2d1130cc51a2f01a9250d285de9d35dc787b80eb2a5ad02585c6791e7f9"
+      "pinnedRef": "e561fa1d7118e3d29267cc3b6ce1130d6581f387",
+      "computedHash": "83b8c66d29a36df2a174643566570e602fc232c2daf7fab020c26ab7d06e80ae"
     },
     "tanstack-start-core": {
       "source": "TanStack/router",
@@ -151,7 +151,7 @@
         "server-routes/SKILL.md"
       ],
       "trackingRef": "main",
-      "pinnedRef": "179d9b9b5eec50dc7833b4e2ef91b735d34bbc07",
+      "pinnedRef": "e561fa1d7118e3d29267cc3b6ce1130d6581f387",
       "computedHash": "57116f0c57e2a687b9e3f0f5071f5cb86c3d5f86cf13b5845267be54de1de514"
     },
     "two-factor-authentication-best-practices": {
@@ -159,8 +159,8 @@
       "sourceType": "github",
       "skillPath": "better-auth/twoFactor/SKILL.md",
       "trackingRef": "main",
-      "pinnedRef": "17dfe3a1da1c3982de723098ba1015d67f35694c",
-      "computedHash": "90f344853d1793ae541f7d73cd8f06dce4a9201d8d4b83aa875d4bb7bc48c617"
+      "pinnedRef": "20c9e88a5c007461a703f1c213572b073196113e",
+      "computedHash": "a9d80a07fcedb8298277356f8dcc2ea4f1bddfc8341075edee675f886ea57d5b"
     },
     "web-design-guidelines": {
       "source": "vercel-labs/web-interface-guidelines",
