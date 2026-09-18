@@ -30,7 +30,24 @@
     "stateError": "Erreur",
     "parameters": "Paramètres",
     "result": "Résultat",
-    "error": "Erreur"
+    "error": "Erreur",
+    "items_one": "{{count}} élément",
+    "items_other": "{{count}} éléments",
+    "calls_one": "{{count}} appel",
+    "calls_other": "{{count}} appels",
+    "call": "Appel {{n}}",
+    "details": "Détails",
+    "labels": {
+      "listItems": "Lecture des éléments",
+      "createItem": "Création d'un élément",
+      "updateItem": "Modification d'un élément",
+      "deleteItem": "Suppression d'un élément"
+    }
+  },
+  "sources": {
+    "approval": "Confirmation requise",
+    "done_one": "{{count}} source consultée",
+    "done_other": "{{count}} sources consultées"
   },
   "threads": {
     "history": "Historique des conversations",

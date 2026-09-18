@@ -27,6 +27,7 @@
     "init": "node scripts/init.mjs",
     "upgrade-template": "node scripts/upgrade-template.mjs",
     "release": "node scripts/release.mjs",
+    "test:unit": "node --import tsx --test \"tests/**/*.test.ts\"",
     "test:smoke": "node scripts/e2e-smoke.mjs",
     "test:cookies": "bash scripts/test-cookies.sh",
     "sync:skills:update": "node scripts/sync-skills.mjs --update"

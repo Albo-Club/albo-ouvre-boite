@@ -25,6 +25,7 @@ Prerequisites:
 | B1 | Typecheck     | `pnpm typecheck`         | Exit 0, no errors             |
 | B2 | Lint          | `pnpm lint`              | Exit 0, 0 warnings            |
 | B3 | Build         | `pnpm build`             | Bundle written to `.output/`  |
+| B3b | Unit tests   | `pnpm test:unit`         | All pass — includes `tests/toolLabels.test.ts`: every agent tool has a `chat:tool.labels.*` entry (fr + en) |
 | B4 | Smoke E2E     | `pnpm test:smoke`        | All scenarios pass            |
 | B5 | Prod cookies  | `pnpm test:cookies`      | `albo.session_token` has Secure+HttpOnly+SameSite=Lax+Max-Age≈604800 |
 | B6 | Skills intact | `pnpm sync:skills:verify` | `Vendored skills match skills-lock.json.` (exit 0) — offline, covers the `SKILL.md` files **and** their `references`, plus `.claude/skills/` symlinks with no lock entry (`~ <name>: .claude/skills link with no lock entry`, exit 2 — repair with `pnpm sync:skills`) |
@@ -210,9 +211,9 @@ Still logged in as Alice. Prepare a second browser for Bob.
 | --- | ------------------------------------------------------- | ----------------------------------------------------------------- |
 | C1  | Open `/app/acme`                                        | AI panel open by default in its rounded box (desktop right column); latest thread resumed, else empty state with suggestions |
 | C1b | Press ⌘J / Ctrl+J (or the header AI button), then reload | Panel toggles; state persists across reload (cookie `ai_panel_state`) |
-| C2  | Send a simple message ("ping")                          | Stream visible token by token; "Thinking…" before first token; no UI blocking |
+| C2  | Send a simple message ("ping")                          | Stream visible token by token; shimmering "Thinking…" line before the first token (no spinner); no UI blocking |
 | C2b | Ask for a formatted response ("bullet list + bold")     | Markdown rendered via streamdown (bullets, bold, inline code, tables) |
-| C3  | Ask the agent "list my items"                           | `listItems` runs (read, no approval), collapsible tool call, response lists Acme items |
+| C3  | Ask the agent "list my items"                           | A borderless steps block: header shimmers with the running tool ("Reading items…"), one step per tool with a magnifier, item count as description; once the answer ends the block folds to "1 source checked" (click to reopen, `Details` shows parameters + JSON). No raw `listItems` name anywhere |
 | C4  | "create an item titled Test"                            | `createItem` shows **Confirm / Reject** buttons; **Confirm** writes it and generation resumes; item visible in `/app/acme/items` |
 | C4b | Repeat, then click **Reject**                           | "Action rejected", nothing written; agent acknowledges            |
 | C5  | While a long answer streams, click **Stop**             | Generation aborts                                                 |
