@@ -10,6 +10,55 @@
 
 @custom-variant dark (&:is(.dark *));
 
+/* AI Elements `Shimmer` (src/components/ai-elements/shimmer.tsx) without
+   motion/react: a highlight in the page's background colour sweeps across
+   muted text, clipped to the glyphs. `--spread` (px) is set per instance
+   from the text length, as upstream does. */
+@layer components {
+  .ai-shimmer {
+    position: relative;
+    display: inline-block;
+    color: transparent;
+    -webkit-background-clip: text;
+    background-clip: text;
+    background-image:
+      linear-gradient(
+        90deg,
+        #0000 calc(50% - var(--spread, 40px)),
+        var(--color-background),
+        #0000 calc(50% + var(--spread, 40px))
+      ),
+      linear-gradient(
+        var(--color-muted-foreground),
+        var(--color-muted-foreground)
+      );
+    background-size:
+      250% 100%,
+      auto;
+    background-repeat: no-repeat, padding-box;
+    animation: ai-shimmer 2s linear infinite;
+  }
+  @keyframes ai-shimmer {
+    from {
+      background-position:
+        100% center,
+        0 0;
+    }
+    to {
+      background-position:
+        0% center,
+        0 0;
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .ai-shimmer {
+      animation: none;
+      background-image: none;
+      color: var(--color-muted-foreground);
+    }
+  }
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;

@@ -140,7 +140,7 @@ other developer-facing text. The only exceptions are user-facing copy in
 
 Before forking the template into a prod project, run through `TESTING.md`
 (levels 1 → 6, ~70 min). Level 1 is automated (`pnpm typecheck`,
-`pnpm lint`, `pnpm build`, `pnpm test:smoke`, `pnpm sync:skills:verify`,
+`pnpm lint`, `pnpm test:unit`, `pnpm build`, `pnpm test:smoke`, `pnpm sync:skills:verify`,
 `pnpm sync:skills:check`);
 the rest is manual — a sign-off checklist to validate auth, multi-tenant,
 invitations, items CRUD, uploads, account lifecycle, super-admin, AI chat,

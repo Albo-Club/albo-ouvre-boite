@@ -30,7 +30,24 @@
     "stateError": "Error",
     "parameters": "Parameters",
     "result": "Result",
-    "error": "Error"
+    "error": "Error",
+    "items_one": "{{count}} item",
+    "items_other": "{{count}} items",
+    "calls_one": "{{count}} call",
+    "calls_other": "{{count}} calls",
+    "call": "Call {{n}}",
+    "details": "Details",
+    "labels": {
+      "listItems": "Reading items",
+      "createItem": "Creating an item",
+      "updateItem": "Updating an item",
+      "deleteItem": "Deleting an item"
+    }
+  },
+  "sources": {
+    "approval": "Confirmation required",
+    "done_one": "{{count}} source checked",
+    "done_other": "{{count}} sources checked"
   },
   "threads": {
     "history": "Conversation history",

@@ -1423,6 +1423,23 @@ after any reinstall from the registry (`npx ai-elements@latest add <name>`):
   hand-edit `src/components/ui/*`), so we map it down.
 - `streamdown` plugins and the `tool.tsx` `CodeBlock` are trimmed — see the
   "Streamdown (AI panel)" section above.
+- `shimmer.tsx` drops `motion/react` (not shipped). Same two-layer background
+  recipe as upstream (a highlight in `--color-background` sweeping across
+  `--color-muted-foreground` text, clipped to the glyphs, `--spread` in px
+  computed per instance from the text length), animated by the `.ai-shimmer`
+  keyframes in `src/styles/app.css` instead, with a `prefers-reduced-motion`
+  fallback. Theme tokens only.
+- `chain-of-thought.tsx` drops `@radix-ui/react-use-controllable-state` (not
+  shipped): `useControllableState` is replaced by a local controlled /
+  uncontrolled `useState`. The `@repo/shadcn-ui` aliases point at
+  `~/components/ui`.
+
+Both are consumed by `src/components/ai/ToolGroup.tsx`, which groups the
+consecutive tool calls of an assistant message into one `ChainOfThought`
+block (one step per run of calls to the same tool, human labels from
+`chat:tool.labels.*`). `tests/toolLabels.test.ts` compares those label keys
+to the `export const <domain>Tools = {…}` blocks of `convex/agentTools*.ts`
+in both locales, so a tool added without its label fails `pnpm test:unit`.
 
 ## Tool approval (AI panel) — resuming the stream is mandatory
 

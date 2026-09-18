@@ -5,6 +5,10 @@
   "subtitle": "Les dernières améliorations de l'application.",
   "seeAll": "Voir toutes les nouveautés",
   "entries": {
+    "ai-activity": {
+      "title": "L'assistant montre ce qu'il fait",
+      "body": "Pendant qu'une réponse se construit, une ligne « Réflexion… » à reflet remplace l'ancien indicateur, puis les outils consultés s'affichent en étapes, une par une, avec un nom lisible. Une fois la réponse terminée, le fil se replie en « N sources consultées » : cliquez dessus pour revoir le détail."
+    },
     "signin-hardening": {
       "title": "Une connexion plus sûre",
       "body": "Nous avons mis à jour le composant qui gère la connexion et renforcé la façon dont les liens de connexion sont rattachés à votre compte. Rien à faire de votre côté : votre compte et vos sessions en cours ne changent pas."
