@@ -7,10 +7,9 @@ export default defineConfig([
   ...convexPlugin.configs.recommended,
   // `.agents/skills` holds upstream skill content vendored verbatim, including
   // illustrative .tsx examples that live outside any tsconfig project — linting
-  // them only produces parser errors. Kept in sync with `.prettierignore`.
+  // them only produces parser errors.
   globalIgnores([
     'convex/_generated',
-    'prettier.config.js',
     '.output',
     '.nitro',
     'dist',

@@ -402,6 +402,92 @@ interoperates.
   are still unpatched; word it as reassurance, not as a map.
 ```
 
+## Prompt — drop prettier
+
+`upgrade-template` will not carry this cleanly, and this one fails quietly in
+the worst direction: the change is a *deletion* spread across `package.json`
+(the most conflict-prone file there is), two deleted files and two edits inside
+`eslint.config.mjs`. Conflict resolution keeps what is already on disk, so a
+half-merge leaves prettier exactly where it was and nothing looks wrong.
+
+Unlike the other prompts here, this one can legitimately end in "do nothing":
+a derived project may have wired prettier up properly since forking. The
+diagnosis decides, not the instruction.
+
+```
+This project was forked from the albo-ouvre-boite template. The template
+shipped prettier in its scaffolding commit and never wired it to anything; it
+has now been removed there. Work out whether the same is true here, and remove
+it if so.
+
+Read the template's own removal first:
+
+  gh api repos/Albo-Club/albo-ouvre-boite/commits/bae7d5fa5f0076a7894404fabaadd3ab9cf62a8d
+
+## The defect
+
+prettier arrived with the scaffolding. `prettier.config.js` set semi, quotes
+and trailing commas but NOT printWidth, so prettier ran at its default 80
+columns against a codebase written well past it. It was never in CI, never in
+a git hook, never in lint-staged. Nobody had ever run it.
+
+That left `pnpm format` as a button whose only possible effect is to reformat
+the whole repo in one commit — burying a real change under thousands of
+cosmetic lines. An agent reading the script list is exactly who presses it.
+
+## Step 1 — diagnose BEFORE coding, and report what you find
+
+  pnpm exec prettier --check .            # how many files, and which types?
+  grep -rn "prettier\|format" .github/workflows/
+  ls -a | grep -E "husky|githooks"
+  node -e "const p=require('./package.json'); console.log(p.scripts.format, !!p['lint-staged'], p.scripts.prepare)"
+
+Report the file count and the callers before touching anything.
+
+## Step 2 — the decision that depends on THIS repo; do not guess it
+
+STOP and remove nothing if ANY of these is true:
+  - `prettier --check .` passes, or fails on only a handful of files
+  - a CI job, a git hook or lint-staged invokes it
+  - the config sets printWidth to something matching the code
+
+Any of those means this project adopted prettier for real. Say so and stop.
+
+Only when it fails wholesale AND nothing calls it is it dead weight here.
+
+## Step 3 — implement
+
+  - delete the `format` script and the `prettier` devDependency
+  - delete `prettier.config.js` and `.prettierignore`
+  - in `eslint.config.mjs`: drop the `prettier.config.js` entry from
+    globalIgnores, and the comment naming `.prettierignore` as the list to
+    keep in sync with — both are orphans once the files are gone
+  - regenerate the lockfile: `pnpm install --lockfile-only`
+
+## Step 4 — prove it, do not assert it
+
+  pnpm install --lockfile-only --frozen-lockfile   # what CI runs; must pass
+  node --check eslint.config.mjs
+  grep -rn "prettier" --include="*.json" --include="*.mjs" --include="*.md" . | grep -v node_modules | grep -v pnpm-lock
+
+The last grep must come back empty. The lockfile diff should be three lines
+(pnpm may also refresh `deprecated:` metadata on an unrelated package — that
+is normal and not a version bump).
+
+## Do NOT
+
+  - run `prettier --write .` to make the check pass. That IS the reformat this
+    change exists to prevent.
+  - worry that convex needs the config. convex depends on prettier and uses it
+    for `convex/_generated/`, but calls `prettier.format(contents, { parser })`
+    WITHOUT config resolution — the generated files are double-quoted and
+    semicoloned, the opposite of what the config asked for. Deleting the config
+    cannot change generated output, and prettier stays in the lockfile as
+    convex's dependency either way.
+  - hand-edit `pnpm-lock.yaml`. Regenerate it.
+  - add a changelog entry. This is tooling, and the gate is user-visible.
+```
+
 ## Writing the next one
 
 The prompt above is the shape to copy. What makes it work is not the file list —
