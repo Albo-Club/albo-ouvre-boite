@@ -422,7 +422,7 @@ it if so.
 
 Read the template's own removal first:
 
-  gh api repos/Albo-Club/albo-ouvre-boite/commits/bae7d5fa5f0076a7894404fabaadd3ab9cf62a8d
+  gh api repos/Albo-Club/albo-ouvre-boite/commits/158b18d
 
 ## The defect
 
