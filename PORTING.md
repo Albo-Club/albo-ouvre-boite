@@ -420,6 +420,10 @@ shipped prettier in its scaffolding commit and never wired it to anything; it
 has now been removed there. Work out whether the same is true here, and remove
 it if so.
 
+Read the template's own removal first:
+
+  gh api repos/Albo-Club/albo-ouvre-boite/commits/bae7d5fa5f0076a7894404fabaadd3ab9cf62a8d
+
 ## The defect
 
 prettier arrived with the scaffolding. `prettier.config.js` set semi, quotes
