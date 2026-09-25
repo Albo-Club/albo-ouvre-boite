@@ -5,7 +5,7 @@
   "type": "module",
   "packageManager": "pnpm@10.34.5+sha512.a4ee05f2f73658255bd6a89859c065a45c28a57daefae2c893a168ee2b73168c37b91e83e57ea67654ad03f03031746430e8bce38e362e042605fb8abc80192e",
   "engines": {
-    "node": ">=22",
+    "node": "24.x",
     "pnpm": "10.x"
   },
   "scripts": {
@@ -78,7 +78,7 @@
     "@convex-dev/eslint-plugin": "^2.0.0",
     "@tailwindcss/vite": "^4.3.0",
     "@tanstack/eslint-config": "^0.4.0",
-    "@types/node": "^25.9.1",
+    "@types/node": "^24.13.6",
     "@types/react": "^19.2.16",
     "@types/react-dom": "^19.2.3",
     "@typescript/native-preview": "7.0.0-dev.20260605.1",

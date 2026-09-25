@@ -23,7 +23,10 @@ sidebar wired in, transactional emails, rate-limiting, and CI/CD on day one.
 
 **Prerequisites**
 
-- **Node 22+** (LTS recommended) — enforced by `engines` in `package.json`
+- **Node 24** (Active LTS) — pinned to the major by `engines` in
+  `package.json`, which is also what Vercel deploys on. An open range there
+  would let Vercel drift onto a newer major without CI following — see
+  `KNOWN_ISSUES.md`.
 - **pnpm** — enable it once via Corepack (bundled with Node): `corepack enable`.
   Do **not** install pnpm globally: the version is pinned by `packageManager`
   in `package.json`, and Corepack fetches exactly that one. A different pnpm
