@@ -450,6 +450,38 @@ in one deliberate PR: bump `packageManager`, move `pnpm.overrides` →
 `allowBuilds: {esbuild: true, unrs-resolver: true}`, and confirm
 `pnpm install --frozen-lockfile` leaves the lockfile untouched.
 
+## An open `engines.node` range deploys on a major CI never tests
+
+`engines.node` was `">=22"` and `ci.yml` pinned `node-version: 22` in all three
+jobs. That reads like "we are a Node 22 project". We were not: Vercel resolves a
+`package.json` range to **the newest major it offers**, so `">=22"` (like
+`">=20.0.0"` in Vercel's own mapping table) deployed on **24.x** — its current
+default. Prod ran 24, CI and every dev machine ran 22, and nothing in the repo
+said so. A range that looks like a floor is a *ceiling-follower* on Vercel.
+
+This is the split-brain of the pnpm section above, one layer down, and it fails
+the same way: silently, until a runtime behaviour differs between the major you
+tested and the major you shipped.
+
+**Rule: pin the node major, in both places, and bump them together.**
+`engines.node` is `"24.x"` and `ci.yml` says `node-version: 24`. Never widen
+either to an open range "so it stays fresh" — fresh is exactly the failure mode.
+Note the asymmetry with pnpm, which is deliberate: `packageManager` is the
+single source of truth there and `ci.yml` must carry **no** `version:`, because
+`pnpm/action-setup` reads `package.json`. `actions/setup-node` does not read
+`engines`, so the node major genuinely has to be written twice — which is why
+this one needs a rule instead of a mechanism.
+
+`@types/node` belongs to the same bump. It was `^25.9.1`: types for the Node 25
+line, which nothing here runs and which went EOL 2026-06-01. Match it to the
+runtime major (`^24`), or `tsc` describes a Node that never executes.
+
+**Next bump**: Node 24 is Active LTS until 2026-10-20, then maintenance until
+2028-04-30 — no hurry. Node 26 becomes LTS on 2026-10-28, but Vercel offers only
+20 / 22 / 24, so the move waits on Vercel's table, not on nodejs.org. Sites to
+change: `engines.node`, the three `node-version:` in `ci.yml`, `@types/node`,
+`README.md` prerequisites, and the `engines` line in `PORTING.md` step 3.
+
 ## `node_modules` is not as big as `du` says
 
 `du -sh node_modules` reports ~617 MB. Deleting it frees **~25 MB**, and
