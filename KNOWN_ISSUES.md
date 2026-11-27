@@ -353,18 +353,34 @@ there** — see "pnpm 11 silently drops them" below. Renovate is configured to
 leave all four alone (`renovate.json`, rule "Pinned overrides"), so they only
 ever move by hand.
 
-### `@tanstack/react-router: 1.170.11` + `@tanstack/router-core: 1.171.9`
+### `@tanstack/react-router: 1.170.41` + `@tanstack/router-core: 1.171.34`
 
 Two router-core versions coexisting (one pulled by `react-router`, one by
 `start-client-core`) prevented `server.handlers` from being type-augmented
 on `createFileRoute`. Pinning both to compatible versions resolves it.
 
 **Unblock when**: TanStack publishes a release where `react-router` and
-`react-start` agree on a single `router-core` version.
+`react-start` agree on a single `router-core` version. **Met**: `react-start`
+1.168.60 asks for exactly these versions, so the pins can be lifted — do it
+deliberately, in its own PR, with the check below.
 
-### `@tanstack/react-start: 1.168.20`
+### `@tanstack/react-start: 1.168.60`
 
-Pinned in lockstep with the router pin above.
+Pinned in lockstep with the router pin above. 1.168.60 is the first release
+patched for CVE-2026-102989 (GHSA-qx66-fv34-fjm8, reflected XSS through a
+server-function URL), and **Vercel refuses to build anything older**: the
+deploy fails in under a second with "contains a known cross-site scripting
+vulnerability", before installing anything.
+
+**Move the family together, SSR integration included.**
+`@tanstack/react-router-with-query` stopped at 1.130 and calls
+`router.serverSsr.isDehydrated()`, which later routers removed: build and
+typecheck stay green, and every server render that dehydrates a query
+answers 500. Its successor, `@tanstack/react-router-ssr-query`
+(`setupRouterSsrQueryIntegration` in `src/router.tsx`), is versioned with the
+router — bump it in the same commit, then run `pnpm test:smoke` against
+`pnpm dev` with a real Convex backend (without one every query fails, and
+the smoke run proves nothing).
 
 ### `better-call: 1.3.4` — LIFTED 2026-08-24, kept as the cautionary tale
 
