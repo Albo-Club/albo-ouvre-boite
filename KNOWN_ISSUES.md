@@ -353,18 +353,34 @@ there** — see "pnpm 11 silently drops them" below. Renovate is configured to
 leave all four alone (`renovate.json`, rule "Pinned overrides"), so they only
 ever move by hand.
 
-### `@tanstack/react-router: 1.170.11` + `@tanstack/router-core: 1.171.9`
+### `@tanstack/react-router: 1.170.41` + `@tanstack/router-core: 1.171.34`
 
 Two router-core versions coexisting (one pulled by `react-router`, one by
 `start-client-core`) prevented `server.handlers` from being type-augmented
 on `createFileRoute`. Pinning both to compatible versions resolves it.
 
 **Unblock when**: TanStack publishes a release where `react-router` and
-`react-start` agree on a single `router-core` version.
+`react-start` agree on a single `router-core` version. **Met**: `react-start`
+1.168.60 asks for exactly these versions, so the pins can be lifted — do it
+deliberately, in its own PR, with the check below.
 
-### `@tanstack/react-start: 1.168.20`
+### `@tanstack/react-start: 1.168.60`
 
-Pinned in lockstep with the router pin above.
+Pinned in lockstep with the router pin above. 1.168.60 is the first release
+patched for CVE-2026-102989 (GHSA-qx66-fv34-fjm8, reflected XSS through a
+server-function URL), and **Vercel refuses to build anything older**: the
+deploy fails in under a second with "contains a known cross-site scripting
+vulnerability", before installing anything.
+
+**Move the family together, SSR integration included.**
+`@tanstack/react-router-with-query` stopped at 1.130 and calls
+`router.serverSsr.isDehydrated()`, which later routers removed: build and
+typecheck stay green, and every server render that dehydrates a query
+answers 500. Its successor, `@tanstack/react-router-ssr-query`
+(`setupRouterSsrQueryIntegration` in `src/router.tsx`), is versioned with the
+router — bump it in the same commit, then run `pnpm test:smoke` against
+`pnpm dev` with a real Convex backend (without one every query fails, and
+the smoke run proves nothing).
 
 ### `better-call: 1.3.4` — LIFTED 2026-08-24, kept as the cautionary tale
 
@@ -681,97 +697,79 @@ its job, and patching the lock to match the edit would be the one thing
 and mirrors reproduce warts. Report it upstream, or override the guidance here
 in `CLAUDE.md` where our own words outrank a vendored file.
 
-## Better Auth is boxed into `>=1.6.22 <1.7.0`
+## Better Auth 1.7 on the Convex adapter 0.13
 
 Two lines in `package.json` look over-specified and are not. Don't "tidy"
 either operator:
 
 ```json
-"@convex-dev/better-auth": "0.12.2",   // exact — NOT a range
-"better-auth": "~1.6.30",              // tilde — NOT a caret
+"@convex-dev/better-auth": "0.13.1",   // exact — NOT a range
+"better-auth": "~1.7.28",              // tilde — NOT a caret
 ```
 
-### The floor: GHSA-qq9h-g4jm-xgf3
+### The floor: four advisories, one of them critical
 
-High severity, *"Account takeover via pre-account hijacking on magic-link and
-email-OTP sign-in"*. Vulnerable `>= 1.1.3, < 1.6.22`; fixed in **1.6.22**.
-`convex/auth.ts` loads `magicLink()`, so this repo sits squarely in the blast
-radius — and because it is a template, every project forked from it is born
-with whatever the lockfile carries. That is why this floor is a lockfile
-concern, not just a range concern: check `pnpm-lock.yaml`, not only
-`package.json`. (The advisory lists a second range, `>=1.7.0-beta.0
-<1.7.0-beta.10`; irrelevant here, the ceiling below excludes all of 1.7.)
+The template sat on 1.6.30 until 2026-11-27, and `pnpm audit` listed four
+better-auth advisories against it, patched only in **1.7.x**:
+GHSA-965c-763c-88jm (critical — "OAuth state can be used as a Magic Link",
+and this repo loads both `magicLink()` and Google OAuth), GHSA-r4xp-prcw-77qf (high, OAuth Proxy),
+GHSA-q84f-53jg-9ppm (high, device login) and GHSA-44jh-23m7-hpcf (low). All are
+fixed by 1.7.7; the older GHSA-qq9h-g4jm-xgf3 (magic-link pre-account
+hijacking) by 1.6.22. No 1.6.x patch carries the 1.7.7 fixes, so there is no
+staying on 1.6. Because this repo is a template, every fork is born with what
+the lockfile carries: check `pnpm-lock.yaml`, not only `package.json`, and
+re-run `pnpm audit --prod` after any bump here.
 
-### The ceiling: the adapter's peer, plus a dropped export
+### The ceiling: the adapter's peer
 
-Every published adapter version — 0.12.2 through 0.12.5 — declares
-`better-auth: ">=1.6.9 <1.7.0"` (0.12.3+ raise the floor to 1.6.11, never the
-ceiling). **No adapter release supports better-auth 1.7 yet.** Hence `~1.6.30`
-— patches inside 1.6.x, never 1.7.x. `^1.6.30` would resolve straight to
-1.7.1, the current `latest` on npm.
+Adapter 0.13.1 declares `better-auth: ">=1.7.25 <1.8.0"`. Hence `~1.7.28` —
+patches inside 1.7, never 1.8; `^1.7.28` would resolve to 1.8 as soon as it is
+`latest`. On a `0.x`, `^0.13.1` and `~0.13.1` both read `>=0.13.1 <0.14.0`, so
+only the bare version stops the adapter itself from moving.
 
-The ceiling is not merely a declared peer, it bites. Measured on 2026-08-24
-with 1.7.1 + adapter 0.12.2: **`tsc` passes clean, then `vite build` dies**
+The adapter drags two floors along with it, both in the same bump:
 
-```
-"./plugins/oidc-provider" is not exported ... from better-auth
-```
+- **`convex` ≥ 1.49**: its `convex-helpers` peers on `convex@^1.49.0`.
+- **`@convex-dev/resend` ≥ 0.2.10**: convex 1.51 gives `runMutation` an
+  options argument, and resend 0.2.4's `RunMutationCtx` no longer accepts the
+  ctx `requireRunMutationCtx` returns — TS2345 on every `resend.sendEmail` in
+  `convex/auth.ts`.
 
-The import is the **adapter's**, not ours — grepping this repo for it finds
-nothing, and there is no local workaround. Note which gate caught it: type
-checking was green on a build that cannot run. When you next evaluate a bump
-here, `tsc` alone is not evidence.
+### What 0.13 changed under us
 
-### Why the adapter is pinned exact, and `~` wouldn't help
+- **`session.cookieCache` is off.** The Convex plugin cannot validate the
+  adapter's dates, so it disables it and logs a warning on every request if
+  the option is set. It is gone from `createAuth`; don't put it back.
+- It refuses an adapter `sortBy` on an unindexed field, and renamed the Convex
+  plugin's server endpoints (`auth.api.getConvexToken`). Nothing here calls
+  either directly; the react-start helpers are unchanged.
+- `registerRoutes` stays eager here. Albo-Club/interw moved to
+  `registerRoutesLazy` because the OAuth Provider plugin logs a failed seed on
+  every HTTP action with the eager one (get-convex/better-auth#492); this
+  template loads no such plugin.
 
-**On a `0.x`, `^0.12.2` and `~0.12.2` mean the same thing** — both read
-`>=0.12.2 <0.13.0`, so neither blocks 0.12.3+. Only the bare `0.12.2` holds.
+### `tsc` is not evidence
 
-It has to hold, because the adapter breaks against newer Better Auth. From
-better-auth **1.6.18**, `useSession().data` collapses to `never` and you get a
-**TS2322 on the `authClient` prop of `ConvexBetterAuthProvider`**. Upstream
-cause: 1.6.18+ gives its return types a *name* (`ReactAuthClient`) where they
-used to be anonymous structural types, and the adapter's `AuthClient` — built
-on `Omit<BetterAuthClientPlugin, …>` — no longer unifies with it.
-
-### The bisect (adapter × better-auth)
-
-| adapter    | better-auth | result                                                                                                             |
-| ---------- | ----------- | ------------------------------------------------------------------------------------------------------------------ |
-| 0.12.2     | 1.6.16      | tsc OK, tests OK                                                                                                     |
-| **0.12.2** | **1.6.30**  | **tsc OK, tests OK — the way out, and what we ship**                                                                 |
-| 0.12.3     | 1.6.30      | tsc OK, but slows `convex-test` down: 2–4 tests out of 120 blow the 5 s timeout, a different set each run. Rejected. |
-| 0.12.4     | 1.6.30      | TS2322                                                                                                               |
-| 0.12.5     | 1.6.30      | TS2322                                                                                                               |
-
-The `tests OK` / `convex-test` column comes from **albo-os**, a downstream
-project that has a `convex-test` suite. This template ships none — don't go
-looking for those 120 tests here. Locally the gates are `pnpm lint`,
-`pnpm build` and `pnpm test:smoke`.
-
-### `better-call` is no longer overridden
-
-Better Auth pins `better-call` *exactly* (1.4.0 for 1.6.30), and this repo used
-to force it back to 1.3.4. That override was **removed on 2026-08-24** — see
-§ "pnpm.overrides" for why it existed and what it taught. `better-call` now
-follows Better Auth with nothing in between, which is one less thing to reason
-about when a bump goes wrong.
+On 2026-08-24, 1.7.1 with adapter 0.12.2 passed `tsc` clean, then `vite build`
+died on an export the adapter imported and better-auth had dropped. For any
+bump here run `pnpm lint`, `pnpm build` and `pnpm test:smoke` (needs
+`pnpm dev`), plus `pnpm audit --prod`. A derived project with a `convex-test`
+suite should also time it: adapter 0.12.3 once made 2–4 tests of 120 blow the
+5 s timeout, a different set each run. Albo-Club/interw runs this exact pair
+(0.13.1 + 1.7.27) in production with 2468 `convex-test` tests in 39 s.
 
 ### Renovate guards the window, asymmetrically
 
 In `renovate.json`: `@convex-dev/better-auth` is disabled outright (any bump
-breaks it), whereas `better-auth` blocks only `minor`/`major` — **1.6.x patches
-stay enabled on purpose**. That channel is how the next security fix arrives,
-and closing it is exactly how this repo ended up shipping a vulnerable 1.6.14.
+can break it), whereas `better-auth` blocks only `minor`/`major` — **1.7.x
+patches stay enabled on purpose**. That channel is how the next security fix
+arrives, and closing it is how this repo once shipped a vulnerable 1.6.14.
 Don't "simplify" the two rules into one disabled rule.
 
-### Unblock condition
+### What to watch
 
-**[get-convex/better-auth#420](https://github.com/get-convex/better-auth/issues/420)**
-(open). When it lands, adapter 0.12.4+ should type-check against better-auth
-1.6.18+. Only then relax the exact pin — and re-run the bisect above rather
-than trusting the table, since the `convex-test` slowdown on 0.12.3 was a
-separate defect from the TS2322.
+A better-auth 1.8 minimum in a new adapter release is a checked bump of
+everything above, not a Renovate merge.
 
 ## Zod v4 required for Better Auth 1.6.10
 
@@ -780,8 +778,8 @@ which is **v4-only**. The install warning is the only signal — runtime
 errors otherwise look like opaque schema failures.
 
 We ship `zod ^4.4.3`. Downgrading `better-auth` to a zod-v3-era release is
-**not** an option any more: GHSA-qq9h-g4jm-xgf3 puts a hard floor at 1.6.22 —
-see § "Better Auth is boxed into `>=1.6.22 <1.7.0`".
+**not** an option any more: the advisories put a hard floor at 1.7.7 —
+see § "Better Auth 1.7 on the Convex adapter 0.13".
 
 ## Resend test-mode trap
 
@@ -1109,7 +1107,7 @@ AND again on the client during hydration. If `getRouter()` creates
 `new ConvexQueryClient(...)` on every call, each call opens a fresh
 WebSocket. The new socket has no JWT yet, so `useConvexAuth()` reports
 `{ isLoading: false, isAuthenticated: false }` for the round-trip while
-BA's cookieCache already knows the user is signed in. Any guard that
+BA's `useSession()` already knows the user is signed in. Any guard that
 redirects on `!isAuthenticated` will fire during that gap.
 
 ### Rule

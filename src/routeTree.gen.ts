@@ -9,46 +9,31 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as ResetPasswordRouteImport } from './routes/reset-password'
-import { Route as RegisterRouteImport } from './routes/register'
-import { Route as LoginRouteImport } from './routes/login'
-import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
-import { Route as AppRouteRouteImport } from './routes/app/route'
 import { Route as IndexRouteImport } from './routes/index'
-import { Route as AppIndexRouteImport } from './routes/app/index'
-import { Route as AppOnboardingRouteImport } from './routes/app/onboarding'
-import { Route as AppMeRouteImport } from './routes/app/me'
-import { Route as AppAdminRouteImport } from './routes/app/admin'
+import { Route as AppRouteRouteImport } from './routes/app/route'
+import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
+import { Route as LoginRouteImport } from './routes/login'
+import { Route as RegisterRouteImport } from './routes/register'
+import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as AcceptInviteTokenRouteImport } from './routes/accept-invite.$token'
+import { Route as AppIndexRouteImport } from './routes/app/index'
 import { Route as AppOrgSlugRouteRouteImport } from './routes/app/$orgSlug/route'
-import { Route as AppOrgSlugIndexRouteImport } from './routes/app/$orgSlug/index'
-import { Route as AppOrgSlugItemsRouteImport } from './routes/app/$orgSlug/items'
-import { Route as AppOrgSlugChangelogRouteImport } from './routes/app/$orgSlug/changelog'
+import { Route as AppAdminRouteImport } from './routes/app/admin'
+import { Route as AppMeRouteImport } from './routes/app/me'
+import { Route as AppOnboardingRouteImport } from './routes/app/onboarding'
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
+import { Route as AppOrgSlugIndexRouteImport } from './routes/app/$orgSlug/index'
+import { Route as AppOrgSlugChangelogRouteImport } from './routes/app/$orgSlug/changelog'
+import { Route as AppOrgSlugItemsRouteImport } from './routes/app/$orgSlug/items'
 import { Route as AppOrgSlugSettingsRouteRouteImport } from './routes/app/$orgSlug/settings/route'
 import { Route as AppOrgSlugSettingsIndexRouteImport } from './routes/app/$orgSlug/settings/index'
-import { Route as AppOrgSlugSettingsMembersRouteImport } from './routes/app/$orgSlug/settings/members'
-import { Route as AppOrgSlugSettingsInvitationsRouteImport } from './routes/app/$orgSlug/settings/invitations'
 import { Route as AppOrgSlugSettingsGeneralRouteImport } from './routes/app/$orgSlug/settings/general'
+import { Route as AppOrgSlugSettingsInvitationsRouteImport } from './routes/app/$orgSlug/settings/invitations'
+import { Route as AppOrgSlugSettingsMembersRouteImport } from './routes/app/$orgSlug/settings/members'
 
-const ResetPasswordRoute = ResetPasswordRouteImport.update({
-  id: '/reset-password',
-  path: '/reset-password',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const RegisterRoute = RegisterRouteImport.update({
-  id: '/register',
-  path: '/register',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const LoginRoute = LoginRouteImport.update({
-  id: '/login',
-  path: '/login',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ForgotPasswordRoute = ForgotPasswordRouteImport.update({
-  id: '/forgot-password',
-  path: '/forgot-password',
+const IndexRoute = IndexRouteImport.update({
+  id: '/',
+  path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AppRouteRoute = AppRouteRouteImport.update({
@@ -56,9 +41,29 @@ const AppRouteRoute = AppRouteRouteImport.update({
   path: '/app',
   getParentRoute: () => rootRouteImport,
 } as any)
-const IndexRoute = IndexRouteImport.update({
-  id: '/',
-  path: '/',
+const ForgotPasswordRoute = ForgotPasswordRouteImport.update({
+  id: '/forgot-password',
+  path: '/forgot-password',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LoginRoute = LoginRouteImport.update({
+  id: '/login',
+  path: '/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RegisterRoute = RegisterRouteImport.update({
+  id: '/register',
+  path: '/register',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ResetPasswordRoute = ResetPasswordRouteImport.update({
+  id: '/reset-password',
+  path: '/reset-password',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AcceptInviteTokenRoute = AcceptInviteTokenRouteImport.update({
+  id: '/accept-invite/$token',
+  path: '/accept-invite/$token',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AppIndexRoute = AppIndexRouteImport.update({
@@ -66,14 +71,9 @@ const AppIndexRoute = AppIndexRouteImport.update({
   path: '/',
   getParentRoute: () => AppRouteRoute,
 } as any)
-const AppOnboardingRoute = AppOnboardingRouteImport.update({
-  id: '/onboarding',
-  path: '/onboarding',
-  getParentRoute: () => AppRouteRoute,
-} as any)
-const AppMeRoute = AppMeRouteImport.update({
-  id: '/me',
-  path: '/me',
+const AppOrgSlugRouteRoute = AppOrgSlugRouteRouteImport.update({
+  id: '/$orgSlug',
+  path: '/$orgSlug',
   getParentRoute: () => AppRouteRoute,
 } as any)
 const AppAdminRoute = AppAdminRouteImport.update({
@@ -81,24 +81,24 @@ const AppAdminRoute = AppAdminRouteImport.update({
   path: '/admin',
   getParentRoute: () => AppRouteRoute,
 } as any)
-const AcceptInviteTokenRoute = AcceptInviteTokenRouteImport.update({
-  id: '/accept-invite/$token',
-  path: '/accept-invite/$token',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AppOrgSlugRouteRoute = AppOrgSlugRouteRouteImport.update({
-  id: '/$orgSlug',
-  path: '/$orgSlug',
+const AppMeRoute = AppMeRouteImport.update({
+  id: '/me',
+  path: '/me',
   getParentRoute: () => AppRouteRoute,
+} as any)
+const AppOnboardingRoute = AppOnboardingRouteImport.update({
+  id: '/onboarding',
+  path: '/onboarding',
+  getParentRoute: () => AppRouteRoute,
+} as any)
+const ApiAuthSplatRoute = ApiAuthSplatRouteImport.update({
+  id: '/api/auth/$',
+  path: '/api/auth/$',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const AppOrgSlugIndexRoute = AppOrgSlugIndexRouteImport.update({
   id: '/',
   path: '/',
-  getParentRoute: () => AppOrgSlugRouteRoute,
-} as any)
-const AppOrgSlugItemsRoute = AppOrgSlugItemsRouteImport.update({
-  id: '/items',
-  path: '/items',
   getParentRoute: () => AppOrgSlugRouteRoute,
 } as any)
 const AppOrgSlugChangelogRoute = AppOrgSlugChangelogRouteImport.update({
@@ -106,10 +106,10 @@ const AppOrgSlugChangelogRoute = AppOrgSlugChangelogRouteImport.update({
   path: '/changelog',
   getParentRoute: () => AppOrgSlugRouteRoute,
 } as any)
-const ApiAuthSplatRoute = ApiAuthSplatRouteImport.update({
-  id: '/api/auth/$',
-  path: '/api/auth/$',
-  getParentRoute: () => rootRouteImport,
+const AppOrgSlugItemsRoute = AppOrgSlugItemsRouteImport.update({
+  id: '/items',
+  path: '/items',
+  getParentRoute: () => AppOrgSlugRouteRoute,
 } as any)
 const AppOrgSlugSettingsRouteRoute = AppOrgSlugSettingsRouteRouteImport.update({
   id: '/settings',
@@ -121,10 +121,10 @@ const AppOrgSlugSettingsIndexRoute = AppOrgSlugSettingsIndexRouteImport.update({
   path: '/',
   getParentRoute: () => AppOrgSlugSettingsRouteRoute,
 } as any)
-const AppOrgSlugSettingsMembersRoute =
-  AppOrgSlugSettingsMembersRouteImport.update({
-    id: '/members',
-    path: '/members',
+const AppOrgSlugSettingsGeneralRoute =
+  AppOrgSlugSettingsGeneralRouteImport.update({
+    id: '/general',
+    path: '/general',
     getParentRoute: () => AppOrgSlugSettingsRouteRoute,
   } as any)
 const AppOrgSlugSettingsInvitationsRoute =
@@ -133,10 +133,10 @@ const AppOrgSlugSettingsInvitationsRoute =
     path: '/invitations',
     getParentRoute: () => AppOrgSlugSettingsRouteRoute,
   } as any)
-const AppOrgSlugSettingsGeneralRoute =
-  AppOrgSlugSettingsGeneralRouteImport.update({
-    id: '/general',
-    path: '/general',
+const AppOrgSlugSettingsMembersRoute =
+  AppOrgSlugSettingsMembersRouteImport.update({
+    id: '/members',
+    path: '/members',
     getParentRoute: () => AppOrgSlugSettingsRouteRoute,
   } as any)
 
@@ -289,32 +289,11 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/reset-password': {
-      id: '/reset-password'
-      path: '/reset-password'
-      fullPath: '/reset-password'
-      preLoaderRoute: typeof ResetPasswordRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/register': {
-      id: '/register'
-      path: '/register'
-      fullPath: '/register'
-      preLoaderRoute: typeof RegisterRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/login': {
-      id: '/login'
-      path: '/login'
-      fullPath: '/login'
-      preLoaderRoute: typeof LoginRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/forgot-password': {
-      id: '/forgot-password'
-      path: '/forgot-password'
-      fullPath: '/forgot-password'
-      preLoaderRoute: typeof ForgotPasswordRouteImport
+    '/': {
+      id: '/'
+      path: '/'
+      fullPath: '/'
+      preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/app': {
@@ -324,11 +303,39 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppRouteRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/': {
-      id: '/'
-      path: '/'
-      fullPath: '/'
-      preLoaderRoute: typeof IndexRouteImport
+    '/forgot-password': {
+      id: '/forgot-password'
+      path: '/forgot-password'
+      fullPath: '/forgot-password'
+      preLoaderRoute: typeof ForgotPasswordRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/login': {
+      id: '/login'
+      path: '/login'
+      fullPath: '/login'
+      preLoaderRoute: typeof LoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/register': {
+      id: '/register'
+      path: '/register'
+      fullPath: '/register'
+      preLoaderRoute: typeof RegisterRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/reset-password': {
+      id: '/reset-password'
+      path: '/reset-password'
+      fullPath: '/reset-password'
+      preLoaderRoute: typeof ResetPasswordRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/accept-invite/$token': {
+      id: '/accept-invite/$token'
+      path: '/accept-invite/$token'
+      fullPath: '/accept-invite/$token'
+      preLoaderRoute: typeof AcceptInviteTokenRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/app/': {
@@ -338,18 +345,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppIndexRouteImport
       parentRoute: typeof AppRouteRoute
     }
-    '/app/onboarding': {
-      id: '/app/onboarding'
-      path: '/onboarding'
-      fullPath: '/app/onboarding'
-      preLoaderRoute: typeof AppOnboardingRouteImport
-      parentRoute: typeof AppRouteRoute
-    }
-    '/app/me': {
-      id: '/app/me'
-      path: '/me'
-      fullPath: '/app/me'
-      preLoaderRoute: typeof AppMeRouteImport
+    '/app/$orgSlug': {
+      id: '/app/$orgSlug'
+      path: '/$orgSlug'
+      fullPath: '/app/$orgSlug'
+      preLoaderRoute: typeof AppOrgSlugRouteRouteImport
       parentRoute: typeof AppRouteRoute
     }
     '/app/admin': {
@@ -359,32 +359,32 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppAdminRouteImport
       parentRoute: typeof AppRouteRoute
     }
-    '/accept-invite/$token': {
-      id: '/accept-invite/$token'
-      path: '/accept-invite/$token'
-      fullPath: '/accept-invite/$token'
-      preLoaderRoute: typeof AcceptInviteTokenRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/app/$orgSlug': {
-      id: '/app/$orgSlug'
-      path: '/$orgSlug'
-      fullPath: '/app/$orgSlug'
-      preLoaderRoute: typeof AppOrgSlugRouteRouteImport
+    '/app/me': {
+      id: '/app/me'
+      path: '/me'
+      fullPath: '/app/me'
+      preLoaderRoute: typeof AppMeRouteImport
       parentRoute: typeof AppRouteRoute
+    }
+    '/app/onboarding': {
+      id: '/app/onboarding'
+      path: '/onboarding'
+      fullPath: '/app/onboarding'
+      preLoaderRoute: typeof AppOnboardingRouteImport
+      parentRoute: typeof AppRouteRoute
+    }
+    '/api/auth/$': {
+      id: '/api/auth/$'
+      path: '/api/auth/$'
+      fullPath: '/api/auth/$'
+      preLoaderRoute: typeof ApiAuthSplatRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/app/$orgSlug/': {
       id: '/app/$orgSlug/'
       path: '/'
       fullPath: '/app/$orgSlug/'
       preLoaderRoute: typeof AppOrgSlugIndexRouteImport
-      parentRoute: typeof AppOrgSlugRouteRoute
-    }
-    '/app/$orgSlug/items': {
-      id: '/app/$orgSlug/items'
-      path: '/items'
-      fullPath: '/app/$orgSlug/items'
-      preLoaderRoute: typeof AppOrgSlugItemsRouteImport
       parentRoute: typeof AppOrgSlugRouteRoute
     }
     '/app/$orgSlug/changelog': {
@@ -394,12 +394,12 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppOrgSlugChangelogRouteImport
       parentRoute: typeof AppOrgSlugRouteRoute
     }
-    '/api/auth/$': {
-      id: '/api/auth/$'
-      path: '/api/auth/$'
-      fullPath: '/api/auth/$'
-      preLoaderRoute: typeof ApiAuthSplatRouteImport
-      parentRoute: typeof rootRouteImport
+    '/app/$orgSlug/items': {
+      id: '/app/$orgSlug/items'
+      path: '/items'
+      fullPath: '/app/$orgSlug/items'
+      preLoaderRoute: typeof AppOrgSlugItemsRouteImport
+      parentRoute: typeof AppOrgSlugRouteRoute
     }
     '/app/$orgSlug/settings': {
       id: '/app/$orgSlug/settings'
@@ -415,11 +415,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppOrgSlugSettingsIndexRouteImport
       parentRoute: typeof AppOrgSlugSettingsRouteRoute
     }
-    '/app/$orgSlug/settings/members': {
-      id: '/app/$orgSlug/settings/members'
-      path: '/members'
-      fullPath: '/app/$orgSlug/settings/members'
-      preLoaderRoute: typeof AppOrgSlugSettingsMembersRouteImport
+    '/app/$orgSlug/settings/general': {
+      id: '/app/$orgSlug/settings/general'
+      path: '/general'
+      fullPath: '/app/$orgSlug/settings/general'
+      preLoaderRoute: typeof AppOrgSlugSettingsGeneralRouteImport
       parentRoute: typeof AppOrgSlugSettingsRouteRoute
     }
     '/app/$orgSlug/settings/invitations': {
@@ -429,11 +429,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppOrgSlugSettingsInvitationsRouteImport
       parentRoute: typeof AppOrgSlugSettingsRouteRoute
     }
-    '/app/$orgSlug/settings/general': {
-      id: '/app/$orgSlug/settings/general'
-      path: '/general'
-      fullPath: '/app/$orgSlug/settings/general'
-      preLoaderRoute: typeof AppOrgSlugSettingsGeneralRouteImport
+    '/app/$orgSlug/settings/members': {
+      id: '/app/$orgSlug/settings/members'
+      path: '/members'
+      fullPath: '/app/$orgSlug/settings/members'
+      preLoaderRoute: typeof AppOrgSlugSettingsMembersRouteImport
       parentRoute: typeof AppOrgSlugSettingsRouteRoute
     }
   }

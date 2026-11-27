@@ -12,8 +12,8 @@ import { authClient } from '~/lib/auth-client'
 // like (a) causes the auth guard to redirect, then snap back once Convex
 // catches up.
 //
-// Better Auth's `useSession()` reads from the BA cookieCache (~5min TTL)
-// and resolves almost instantly. If BA reports a session, we know the user
+// Better Auth's `useSession()` is a single `get-session` round trip and
+// resolves well before Convex has its JWT. If BA reports a session, we know the user
 // is authenticated even if Convex is still catching up.
 //
 // Use this hook in any route guard instead of consuming `useConvexAuth()`

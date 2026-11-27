@@ -33,7 +33,7 @@ export function RouterErrorFallback({ error }: ErrorComponentProps) {
         <CardContent className="flex flex-col gap-4">
           {import.meta.env.DEV && (
             <pre className="bg-muted overflow-auto rounded-md p-3 text-xs">
-              {error.message}
+              {error instanceof Error ? error.message : String(error)}
             </pre>
           )}
           <div className="flex gap-2">

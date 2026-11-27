@@ -1,6 +1,6 @@
 import { createRouter } from '@tanstack/react-router'
 import { QueryClient } from '@tanstack/react-query'
-import { routerWithQueryClient } from '@tanstack/react-router-with-query'
+import { setupRouterSsrQueryIntegration } from '@tanstack/react-router-ssr-query'
 import { ConvexQueryClient } from '@convex-dev/react-query'
 import { ConvexBetterAuthProvider } from '@convex-dev/better-auth/react'
 import { routeTree } from './routeTree.gen'
@@ -61,26 +61,24 @@ export function getRouter() {
   }
   const { convexQueryClient, queryClient } = getOrCreateClients(CONVEX_URL)
 
-  const router = routerWithQueryClient(
-    createRouter({
-      routeTree,
-      defaultPreload: 'intent',
-      context: { queryClient },
-      scrollRestoration: true,
-      defaultPreloadStaleTime: 0, // Let React Query handle all caching
-      defaultErrorComponent: RouterErrorFallback,
-      defaultNotFoundComponent: RouterNotFound,
-      Wrap: ({ children }) => (
-        <ConvexBetterAuthProvider
-          client={convexQueryClient.convexClient}
-          authClient={authClient}
-        >
-          {children}
-        </ConvexBetterAuthProvider>
-      ),
-    }),
-    queryClient,
-  )
+  const router = createRouter({
+    routeTree,
+    defaultPreload: 'intent',
+    context: { queryClient },
+    scrollRestoration: true,
+    defaultPreloadStaleTime: 0, // Let React Query handle all caching
+    defaultErrorComponent: RouterErrorFallback,
+    defaultNotFoundComponent: RouterNotFound,
+    Wrap: ({ children }) => (
+      <ConvexBetterAuthProvider
+        client={convexQueryClient.convexClient}
+        authClient={authClient}
+      >
+        {children}
+      </ConvexBetterAuthProvider>
+    ),
+  })
+  setupRouterSsrQueryIntegration({ router, queryClient })
 
   return router
 }

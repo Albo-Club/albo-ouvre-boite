@@ -94,7 +94,8 @@ export const createAuth = (ctx: GenericCtx<DataModel>) =>
     session: {
       expiresIn: 60 * 60 * 24 * 7, // 7 days
       updateAge: 60 * 60 * 24, // refresh once a day
-      cookieCache: { enabled: true, maxAge: 60 * 5 }, // 5 min
+      // No `cookieCache`: adapter 0.13+ turns it off (it cannot validate the
+      // adapter's dates) and warns on every request if it is set.
       // `freshAge` is how recently a user must have authenticated for
       // sensitive ops (changeEmail, deleteUser, change-password). BA enforces
       // this when an endpoint asks for a fresh session.
