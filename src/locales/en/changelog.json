@@ -5,6 +5,10 @@
   "subtitle": "The latest improvements to the app.",
   "seeAll": "See all updates",
   "entries": {
+    "signin-update": {
+      "title": "A stronger sign-in",
+      "body": "We moved the sign-in system to its latest version, which closes issues found since our last update. Nothing to do on your side — your account and password are unchanged."
+    },
     "ai-activity": {
       "title": "The assistant shows what it is doing",
       "body": "While an answer is being built, a shimmering “Thinking…” line replaces the old indicator, then the tools it consults appear as steps, one by one, under a readable name. Once the answer ends, the trail folds into “N sources checked”: click it to review the details."

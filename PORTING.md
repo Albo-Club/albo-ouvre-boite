@@ -283,121 +283,86 @@ the pin is decorative.
   green. That hides the drift instead of fixing it.
 ```
 
-## Prompt — port the Better Auth security bump (GHSA-qq9h-g4jm-xgf3)
+## Prompt — port the Better Auth 1.7 security bump (GHSA-965c-763c-88jm)
 
-This one is **urgent and unusual**: every project forked from the template
-before 2026-08-24 is running a `better-auth` with a *high*-severity account
-takeover advisory, and `upgrade-template` will drop it right into the most
-conflict-prone file there is. A derived project that resolves the
-`package.json` conflict "its own way" stays vulnerable and gets no warning —
-`tsc`, `lint` and `build` are all green either way. Send this before the
-routine catch-up, not with it.
+This one is **urgent**: every project forked from the template before
+2026-11-27 runs a `better-auth` 1.6.x with a *critical* sign-in-as-another-user
+advisory, and no 1.6 patch fixes it. It supersedes the earlier 1.6.22 prompt —
+a project still below 1.6.22 goes straight to 1.7. `upgrade-template` drops it
+into `package.json`, the most conflict-prone file there is, and a conflict
+resolved "its own way" stays vulnerable with `tsc`, `lint` and `build` all
+green. Send this before the routine catch-up, not with it.
 
 ```text
-Port the Better Auth security bump from the albo-ouvre-boite template into this
-repo. It shipped upstream in `Albo-Club/albo-ouvre-boite` (public) at commit
-00278e7 (PR #61).
+Port the Better Auth 1.7 security bump from the albo-ouvre-boite template into
+this repo. Find the upstream commit in `Albo-Club/albo-ouvre-boite` on main:
 
-    gh api repos/Albo-Club/albo-ouvre-boite/commits/00278e7 \
-      --jq '.files[] | "\(.filename)"'
+    gh api 'repos/Albo-Club/albo-ouvre-boite/commits?path=package.json&per_page=20' \
+      --jq '.[] | "\(.sha[0:7]) \(.commit.message | split("\n")[0])"' | grep -i 'better auth 1.7'
+
+Read KNOWN_ISSUES.md § "Better Auth 1.7 on the Convex adapter 0.13" there
+first.
 
 ## The defect
 
-GHSA-qq9h-g4jm-xgf3 — high severity, "Account takeover via pre-account
-hijacking on magic-link and email-OTP sign-in". Vulnerable `>= 1.1.3, < 1.6.22`,
-fixed in 1.6.22.
-
-The fix is mechanically blocked, which is why this is a prompt and not a
-one-line bump: `@convex-dev/better-auth` breaks typing from better-auth 1.6.18+
-(`useSession().data` collapses to `never`, TS2322 on the `authClient` prop of
-`ConvexBetterAuthProvider`). Adapter 0.12.2 is the one version that tolerates a
-patched better-auth. Upstream tracking: get-convex/better-auth#420 (open).
+better-auth < 1.7.7 carries GHSA-965c-763c-88jm (critical),
+GHSA-r4xp-prcw-77qf (high), GHSA-q84f-53jg-9ppm (high) and GHSA-44jh-23m7-hpcf
+(low). The fix needs better-auth 1.7, which needs `@convex-dev/better-auth`
+0.13.1 (peer `>=1.7.25 <1.8.0`), which pulls `convex` >= 1.49 and, through the
+new `runMutation` signature, `@convex-dev/resend` >= 0.2.10.
 
 ## Step 1 — diagnose BEFORE coding, and report what you find
 
-Run these and paste the output. This repo may already be patched, may be on a
-different adapter, or may not load a vulnerable plugin at all.
-
-  node -e "const p=require('./package.json');const d={...p.dependencies,...p.devDependencies};console.log('better-auth:',d['better-auth']??'ABSENT');console.log('adapter:',d['@convex-dev/better-auth']??'ABSENT');console.log('overrides:',JSON.stringify(p.pnpm?.overrides??'ABSENT'))"
+  node -e "const p=require('./package.json');const d={...p.dependencies,...p.devDependencies};for (const k of ['better-auth','@convex-dev/better-auth','convex','@convex-dev/resend']) console.log(k+':',d[k]??'ABSENT')"
   pnpm why better-auth 2>/dev/null | grep -oE 'better-auth [0-9]+\.[0-9]+\.[0-9]+' | sort -u
-  grep -rnE "magicLink|emailOTP" convex/auth.ts
+  pnpm audit --prod 2>/dev/null | grep -A2 -i better-auth | head -30
+  grep -rnE "magicLink|emailOTP|socialProviders|oauthProvider|mcp\(|cookieCache" convex/
 
-The middle command is the one that matters: the RESOLVED version in the
-lockfile is what ships, not the range in package.json. Report every distinct
-version it prints — a transitive copy below 1.6.22 still counts.
+The resolved version in the lockfile is what ships, not the range. Report every
+distinct better-auth version, and every plugin the last grep finds.
 
 ## Step 2 — the decision that depends on THIS repo; do not guess it
 
-Two things to settle before editing.
+  (a) Plugins beyond the template's (magicLink, convex, socialProviders). A
+      plugin that adds tables the adapter's packaged schema lacks — the OAuth
+      Provider / `@better-auth/mcp` above all — means installing the auth
+      component locally (`convex/betterAuth/`), as Albo-Club/interw did. That
+      is a different, larger port: stop and report rather than improvise it.
+  (b) Whether this repo pins `convex` or `@convex-dev/resend` below the floors
+      above for a reason of its own (a KNOWN_ISSUES entry, a renovate rule).
 
-  (a) Which better-auth to land on. The window is >=1.6.22 <1.7.0: the floor is
-      the advisory, the ceiling is the adapter peer (>=1.6.9 <1.7.0) — and NO
-      published adapter version supports 1.7 yet. Verified: 1.7.1 + adapter
-      0.12.2 type-checks clean, then the build dies on
-      "./plugins/oidc-provider is not exported", an import the ADAPTER makes.
-      The template ships `~1.6.30`. Take the newest 1.6.x, not blindly 1.6.30 —
-      check `npm view better-auth versions --json`.
-
-  (b) Whether this repo overrides `better-call`. The template used to pin it to
-      1.3.4 and REMOVED that override on 2026-08-24 — better-auth pins the
-      version it wants (1.4.0), and letting it do so is one less thing between
-      you and a working auth stack. If YOUR repo still has the override, check
-      whether its reason has expired too; if it has none, do not add one.
-
-If step 1 showed this repo loads NEITHER magicLink nor emailOTP, say so — the
-advisory does not bite, and the bump becomes routine rather than urgent. Bump
-anyway, but drop the urgency framing in your report.
-
-State both choices and why before editing.
+State both before editing.
 
 ## Step 3 — implement
 
-  - `"@convex-dev/better-auth": "0.12.2"` — EXACT, no range operator. On a 0.x,
-    ^0.12.2 and ~0.12.2 BOTH read >=0.12.2 <0.13.0, so neither blocks 0.12.3+,
-    and 0.12.4/0.12.5 reintroduce the TS2322. Only the bare version holds.
-  - `"better-auth": "~<chosen 1.6.x>"` — TILDE, not caret. ^ would resolve to
-    1.7.x, outside the adapter peer.
-  - Add Renovate rules if this repo uses Renovate: disable
-    `@convex-dev/better-auth` entirely, and disable only minor/major for
-    `better-auth`. Leave 1.6.x PATCHES enabled — that channel is how the next
-    security fix arrives, and closing it is how the template ended up shipping
-    a vulnerable 1.6.14 in the first place.
+  pnpm add @convex-dev/better-auth@0.13.1 'better-auth@~1.7.28' 'convex@^1.51.0' '@convex-dev/resend@^0.2.10'
+
+  - `"@convex-dev/better-auth": "0.13.1"` — EXACT. On a 0.x, ^ and ~ both
+    allow the next 0.13.x.
+  - `"better-auth": "~1.7.x"` — TILDE. ^ would take 1.8, outside the peer.
+  - Remove `session.cookieCache` from the Better Auth options: 0.13 disables
+    it and warns on every request otherwise. Fix any comment that relies on
+    it.
+  - Renovate, if used: keep `@convex-dev/better-auth` disabled, and block only
+    minor/major for `better-auth` — 1.7.x patches stay enabled.
 
 ## Step 4 — prove it, do not assert it
 
-Type-checking is NOT sufficient here: it cannot see a version, and it cannot
-see better-call breaking at runtime. Do all four.
-
-  rm -rf node_modules && pnpm install     # cold, not a rebuild — see below
+  rm -rf node_modules && pnpm install     # cold, not a rebuild
   pnpm why better-auth | grep -oE 'better-auth [0-9]+\.[0-9]+\.[0-9]+' | sort -u
+  pnpm audit --prod | grep -i better-auth  # expect nothing
   pnpm lint && pnpm build
-  pnpm test:smoke                          # needs `pnpm dev` in another terminal
+  pnpm dev   # then: Convex log reaches `ready`, no cookieCache warning
+  pnpm test:smoke
 
-The install MUST be cold. A warm node_modules can satisfy an import from a
-leftover copy, so the build passes locally while CI fails — that has already
-produced one falsely-announced green on this stack. If the build dies on a
-missing `destr`, the culprit is a broken unstorage prerelease: pin it with
-`"pnpm": {"overrides": {"unstorage": "2.0.0-alpha.7"}}`.
-
-Then exercise the advisory's own surface, which the smoke test does not cover:
-
-  curl -s -o /dev/null -w "%{http_code} -> %{redirect_url}\n" \
-    "http://localhost:3000/api/auth/magic-link/verify?token=deadbeef"
-
-Expect a 302 to `?error=INVALID_TOKEN`, not a 404 (plugin not wired) or a 500.
-If this repo overrides better-call, also POST to
-`/api/auth/sign-in/magic-link` with an `Origin: http://localhost:3000` header
-and read the Convex log: the stack trace names every package version in the
-chain, which is the only direct evidence the overridden better-call actually
-interoperates.
+Then sign in once each way the repo offers (password, magic link, Google if
+configured) and sign out. If the repo has a `convex-test` suite, time it: an
+adapter bump has made random tests blow the 5 s timeout before.
 
 ## Do NOT
 
-- Relax the adapter to a range "because pinning feels wrong". Re-read step 3;
-  on a 0.x the range operators do not do what you think.
-- Bump the adapter to 0.12.3 to get "closer to latest". It type-checks, but it
-  slows convex-test down until 2-4 tests out of 120 time out at random.
-- Bump better-auth to 1.7.x. Outside the adapter peer.
+- Relax the adapter to a range.
+- Stay on 1.6.x "to keep the diff small" — no 1.6 patch has the fix.
 - Announce green from `tsc` alone, or from a build on a warm node_modules.
 - Write the advisory's mechanism into any user-facing changelog. Other forks
   are still unpatched; word it as reassurance, not as a map.

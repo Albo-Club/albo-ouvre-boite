@@ -26,12 +26,12 @@
       "enabled": false
     },
     {
-      "description": "The Convex adapter is pinned to an exact version, not a range: on a 0.x, ^0.12.2 and ~0.12.2 both read >=0.12.2 <0.13.0, so neither blocks 0.12.3+. 0.12.4 and 0.12.5 break typing (TS2322 on ConvexBetterAuthProvider), and 0.12.3 slows convex-test down. Unblock via get-convex/better-auth#420 — see KNOWN_ISSUES.md.",
+      "description": "The Convex adapter is pinned to an exact version, not a range: on a 0.x, ^0.13.1 and ~0.13.1 both read >=0.13.1 <0.14.0, so neither blocks the next 0.13.x, and any adapter bump has broken typing or the build before. Bump it by hand — see KNOWN_ISSUES.md § Better Auth 1.7 on the Convex adapter 0.13.",
       "matchPackageNames": ["@convex-dev/better-auth"],
       "enabled": false
     },
     {
-      "description": "better-auth is boxed into >=1.6.22 <1.7.0. The floor is GHSA-qq9h-g4jm-xgf3 (high, account takeover on magic-link sign-in); the ceiling is the adapter peer (>=1.6.9 <1.7.0), which 1.7.x leaves. Patches inside 1.6.x stay ENABLED on purpose — that channel is what ships the next security fix, and closing it is how we got here. Only the minor/major jump is blocked.",
+      "description": "better-auth sits on 1.7.x: the floor is GHSA-965c-763c-88jm and three siblings (fixed in 1.7.7), the ceiling is the adapter peer (>=1.7.25 <1.8.0). Patches inside 1.7.x stay ENABLED on purpose — that channel is what ships the next security fix, and closing it once left a vulnerable release shipped. Only the minor/major jump is blocked.",
       "matchPackageNames": ["better-auth"],
       "matchUpdateTypes": ["minor", "major"],
       "enabled": false
